@@ -1,0 +1,49 @@
+# XcodeGen project for the Silkfall iPad app.
+# GitHub builds this in the cloud (see .github/workflows/build-ipa.yml); you never need Xcode yourself.
+name: Silkfall
+options:
+  bundleIdPrefix: app.silkfall
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  Silkfall:
+    type: application
+    platform: iOS
+    scheme: {}
+    sources:
+      - path: Silkfall
+      - path: web
+        type: folder
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.silkfall.display
+        PRODUCT_NAME: Silkfall
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        MARKETING_VERSION: "1.0"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: NO
+        CODE_SIGNING_ALLOWED: NO
+    info:
+      path: Silkfall/Info.plist
+      properties:
+        CFBundleDisplayName: Silkfall
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSRequiresIPhoneOS: true
+        UILaunchScreen: {}
+        UIRequiresFullScreen: true
+        UIStatusBarHidden: true
+        UIViewControllerBasedStatusBarAppearance: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSMotionUsageDescription: Silkfall uses the iPad's tilt to give the silk a sense of depth.

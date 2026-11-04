@@ -1,0 +1,63 @@
+# Builds the Silkfall iPad app in the cloud every time you upload changes,
+# and publishes it as Silkfall.ipa on this repository's "latest" release.
+# AltStore or SideStore then installs it and signs it with your own Apple ID.
+name: Build iPad app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# if you upload twice quickly, only the newest upload gets built
+concurrency:
+  group: release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use a known Xcode version
+        run: |
+          if [ -d /Applications/Xcode_16.4.app ]; then sudo xcode-select -s /Applications/Xcode_16.4.app; fi
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Copy the web app into the iPad app
+        run: |
+          mkdir -p ios/web
+          cp index.html ios/web/index.html
+
+      - name: Generate Xcode project
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Build (unsigned)
+        working-directory: ios
+        run: |
+          xcodebuild -project Silkfall.xcodeproj -scheme Silkfall -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
+
+      - name: Package Silkfall.ipa
+        run: |
+          mkdir -p Payload
+          cp -R ios/build/Build/Products/Release-iphoneos/Silkfall.app Payload/
+          zip -qry Silkfall.ipa Payload
+          ls -lh Silkfall.ipa
+
+      - name: Publish to the "latest" release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest Silkfall.ipa \
+            --title "Silkfall iPad app (latest build)" \
+            --notes "Built automatically from commit ${GITHUB_SHA::7}. Download Silkfall.ipa on your iPad and install it with AltStore or SideStore."

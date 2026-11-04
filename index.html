@@ -1,0 +1,1060 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Silkfall">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-512.png">
+<title>Silkfall</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Manrope:wght@200;400;600&display=swap" media="print" onload="this.media='all'">
+<style>
+/* Layout: full-bleed canvas; a glass control sheet slides in from the right (bottom on phones). Single dark look by design. */
+:root{
+  --ink:#050507;
+  --glass:rgba(16,14,22,.74);
+  --line:rgba(236,226,206,.13);
+  --pearl:#ece2ce;
+  --pearl-dim:rgba(236,226,206,.58);
+  --accent:#f1d9a6;
+  --accent-ink:#1b1408;
+  --display:"Cormorant Garamond","Iowan Old Style","Palatino",Georgia,serif;
+  --ui:"Manrope",-apple-system,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;background:var(--ink);color:var(--pearl);overflow:hidden;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
+  font-family:var(--ui);overscroll-behavior:none}
+#silk{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;transition:opacity .6s ease}
+
+/* clock */
+#clock{position:fixed;pointer-events:none;color:var(--pearl);text-align:center;transition:opacity .8s ease;
+  font-variant-numeric:tabular-nums;mix-blend-mode:screen}
+#clock .t{font-weight:200;letter-spacing:.02em;line-height:1}
+#clock .d{font-size:.95rem;letter-spacing:.22em;text-transform:uppercase;opacity:.6;margin-top:.6em}
+#clock.center{left:0;right:0;top:50%;transform:translateY(-50%)}
+#clock.center .t{font-size:clamp(5rem,16vw,13rem);opacity:.78}
+#clock.corner{left:calc(28px + env(safe-area-inset-left,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));text-align:left}
+#clock.corner .t{font-size:3.4rem;opacity:.7}
+#clock.corner .d{font-size:.72rem}
+
+/* floating button */
+#fab{position:fixed;top:calc(18px + env(safe-area-inset-top,0px));right:calc(18px + env(safe-area-inset-right,0px));
+  width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--glass);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);color:var(--pearl);display:grid;place-items:center;
+  opacity:0;pointer-events:none;transition:opacity .4s ease;cursor:pointer}
+#fab.show{opacity:1;pointer-events:auto}
+#fab svg{width:22px;height:22px}
+
+/* panel */
+#panel{position:fixed;top:0;right:0;bottom:0;width:min(360px,100%);box-sizing:border-box;
+  background:var(--glass);-webkit-backdrop-filter:blur(28px) saturate(1.3);backdrop-filter:blur(28px) saturate(1.3);
+  border-left:1px solid var(--line);transform:translateX(105%);transition:transform .45s cubic-bezier(.2,.8,.2,1);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-block:calc(22px + env(safe-area-inset-top,0px)) calc(28px + env(safe-area-inset-bottom,0px));
+  padding-left:22px;padding-right:max(22px, env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:22px}
+#panel.open{transform:none}
+@media (max-width:560px){
+  #panel{top:auto;width:100%;max-height:78%;border-left:0;border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+    transform:translateY(105%);padding-left:max(18px, env(safe-area-inset-left,0px));padding-right:max(18px, env(safe-area-inset-right,0px));
+    padding-block:20px calc(24px + env(safe-area-inset-bottom,0px))}
+}
+.head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.mark{font-family:var(--display);font-style:italic;font-weight:500;font-size:2.1rem;letter-spacing:.01em;line-height:1;margin:0}
+.mark small{display:block;font-family:var(--ui);font-style:normal;font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--pearl-dim);margin-top:6px}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--pearl);display:grid;place-items:center;cursor:pointer}
+.icon-btn svg{width:18px;height:18px}
+
+.auto{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:16px;
+  background:linear-gradient(120deg,rgba(241,217,166,.16),rgba(170,140,230,.10));border:1px solid var(--line)}
+.auto b{display:block;font-weight:600;font-size:1rem}
+.auto span{font-size:.78rem;color:var(--pearl-dim)}
+
+section{display:flex;flex-direction:column;gap:14px}
+section h2{margin:0;font-size:.66rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--pearl-dim)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.9rem}
+.row label{flex:0 0 auto}
+.row output{font-variant-numeric:tabular-nums;color:var(--pearl-dim);font-size:.82rem;min-width:3ch;text-align:right}
+.ctl{display:flex;flex-direction:column;gap:8px}
+.ctl .top{display:flex;justify-content:space-between;font-size:.9rem}
+.ctl .top output{color:var(--pearl-dim);font-size:.82rem;font-variant-numeric:tabular-nums}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent) var(--p,50%),rgba(236,226,206,.16) var(--p,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--pearl);margin-top:-9.5px;box-shadow:0 2px 10px rgba(0,0,0,.5)}
+input[type=range]::-moz-range-track{height:3px;border-radius:3px;background:rgba(236,226,206,.16)}
+input[type=range]::-moz-range-progress{height:3px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:var(--pearl)}
+
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+.seg.grid3{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg button{border:0;background:transparent;color:var(--pearl-dim);font:600 .8rem var(--ui);padding:9px 4px;border-radius:9px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--pearl);color:var(--accent-ink)}
+
+.switch{position:relative;width:52px;height:30px;border-radius:30px;border:0;background:rgba(236,226,206,.18);cursor:pointer;flex:0 0 auto;transition:background .25s}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--pearl);transition:transform .25s cubic-bezier(.3,.7,.3,1)}
+.switch[aria-checked=true]{background:var(--accent)}
+.switch[aria-checked=true]::after{transform:translateX(22px);background:var(--accent-ink)}
+
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--pearl);font:400 1.2rem var(--ui);cursor:pointer}
+.stepper output{min-width:2.2ch;text-align:center;font-size:1.05rem;color:var(--pearl)}
+
+.palettes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pal{display:flex;flex-direction:column;gap:7px;padding:8px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--pearl);text-align:left;cursor:pointer;font:400 .78rem var(--ui)}
+.pal i{display:block;height:16px;border-radius:6px}
+.pal[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+
+.times{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.times label{display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--pearl-dim)}
+.times input{font:600 1rem var(--ui);color:var(--pearl);background:rgba(236,226,206,.06);border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-width:0;-webkit-appearance:none;appearance:none}
+.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.actions button{border:1px solid var(--line);background:rgba(236,226,206,.05);color:var(--pearl);border-radius:12px;padding:12px 6px;font:600 .8rem var(--ui);cursor:pointer}
+.actions button:active,.seg button:active,.pal:active{transform:scale(.97)}
+.note{font-size:.76rem;line-height:1.5;color:var(--pearl-dim);margin:0}
+.note b{color:var(--pearl);font-weight:600}
+#hint{position:fixed;left:50%;bottom:calc(36px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
+  padding:12px 20px;border-radius:30px;background:var(--glass);border:1px solid var(--line);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);color:var(--pearl);font-size:.88rem;white-space:nowrap;
+  pointer-events:none;opacity:0;transition:opacity 1s ease}
+#hint.show{opacity:1}
+.foot{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:.72rem;color:var(--pearl-dim);letter-spacing:.04em}
+.foot button{border:0;background:transparent;color:var(--pearl-dim);font:600 .76rem var(--ui);text-decoration:underline;text-underline-offset:3px;padding:6px 0;cursor:pointer}
+.foot button.armed{color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){#panel,#fab,#clock{transition:none}}
+</style>
+
+</head>
+<body>
+<canvas id="silk" aria-label="Generative silk animation"></canvas>
+<div id="hint">Tap anywhere for settings</div>
+<div id="clock" hidden><div class="t" id="clockT"></div><div class="d" id="clockD"></div></div>
+
+<button id="fab" aria-label="Open settings">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+</button>
+
+<aside id="panel" aria-label="Silkfall settings">
+  <div class="head">
+    <h1 class="mark">Silkfall<small>Generative silk</small></h1>
+    <button class="icon-btn" id="closePanel" aria-label="Close settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+
+  <div class="auto">
+    <div><b>Automatic mode</b><span>Keeps weaving new designs on its own</span></div>
+    <button class="switch" role="switch" id="sw-auto" data-key="auto" aria-label="Automatic mode"></button>
+  </div>
+
+  <section>
+    <h2>Pattern</h2>
+    <div class="row"><label>Symmetry</label>
+      <div class="stepper"><button id="symMinus" aria-label="Fewer mirrors">−</button><output id="symOut">6</output><button id="symPlus" aria-label="More mirrors">+</button></div></div>
+    <div class="row"><label for="sw-mirror">Mirror</label><button class="switch" role="switch" id="sw-mirror" data-key="mirror"></button></div>
+    <div class="ctl"><div class="top"><label for="r-spin">Spin</label><output data-for="spin"></output></div>
+      <input type="range" id="r-spin" data-key="spin" min="0" max="1" step="0.01"></div>
+    <div class="ctl" id="vortexCtl"><div class="top"><label for="r-vortex">Vortex</label><output data-for="vortex"></output></div>
+      <input type="range" id="r-vortex" data-key="vortex" min="0" max="1" step="0.01"></div>
+    <div class="row" id="vortexRevCtl"><label for="sw-vortexRev">Reverse vortex</label><button class="switch" role="switch" id="sw-vortexRev" data-key="vortexRev"></button></div>
+    <p class="note" id="vortexNote">Spin turns where new silk lands. Vortex turns the whole picture, faster toward the centre.</p>
+    <div class="ctl" id="finishCtl"><div class="top"><span>Silk finish</span></div>
+      <div class="seg" data-key="finish"><button data-v="crisp">Crisp</button><button data-v="soft">Soft</button></div></div>
+  </section>
+
+  <section>
+    <h2>Colour</h2>
+    <div class="palettes" id="palettes"></div>
+    <p class="note" id="todNote" hidden></p>
+    <div class="row"><label for="sw-palLock">Keep this colour when shuffling</label><button class="switch" role="switch" id="sw-palLock" data-key="palLock"></button></div>
+  </section>
+
+  <section>
+    <h2>Brush stroke</h2>
+    <div class="seg grid3" data-key="stroke"><button data-v="mix">Mix</button><button data-v="curvy">Curvy</button><button data-v="straight">Straight</button><button data-v="wavy">Wavy</button><button data-v="fan">Fan</button><button data-v="dust">Dust</button></div>
+    <p class="note">Mix picks a different stroke for every new line.</p>
+  </section>
+
+  <section>
+    <h2>Motion</h2>
+    <div class="ctl"><div class="top"><span>Brushes</span></div>
+      <div class="seg" data-key="brushes"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button></div></div>
+    <div class="ctl"><div class="top"><label for="r-speed">Speed</label><output data-for="speed"></output></div>
+      <input type="range" id="r-speed" data-key="speed" min="0.2" max="2.5" step="0.05"></div>
+    <div class="ctl"><div class="top"><label for="r-threads">Silk density</label><output data-for="threads"></output></div>
+      <input type="range" id="r-threads" data-key="threads" min="10" max="60" step="1"></div>
+    <div class="ctl"><div class="top"><label for="r-glow">Glow</label><output data-for="glow"></output></div>
+      <input type="range" id="r-glow" data-key="glow" min="0.15" max="1.5" step="0.05"></div>
+    <div class="ctl" id="bloomCtl"><div class="top"><label for="r-bloom">Bloom</label><output data-for="bloom"></output></div>
+      <input type="range" id="r-bloom" data-key="bloom" min="0" max="1" step="0.01"></div>
+    <div class="ctl"><div class="top"><label for="r-trail">Trail length</label><output data-for="trail"></output></div>
+      <input type="range" id="r-trail" data-key="trail" min="0" max="1" step="0.01"></div>
+  </section>
+
+  <section>
+    <h2>Evolve</h2>
+    <div class="ctl"><div class="top"><span>Shuffle the style every</span></div>
+      <div class="seg" data-key="shuffle"><button data-v="0">Off</button><button data-v="1">1 min</button><button data-v="3">3 min</button><button data-v="10">10 min</button></div></div>
+  </section>
+
+  <section>
+    <h2>Atmosphere</h2>
+    <div class="row"><label for="sw-breathe">Breathing</label><button class="switch" role="switch" id="sw-breathe" data-key="breathe"></button></div>
+    <p class="note">The picture slowly swells and softens, about once every nine seconds.</p>
+    <div class="row"><label for="sw-tilt">Tilt parallax</label><button class="switch" role="switch" id="sw-tilt" data-key="tilt"></button></div>
+    <p class="note" id="tiltNote">Tilt the iPad and the silk shifts in layers. The centre moves most, the glow behind it least.</p>
+  </section>
+
+  <section>
+    <h2>Night mode</h2>
+    <div class="row"><label for="sw-night">Dim and slow down at night</label><button class="switch" role="switch" id="sw-night" data-key="night"></button></div>
+    <div class="times">
+      <label for="t-from">From<input type="time" id="t-from" data-key="nightFrom"></label>
+      <label for="t-to">Until<input type="time" id="t-to" data-key="nightTo"></label>
+    </div>
+    <div class="ctl"><div class="top"><label for="r-nightDim">Night brightness</label><output data-for="nightDim"></output></div>
+      <input type="range" id="r-nightDim" data-key="nightDim" min="0.08" max="1" step="0.01"></div>
+    <div class="ctl"><div class="top"><label for="r-nightSpeed">Night speed</label><output data-for="nightSpeed"></output></div>
+      <input type="range" id="r-nightSpeed" data-key="nightSpeed" min="0.15" max="1" step="0.05"></div>
+    <p class="note" id="nightNote"></p>
+  </section>
+
+  <section>
+    <h2>Display</h2>
+    <div class="ctl"><div class="top"><span>Clock</span></div>
+      <div class="seg" data-key="clock"><button data-v="off">Off</button><button data-v="corner">Corner</button><button data-v="center">Centre</button></div></div>
+    <div class="ctl"><div class="top"><label for="r-dim">Brightness</label><output data-for="dim"></output></div>
+      <input type="range" id="r-dim" data-key="dim" min="0.15" max="1" step="0.01"></div>
+    <div class="ctl"><div class="top"><span>Quality</span></div>
+      <div class="seg" data-key="quality"><button data-v="battery">Battery</button><button data-v="balanced">Balanced</button><button data-v="sharp">Sharp</button></div></div>
+    <div class="row"><label for="sw-awake">Keep screen awake</label><button class="switch" role="switch" id="sw-awake" data-key="awake"></button></div>
+    <p class="note" id="awakeNote"></p>
+  </section>
+
+  <div class="actions">
+    <button id="btnShuffle">Shuffle now</button>
+    <button id="btnClear">Clear</button>
+    <button id="btnFull">Fullscreen</button>
+  </div>
+  <p class="note"><b>Tap</b> the screen to show or hide controls. <b>Drag</b> to weave your own silk, even while automatic mode runs. Settings save automatically.</p>
+  <div class="foot"><span id="ver">Silkfall 1.0</span><button id="btnReset">Reset all settings</button></div>
+</aside>
+
+<script>
+(() => {
+"use strict";
+/* ---------- settings ---------- */
+const DEFAULTS = { auto:true, symmetry:6, mirror:true, spin:0.25, palette:"silk", palLock:false, brushes:2, stroke:"mix", vortex:0.35, vortexRev:false, bloom:0.35, finish:"crisp", breathe:true, tilt:false,
+  night:false, nightFrom:"22:00", nightTo:"07:00", nightDim:0.35, nightSpeed:0.5,
+  speed:1, threads:30, glow:1, trail:0.4, shuffle:3, clock:"off", dim:1, quality:"balanced", awake:true };
+const KEY = "silkfall.v1";
+const STROKES = ["curvy","curvy","straight","wavy","fan","dust"];
+let S = Object.assign({}, DEFAULTS);
+try { const saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved) Object.assign(S, saved); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+
+/* ---------- palettes: lists of [hue, sat, light] ---------- */
+const PALETTES = {
+  silk:      { name:"Silk",      any:true },
+  aurora:    { name:"Aurora",    c:[[150,85,55],[168,90,52],[188,90,55],[275,75,65],[300,70,62]] },
+  ember:     { name:"Ember",     c:[[4,90,55],[18,95,55],[32,95,55],[44,95,58],[350,85,58]] },
+  lagoon:    { name:"Lagoon",    c:[[176,85,50],[192,90,55],[208,90,60],[224,85,64],[165,70,55]] },
+  orchid:    { name:"Orchid",    c:[[275,80,66],[295,80,64],[315,85,64],[332,85,64],[255,75,68]] },
+  dusk:      { name:"Dusk",      c:[[330,85,62],[350,90,62],[15,95,60],[36,95,60],[268,70,64]] },
+  time:      { name:"Time of day", tod:true },
+  spectrum:  { name:"Spectrum",  cycle:true },
+  moonlight: { name:"Moonlight", c:[[210,30,82],[220,40,78],[195,35,80],[240,25,85],[0,0,90]] },
+  gilded:    { name:"Gilded",    c:[[38,80,58],[44,85,62],[30,70,55],[50,75,66],[20,60,55]] },
+  sakura:    { name:"Sakura",    c:[[340,70,72],[350,60,80],[322,55,70],[10,60,75],[300,40,78]] },
+  neon:      { name:"Neon",      c:[[300,100,60],[190,100,55],[95,100,55],[55,100,55],[330,100,60]] },
+};
+// time-of-day keyframes: hour -> five colours [hue, sat, light]
+const TOD = [
+  { at:0,    label:"deep night",   c:[[225,70,48],[240,65,56],[210,80,50],[262,55,60],[198,60,44]] },
+  { at:5.5,  label:"before dawn",  c:[[255,50,62],[282,45,64],[222,60,58],[320,40,62],[240,55,60]] },
+  { at:7.5,  label:"morning",      c:[[340,70,78],[20,75,77],[190,60,76],[270,55,80],[50,80,76]] },
+  { at:12,   label:"midday",       c:[[190,85,58],[160,70,55],[45,90,62],[205,90,62],[330,70,65]] },
+  { at:17,   label:"golden hour",  c:[[38,90,58],[28,95,56],[45,95,62],[15,90,58],[50,85,66]] },
+  { at:19.5, label:"sunset",       c:[[10,90,58],[340,80,60],[28,95,58],[300,55,58],[45,90,60]] },
+  { at:21.5, label:"dusk",         c:[[250,60,56],[230,70,50],[280,55,60],[210,75,48],[320,45,56]] },
+  { at:24,   label:"deep night",   c:[[225,70,48],[240,65,56],[210,80,50],[262,55,60],[198,60,44]] },
+];
+function todNow() {
+  const d = new Date(), hr = d.getHours() + d.getMinutes() / 60;
+  let i = 0; while (i < TOD.length - 2 && TOD[i+1].at <= hr) i++;
+  const a = TOD[i], b = TOD[i+1], t = (hr - a.at) / (b.at - a.at);
+  const mix = (x, y) => { let dh = ((y[0] - x[0] + 540) % 360) - 180; return [x[0] + dh*t, x[1] + (y[1]-x[1])*t, x[2] + (y[2]-x[2])*t]; };
+  return { c: a.c.map((col, k) => mix(col, b.c[k])), label: t < .5 ? a.label : b.label };
+}
+const swatchCSS = (p) => {
+  if (p.tod) return "linear-gradient(90deg,hsl(340 70% 78%),hsl(190 85% 58%),hsl(38 90% 58%),hsl(10 90% 58%),hsl(240 65% 50%))";
+  if (p.any || p.cycle) return "linear-gradient(90deg,hsl(0 85% 60%),hsl(60 85% 60%),hsl(120 85% 55%),hsl(190 85% 58%),hsl(260 85% 65%),hsl(320 85% 62%))";
+  return "linear-gradient(90deg," + p.c.map(([h,s,l]) => `hsl(${h} ${s}% ${l}%)`).join(",") + ")";
+};
+
+/* ---------- GPU renderer (WebGL2): float accumulation, vortex warp, bloom ---------- */
+const GLR = (() => {
+  let gl, pLine, pFade, pSub, pWarp, pShow, vao, vbo, tex = [], fbo = [], cur = 0, fmt, w = 0, h = 0, levels = 1, isFloat = false;
+  let T = 0, sinceRebase = 0, vortexNow = 0, fadeAcc = 0;
+  let data = new Float32Array(60000), count = 0; // floats used
+  const OMEGA = `float omega(float r){ float x = r / uR; return uVortex * (0.10 + 1.5 / (1.0 + pow(x / 0.2, 1.6))); }
+    vec2 rot(vec2 p, float a){ float c = cos(a), s = sin(a); return vec2(c*p.x - s*p.y, s*p.x + c*p.y); }`;
+  const VS_LINE = `#version 300 es
+    precision highp float;
+    layout(location=0) in vec4 aSeg; layout(location=1) in vec2 aSE; layout(location=2) in vec4 aCol;
+    uniform float uCopies, uSpin, uT, uVortex, uR, uDpr, uHalf; uniform vec2 uRes, uCenter;
+    out vec4 vCol; out float vD;
+    ${OMEGA}
+    vec2 place(vec2 p, float ang, float sx){ p = rot(vec2(sx*p.x, p.y), ang); p = rot(p, -omega(length(p)) * uT); return p * uDpr; }
+    void main(){
+      float id = float(gl_InstanceID), j = mod(id, uCopies), sx = id >= uCopies ? -1.0 : 1.0;
+      float ang = uSpin + j * 6.2831853 / uCopies;
+      vec2 a = place(aSeg.xy, ang, sx), b = place(aSeg.zw, ang, sx), d = b - a;
+      float L = length(d); vec2 dir = L > 1e-4 ? d / L : vec2(1.0, 0.0), nrm = vec2(-dir.y, dir.x);
+      vec2 P = mix(a, b, aSE.y) + nrm * aSE.x * uHalf + dir * (aSE.y * 2.0 - 1.0) * 0.5;
+      vec2 pix = uCenter + P;
+      gl_Position = vec4(pix.x / uRes.x * 2.0 - 1.0, 1.0 - pix.y / uRes.y * 2.0, 0.0, 1.0);
+      vCol = aCol; vD = aSE.x * uHalf;
+    }`;
+  const FS_LINE = `#version 300 es
+    precision highp float; in vec4 vCol; in float vD; uniform float uLine; out vec4 o;
+    void main(){ o = vCol * clamp(uLine + 0.5 - abs(vD), 0.0, 1.0); }`;
+  const VS_FULL = `#version 300 es
+    void main(){ vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2)); gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0); }`;
+  const FS_CONST = `#version 300 es
+    precision highp float; uniform vec4 uC; out vec4 o; void main(){ o = uC; }`;
+  const WARP = `uniform sampler2D uTex; uniform vec2 uRes, uCenter, uPar; uniform float uT, uVortex, uR, uDpr, uZoom, uCrisp;
+    ${OMEGA}
+    vec2 srcUV(float parScale){
+      vec2 pc = (vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) - uCenter) / uDpr;
+      pc /= uZoom;
+      pc -= uPar * parScale * (0.35 + 0.65 * exp(-length(pc) / (0.55 * uR)));   // nearer toward the centre
+      pc = rot(pc, -omega(length(pc)) * uT);
+      vec2 pix = uCenter + pc * uDpr; return vec2(pix.x / uRes.x, 1.0 - pix.y / uRes.y);
+    }
+    bool inside(vec2 uv){ return all(greaterThanEqual(uv, vec2(0.0))) && all(lessThanEqual(uv, vec2(1.0))); }
+    // with the vortex on, silk near the screen edge fades out softly instead of being cut in a hard line
+    float edgeFade(vec2 uv){ if (uVortex == 0.0) return 1.0; vec2 d = min(uv, 1.0 - uv) * uRes / uDpr; return smoothstep(0.0, 40.0, min(d.x, d.y)); }
+    vec4 samp(vec2 uv){   // crisp: Catmull-Rom (keeps silk sharp through rotation); soft: bilinear
+      if (uCrisp < 0.5) return textureLod(uTex, uv, 0.0);
+      vec2 sp = uv * uRes, tp = floor(sp - 0.5) + 0.5, f = sp - tp;
+      vec2 w0 = f * (-0.5 + f * (1.0 - 0.5 * f)), w1 = 1.0 + f * f * (-2.5 + 1.5 * f);
+      vec2 w2 = f * (0.5 + f * (2.0 - 1.5 * f)), w3 = f * f * (-0.5 + 0.5 * f);
+      vec2 w12 = w1 + w2, t0 = (tp - 1.0) / uRes, t3 = (tp + 2.0) / uRes, t12 = (tp + w2 / w12) / uRes;
+      vec4 r = textureLod(uTex, vec2(t0.x, t0.y), 0.0) * w0.x * w0.y + textureLod(uTex, vec2(t12.x, t0.y), 0.0) * w12.x * w0.y + textureLod(uTex, vec2(t3.x, t0.y), 0.0) * w3.x * w0.y
+             + textureLod(uTex, vec2(t0.x, t12.y), 0.0) * w0.x * w12.y + textureLod(uTex, vec2(t12.x, t12.y), 0.0) * w12.x * w12.y + textureLod(uTex, vec2(t3.x, t12.y), 0.0) * w3.x * w12.y
+             + textureLod(uTex, vec2(t0.x, t3.y), 0.0) * w0.x * w3.y + textureLod(uTex, vec2(t12.x, t3.y), 0.0) * w12.x * w3.y + textureLod(uTex, vec2(t3.x, t3.y), 0.0) * w3.x * w3.y;
+      return max(r, vec4(0.0));
+    }`;
+  const FS_WARP = `#version 300 es
+    precision highp float; ${WARP} out vec4 o;
+    void main(){ vec2 uv = srcUV(0.0); vec4 v = inside(uv) ? samp(uv) * edgeFade(uv) : vec4(0.0);
+      o = any(isnan(v)) ? vec4(0.0) : min(v, vec4(256.0)); }`;
+  const FS_SHOW = `#version 300 es
+    precision highp float; ${WARP} uniform float uBloom, uExp, uB0, uB1; out vec4 o;
+    vec3 blur(vec2 uv, float lv){   // 3x3 tent filter at a mip level: soft, no blocky texels
+      vec2 st = exp2(lv) / uRes; vec3 acc = vec3(0.0);
+      for (int y = -1; y <= 1; y++) for (int x = -1; x <= 1; x++) {
+        float wgt = (2.0 - abs(float(x))) * (2.0 - abs(float(y)));
+        acc += textureLod(uTex, uv + vec2(float(x), float(y)) * st * 1.2, lv).rgb * wgt;
+      }
+      return acc / 16.0;
+    }
+    void main(){
+      vec2 uv = srcUV(1.0), ub = srcUV(0.35);
+      vec3 c = inside(uv) ? samp(uv).rgb * edgeFade(uv) : vec3(0.0);
+      vec3 b = blur(ub, uB0) * 0.55 + blur(ub, uB1) * 0.45;
+      vec3 x = (c + b * uBloom * 1.6) * uExp;
+      if (any(isnan(x))) x = vec3(0.0);
+      o = vec4(1.0 - exp(-x), 1.0);
+    }`;
+  function prog(vs, fs) {
+    const mk = (t, src) => { const sh = gl.createShader(t); gl.shaderSource(sh, src); gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh)); return sh; };
+    const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, vs)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const nm = gl.getActiveUniform(p, i).name; u[nm] = gl.getUniformLocation(p, nm); }
+    return { p, u };
+  }
+  function init(context) {
+    gl = context; tex = []; fbo = []; cur = 0;   // old objects died with the previous context
+    try {
+      isFloat = !!gl.getExtension("EXT_color_buffer_float");
+      pLine = prog(VS_LINE, FS_LINE); pFade = prog(VS_FULL, FS_CONST); pSub = pFade;
+      pWarp = prog(VS_FULL, FS_WARP); pShow = prog(VS_FULL, FS_SHOW);
+      vao = gl.createVertexArray(); gl.bindVertexArray(vao);
+      vbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 40, 0);
+      gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 40, 16);
+      gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 40, 24);
+      gl.disable(gl.DEPTH_TEST);
+      return true;
+    } catch (e) { console.warn("WebGL2 setup failed", e); return false; }
+  }
+  function alloc(fl) {
+    tex.forEach(t => gl.deleteTexture(t)); fbo.forEach(f => gl.deleteFramebuffer(f)); tex = []; fbo = [];
+    levels = Math.floor(Math.log2(Math.max(w, h))) + 1;
+    for (let i = 0; i < 2; i++) {
+      const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+      gl.texStorage2D(gl.TEXTURE_2D, levels, fl ? gl.RGBA16F : gl.RGBA8, w, h);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+      if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) return false;
+      gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
+      tex.push(t); fbo.push(f);
+    }
+    return true;
+  }
+  function resize(cw, ch) {
+    w = cw; h = ch; T = 0; sinceRebase = 0; cur = 0; count = 0;
+    if (isFloat && alloc(true)) fmt = "float"; else { isFloat = false; alloc(false); fmt = "byte"; }
+  }
+  let view = { zoom:1, px:0, py:0, crisp:true };
+  const common = (u, show) => {
+    gl.uniform2f(u.uRes, w, h); gl.uniform2f(u.uCenter, CX * DPR, CY * DPR);
+    if (u.uZoom) gl.uniform1f(u.uZoom, show ? view.zoom : 1);
+    if (u.uPar) gl.uniform2f(u.uPar, show ? view.px : 0, show ? view.py : 0);
+    if (u.uCrisp) gl.uniform1f(u.uCrisp, view.crisp ? 1 : 0);
+    gl.uniform1f(u.uT, T); gl.uniform1f(u.uVortex, vortexNow); gl.uniform1f(u.uR, R); gl.uniform1f(u.uDpr, DPR);
+  };
+  function fullTri() { gl.bindVertexArray(vao); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+  function fade(dt, half) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[cur]); gl.viewport(0, 0, w, h);
+    gl.enable(gl.BLEND); gl.useProgram(pFade.p); gl.uniform4f(pFade.u.uC, 0, 0, 0, 0);
+    if (isFloat) {
+      // half-floats can't register tiny per-frame changes, so fade in steps of at least ~0.4%
+      fadeAcc += dt; const k = Math.pow(.5, fadeAcc / half); if (1 - k < 1/256) return; fadeAcc = 0;
+      gl.blendEquation(gl.FUNC_ADD); gl.blendFunc(gl.ZERO, gl.CONSTANT_ALPHA); gl.blendColor(0, 0, 0, k); fullTri();
+      gl.blendEquation(gl.FUNC_REVERSE_SUBTRACT); gl.blendFunc(gl.ONE, gl.ONE);
+      gl.uniform4f(pFade.u.uC, 1/2048, 1/2048, 1/2048, 1/2048); fullTri(); gl.blendEquation(gl.FUNC_ADD);
+    } else {
+      fadeAcc += dt; const a = 1 - Math.pow(.5, fadeAcc / half); if (a < .035) return; fadeAcc = 0;
+      gl.blendEquation(gl.FUNC_ADD); gl.blendFunc(gl.ZERO, gl.CONSTANT_ALPHA); gl.blendColor(0, 0, 0, 1 - a); fullTri();
+      gl.blendEquation(gl.FUNC_REVERSE_SUBTRACT); gl.blendFunc(gl.ONE, gl.ONE);
+      gl.uniform4f(pFade.u.uC, 1.5/255, 1.5/255, 1.5/255, 1.5/255); fullTri(); gl.blendEquation(gl.FUNC_ADD);
+    }
+  }
+  function seg(ax, ay, bx, by, r, g, b) {
+    if (count + 60 > data.length) { const nd = new Float32Array(data.length * 2); nd.set(data); data = nd; }
+    const d = data; let o = count;
+    const V = (side, end) => { d[o++] = ax; d[o++] = ay; d[o++] = bx; d[o++] = by; d[o++] = side; d[o++] = end; d[o++] = r; d[o++] = g; d[o++] = b; d[o++] = 1; };
+    V(-1,0); V(1,0); V(-1,1); V(-1,1); V(1,0); V(1,1);
+    count = o;
+  }
+  function stroke(X, Y, n, st, rgb) {
+    const [r, g, b] = rgb;
+    if (st === "straight") { for (let i = 1; i < n; i++) seg(X[i-1], Y[i-1], X[i], Y[i], r, g, b); }
+    else if (st === "fan") { for (let i = 2; i < n; i += 2) seg(X[0], Y[0], X[i], Y[i], r, g, b); }
+    else if (st === "dust") { for (let i = 0; i < n; i++) seg(X[i] - .6, Y[i], X[i] + .6, Y[i], r, g, b); }
+    else {
+      let px = X[0], py = Y[0];
+      for (let i = 1; i < n - 1; i++) {
+        const cx = X[i], cy = Y[i], ex = (X[i] + X[i+1]) / 2, ey = (Y[i] + Y[i+1]) / 2;
+        for (let k = 1; k <= 3; k++) {
+          const t = k / 3, u = 1 - t, qx = u*u*px + 2*u*t*cx + t*t*ex, qy = u*u*py + 2*u*t*cy + t*t*ey;
+          seg(px, py, qx, qy, r, g, b); px = qx; py = qy;
+        }
+      }
+      seg(px, py, X[n-1], Y[n-1], r, g, b);
+    }
+  }
+  function warpInto(dst) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[dst]); gl.viewport(0, 0, w, h); gl.disable(gl.BLEND);
+    gl.useProgram(pWarp.p); common(pWarp.u);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[cur]); gl.uniform1i(pWarp.u.uTex, 0);
+    fullTri();
+  }
+  function rebase() { if (T !== 0 && vortexNow !== 0) { warpInto(1 - cur); cur = 1 - cur; } T = 0; sinceRebase = 0; }
+  function setVortex(v) { if (Math.abs(v - vortexNow) > 1e-6) { rebase(); vortexNow = v; } }
+  function render(dt, copies, mirror, spin, bloom, exposure, v) {
+    view = v;
+    // 1. lay down this frame's silk
+    if (count) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[cur]); gl.viewport(0, 0, w, h);
+      gl.enable(gl.BLEND); gl.blendEquation(gl.FUNC_ADD); gl.blendFunc(gl.ONE, gl.ONE);
+      gl.useProgram(pLine.p); common(pLine.u);
+      gl.uniform1f(pLine.u.uCopies, copies); gl.uniform1f(pLine.u.uSpin, spin);
+      const line = (view.crisp ? .4 : .45) * DPR; gl.uniform1f(pLine.u.uLine, line); gl.uniform1f(pLine.u.uHalf, line + 1.0);
+      gl.bindVertexArray(vao); gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
+      gl.bufferData(gl.ARRAY_BUFFER, data.subarray(0, count), gl.STREAM_DRAW);
+      gl.drawArraysInstanced(gl.TRIANGLES, 0, count / 10, copies * (mirror ? 2 : 1));
+      count = 0;
+    }
+    // 2. advance the vortex; fold it into the buffer every couple of seconds so geometry stays exact
+    T += dt; sinceRebase += dt; if (sinceRebase > (view.crisp ? 6 : 2)) rebase();
+    // 3. show it: warp, bloom, tone-map
+    gl.bindTexture(gl.TEXTURE_2D, tex[cur]); gl.generateMipmap(gl.TEXTURE_2D);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); gl.viewport(0, 0, w, h); gl.disable(gl.BLEND);
+    gl.useProgram(pShow.p); common(pShow.u, true);
+    gl.activeTexture(gl.TEXTURE0); gl.uniform1i(pShow.u.uTex, 0);
+    gl.uniform1f(pShow.u.uBloom, bloom); gl.uniform1f(pShow.u.uExp, exposure);
+    const b0 = Math.min(levels - 1, Math.round(Math.log2(DPR) + 2)), b1 = Math.min(levels - 1, b0 + 2);
+    gl.uniform1f(pShow.u.uB0, b0); gl.uniform1f(pShow.u.uB1, b1);
+    fullTri();
+  }
+  function clearAll() { for (const f of fbo) { gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); } }
+  return { init, resize, fade, stroke, render, setVortex, clearAll, get isFloat() { return isFloat; } };
+})();
+
+function hslToRgb(h, s, l) {
+  h = ((h % 360) + 360) % 360 / 360; s /= 100; l /= 100;
+  const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
+  const f = t => { t = (t + 1) % 1; return t < 1/6 ? p + (q - p) * 6 * t : t < .5 ? q : t < 2/3 ? p + (q - p) * (2/3 - t) * 6 : p; };
+  return [f(h + 1/3), f(h), f(h - 1/3)];
+}
+
+/* ---------- canvas ---------- */
+let cv = document.getElementById("silk");
+let gl = null, ctx = null;
+try { gl = cv.getContext("webgl2", { alpha:false, antialias:false, depth:false, stencil:false, premultipliedAlpha:false, powerPreference:"high-performance" }); } catch (e) {}
+if (gl && !GLR.init(gl)) {          // GPU path failed: swap in a fresh canvas for the 2D fallback
+  gl = null; const fresh = cv.cloneNode(); cv.replaceWith(fresh); cv = fresh;
+}
+if (!gl) ctx = cv.getContext("2d", { alpha:false });
+let W = 0, H = 0, DPR = 1, CX = 0, CY = 0, R = 1;
+const QUALITY = { battery:{ dpr:1, fps:30 }, balanced:{ dpr:1.5, fps:60 }, sharp:{ dpr:2, fps:60 } };
+function resize() {
+  const q = QUALITY[S.quality] || QUALITY.balanced;
+  DPR = Math.min(window.devicePixelRatio || 1, q.dpr);
+  W = window.innerWidth; H = window.innerHeight;
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  CX = W / 2; CY = H / 2; R = Math.min(W, H) * 0.5;
+  if (gl) { GLR.resize(cv.width, cv.height); return; }
+  ctx.setTransform(1,0,0,1,0,0); ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = "#000"; ctx.fillRect(0, 0, cv.width, cv.height);
+}
+window.addEventListener("resize", resize);
+cv.addEventListener("webglcontextlost", e => e.preventDefault());
+cv.addEventListener("webglcontextrestored", () => { if (GLR.init(gl)) resize(); });
+
+/* ---------- helpers ---------- */
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const TAU = Math.PI * 2;
+let clock = 0;      // seconds of animation time
+let spinAngle = 0;  // global rotation that slowly turns the mandala
+
+function strokeColor() {
+  const p = PALETTES[S.palette] || PALETTES.silk;
+  if (p.any) return { h: rand(0,360), s: rand(70,95), l: rand(55,68), drift: rand(10,40) };
+  if (p.cycle) return { h: (clock * 14) % 360, s: 90, l: 60, drift: 60, cycle:true };
+  if (p.tod) { const [h,s,l] = pick(todNow().c); return { h: h + rand(-5,5), s, l, drift: rand(4,12) }; }
+  const [h,s,l] = pick(p.c); return { h: h + rand(-6,6), s, l, drift: rand(4,14) };
+}
+
+/* ---------- gestures: shapes the automatic brush traces (centred coords, R = half the short side) ---------- */
+const SHAPES = ["orbit","rose","lissajous","wander","spiral","petal","sweep","edgearc","dive","star","scribble","figure8"];
+let recentShapes = [];
+function shape(type, sc) {
+  const th0 = rand(0, TAU), dir = Math.random() < .5 ? -1 : 1, K = R * sc;
+  let f, dur;
+  switch (type) {
+    case "orbit": { const a = rand(.25,.95), b = rand(.03,.3), w = dir*rand(.4,1.2), w2 = rand(.5,2);
+      f = u => { const r = K*(a + b*Math.sin(w2*u)), t = th0 + w*u; return [r*Math.cos(t), r*Math.sin(t)]; }; dur = rand(4,11); break; }
+    case "rose": { const k = pick([2,3,4,5,6,1.5,2.5,3.5]), A = rand(.5,1), c = rand(0,.25), w = dir*rand(.3,.65);
+      f = u => { const t = th0 + w*u, r = K*(A*Math.cos(k*t) + c); return [r*Math.cos(t), r*Math.sin(t)]; }; dur = rand(5,12); break; }
+    case "lissajous": { const a = pick([1,2,3]), b = pick([2,3,4,5]), A = rand(.5,1), B = rand(.5,1), w = rand(.3,.65), p = rand(0,TAU);
+      f = u => [K*A*Math.sin(a*w*u + p), K*B*Math.sin(b*w*u)]; dur = rand(5,12); break; }
+    case "figure8": { const A = rand(.6,1), B = rand(.3,.6), w = dir*rand(.4,.8), ang = rand(0,TAU), c = Math.cos(ang), s2 = Math.sin(ang);
+      f = u => { const x = K*A*Math.sin(w*u), y = K*B*Math.sin(2*w*u); return [x*c - y*s2, x*s2 + y*c]; }; dur = rand(6,11); break; }
+    case "wander": case "scribble": { const q = type === "scribble" ? rand(1.8,3) : 1;
+      const fr = [rand(.25,.5),rand(.6,1.1),rand(1.3,2.1),rand(.25,.5),rand(.6,1.1),rand(1.3,2.1)].map(v => v*q), ph = fr.map(() => rand(0,TAU)), A = rand(.6,1);
+      const n = (u,o) => (Math.sin(u*fr[o]+ph[o]) + .55*Math.sin(u*fr[o+1]+ph[o+1]) + .3*Math.sin(u*fr[o+2]+ph[o+2]))/1.85;
+      f = u => [K*A*n(u,0)*1.3, K*A*n(u,3)*1.3]; dur = type === "scribble" ? rand(3,6) : rand(6,13); break; }
+    case "spiral": { const r0 = rand(.02,.25), r1 = rand(.6,1), w = dir*rand(.8,1.8), out = Math.random() < .5; dur = rand(5,10);
+      f = u => { const k = Math.min(u/dur,1), r = K*(out ? r0+(r1-r0)*k : r1-(r1-r0)*k), t = th0 + w*u; return [r*Math.cos(t), r*Math.sin(t)]; }; break; }
+    case "petal": { const big = rand(.5,.75), small = rand(.1,.32), d = rand(.12,.4), w = dir*rand(.4,.85), ratio = (big-small)/small;
+      f = u => { const t = th0 + w*u; return [K*((big-small)*Math.cos(t) + d*Math.cos(ratio*t)), K*((big-small)*Math.sin(t) - d*Math.sin(ratio*t))]; }; dur = rand(6,11); break; }
+    case "edgearc": { // a long sweep around the outer rim of the screen
+      const r = K*rand(.85,1), sweep = dir*rand(1.2,3.5), wig = rand(.02,.12), ww = rand(1,3); dur = rand(5,9);
+      f = u => { const t = th0 + sweep*Math.min(u/dur,1), rr = r*(1 + wig*Math.sin(ww*u)); return [rr*Math.cos(t), rr*Math.sin(t)]; }; break; }
+    case "dive": { // plunges from the rim to the centre and back out
+      const w2 = rand(.5,1.1), drift = dir*rand(.15,.6), lo = rand(0,.15);
+      f = u => { const r = K*(lo + (1-lo)*(.5 + .5*Math.cos(w2*u))), t = th0 + drift*u; return [r*Math.cos(t), r*Math.sin(t)]; }; dur = rand(5,10); break; }
+    case "star": { // sharp spiky loops
+      const k = pick([3,4,5,6,7,8]), w = dir*rand(.35,.7), inner = rand(.15,.5), sharp = rand(2,6);
+      f = u => { const t = th0 + w*u, spike = Math.pow(Math.abs(Math.cos(k*t/2)), sharp), r = K*(inner + (1-inner)*spike); return [r*Math.cos(t), r*Math.sin(t)]; }; dur = rand(6,11); break; }
+    default: { // "sweep": a long pass straight across the screen
+      const ang = rand(0,TAU), amp = rand(.05,.35), w = rand(.8,2.6), L = rand(.8,1.1); dur = rand(4,8);
+      f = u => { const k = Math.min(u/dur,1)*2-1, x = K*L*k, y = K*amp*Math.sin(w*u); return [x*Math.cos(ang) - y*Math.sin(ang), x*Math.sin(ang) + y*Math.cos(ang)]; }; }
+  }
+  return { f, dur };
+}
+function pickShape() {
+  const options = SHAPES.filter(t => !recentShapes.includes(t));
+  const t = pick(options); recentShapes.push(t); if (recentShapes.length > 4) recentShapes.shift();
+  return t;
+}
+function reach() {
+  // how far out this stroke reaches: sometimes tight in the middle, often mid-screen, often all the way to the corners
+  const edge = Math.hypot(W, H) / 2 / R * .95, roll = Math.random();
+  return roll < .2 ? rand(.3,.65) : roll < .6 ? rand(.7,1.1) : rand(1.1, Math.max(1.15, edge));
+}
+function makeGesture() {
+  const t1 = pickShape();
+  let sc = reach(); if (t1 === "edgearc" || t1 === "dive") sc = Math.max(sc, rand(1, Math.hypot(W, H) / 2 / R * .95));
+  const A = shape(t1, sc);
+  let f = A.f, dur = A.dur;
+  // 35% of strokes morph into a second shape partway through
+  if (Math.random() < .35) {
+    const B = shape(pickShape(), reach()), ts = A.dur * rand(.35,.7), bl = rand(1,2.5);
+    const sm = x => x <= 0 ? 0 : x >= 1 ? 1 : x*x*(3 - 2*x);
+    f = u => { const k = sm((u - ts) / bl); if (k === 0) return A.f(u); const [ax,ay] = A.f(u), [bx,by] = B.f(u - ts);
+      return [ax + (bx - ax)*k, ay + (by - ay)*k]; };
+    dur = ts + B.dur * rand(.5,.85);
+  }
+  // 30%: stretch to the screen's shape so it fills the long side too
+  const stretch = Math.random() < .3 ? rand(1, Math.max(W, H) / Math.min(W, H)) : 1, sang = rand(0, TAU), cs = Math.cos(sang), sn = Math.sin(sang);
+  // 25%: the shape's own centre drifts off-axis
+  const off = Math.random() < .25 ? { r: R*rand(.15,.6), a: rand(0,TAU), w: rand(-.3,.3) } : null;
+  // speed changes within the stroke: it rushes and lingers
+  const wa = rand(0,.45), ww = rand(.25,1), warp = u => u + (wa/ww) * Math.sin(ww*u);
+  const j = { a: rand(.01,.11), f1: rand(.5,1.6), f2: rand(1.2,3), p1: rand(0,TAU), p2: rand(0,TAU) };
+  const g = u0 => {
+    const u = warp(u0); let [x,y] = f(u);
+    if (stretch !== 1) { const px = x*cs + y*sn, py = -x*sn + y*cs; x = px*stretch*cs - py*sn; y = px*stretch*sn + py*cs; }
+    if (off) { x += off.r*Math.cos(off.a + off.w*u0); y += off.r*Math.sin(off.a + off.w*u0); }
+    return [x + R*j.a*Math.sin(u*j.f1+j.p1), y + R*j.a*Math.sin(u*j.f2+j.p2)];
+  };
+  return { at:g, dur };
+}
+
+/* ---------- strand: a springy chain of points; a curve through it is laid down every frame ---------- */
+class Strand {
+  constructor() { this.pts = []; this.phase = rand(0, TAU); }
+  start(x, y, color) {
+    const n = Math.max(6, Math.round(S.threads * rand(.7, 1.3)));
+    this.pts = []; this.gain = rand(.65, 1.35); this.spread = rand(.5, 1.8);
+    // every point chases the brush tip directly, each with its own lag: fast points hug the tip,
+    // slow ones trail behind, so the curve through them sweeps out a silk sheet
+    for (let i = 0; i < n; i++) {
+      const f = i / (n - 1);
+      this.pts.push({ x, y, vx:0, vy:0, k: .25 * Math.pow(.018, Math.pow(f, .8)) * rand(.85, 1.15), d: rand(.6, .72),
+        ox: rand(-1,1), oy: rand(-1,1) });
+    }
+    this.color = color; this.age = 0;
+    this.style = S.stroke === "mix" ? pick(STROKES) : S.stroke;
+  }
+  step(tx, ty) {
+    const p = this.pts; if (!p.length) return;
+    const jit = R * .035 * (this.spread || 1);
+    for (let i = 0; i < p.length; i++) {
+      const q = p[i];
+      q.vx = q.vx*q.d + (tx + q.ox*jit - q.x)*q.k; q.vy = q.vy*q.d + (ty + q.oy*jit - q.y)*q.k;
+      q.x += q.vx; q.y += q.vy;
+    }
+    this.age += 1/60;
+  }
+  draw(alpha) {
+    alpha *= this.gain || 1;
+    const p = this.pts, n = p.length; if (n < 3 || alpha <= 0.002) return;
+    const st = this.style;
+    const wob = st === "straight" ? 0 : st === "wavy" ? 16 + 10*S.glow : 3 + 4*S.glow;
+    const t = clock*(st === "wavy" ? 3.4 : 2.2) + this.phase, wf = st === "wavy" ? .75 : .42;
+    const X = new Float32Array(n), Y = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      const a = p[Math.max(i-1,0)], b = p[Math.min(i+1,n-1)];
+      let nx = -(b.y - a.y), ny = b.x - a.x; const len = Math.hypot(nx, ny) || 1;
+      const w = Math.sin(t + i*wf) * wob * (i/n);
+      X[i] = p[i].x + nx/len*w; Y[i] = p[i].y + ny/len*w;
+    }
+    if (gl) {
+      const c = this.color, copiesAll = Math.max(1, Math.round(S.symmetry)) * (S.mirror ? 2 : 1);
+      const symDim = Math.min(1, 2.2 / Math.sqrt(copiesAll));
+      const gain = st === "fan" ? .45 : st === "dust" ? 2.2 : st === "wavy" ? .55 : 1;
+      const h = c.cycle ? (clock*14) % 360 : c.h + Math.sin(this.age*.35)*c.drift;
+      const a = alpha * .075 * S.glow * symDim * gain, rgb = hslToRgb(h, c.s, c.l);
+      GLR.stroke(X, Y, n, st, [rgb[0]*a, rgb[1]*a, rgb[2]*a]);
+      return;
+    }
+    const path = new Path2D();
+    let styleGain = 1, fill = false;
+    if (st === "straight") {            // crisp polyline: angular, folded-paper sheets
+      path.moveTo(X[0], Y[0]); for (let i = 1; i < n; i++) path.lineTo(X[i], Y[i]);
+    } else if (st === "fan") {          // rays from the brush tip to every thread
+      for (let i = 2; i < n; i += 2) { path.moveTo(X[0], Y[0]); path.lineTo(X[i], Y[i]); }
+      styleGain = .45;
+    } else if (st === "dust") {         // glittering particles instead of lines
+      for (let i = 0; i < n; i++) path.rect(X[i] - .7, Y[i] - .7, 1.4, 1.4);
+      fill = true; styleGain = 2.6;
+    } else {                            // curvy & wavy
+      if (st === "wavy") styleGain = .55;   // smooth curve through the threads
+      path.moveTo(X[0], Y[0]);
+      for (let i = 1; i < n-1; i++) path.quadraticCurveTo(X[i], Y[i], (X[i]+X[i+1])/2, (Y[i]+Y[i+1])/2);
+      path.lineTo(X[n-1], Y[n-1]);
+    }
+
+    const c = this.color;
+    const copiesAll = Math.max(1, Math.round(S.symmetry)) * (S.mirror ? 2 : 1);
+    const symDim = Math.min(1, 2.2 / Math.sqrt(copiesAll));
+    const h = c.cycle ? (clock*14) % 360 : c.h + Math.sin(this.age*.35)*c.drift;
+    const col = `hsla(${h.toFixed(1)},${c.s}%,${c.l}%,${Math.min(1, alpha*.075*S.glow*symDim*styleGain).toFixed(4)})`;
+    ctx.strokeStyle = col; ctx.fillStyle = col;
+    ctx.lineWidth = .9;
+    const copies = Math.max(1, Math.round(S.symmetry));
+    for (let m = 0; m < (S.mirror ? 2 : 1); m++) {
+      const sx = m ? -1 : 1;
+      for (let j = 0; j < copies; j++) {
+        const th = spinAngle + j*TAU/copies, co = Math.cos(th), si = Math.sin(th);
+        ctx.setTransform(DPR*co*sx, DPR*si*sx, -DPR*si, DPR*co, DPR*CX, DPR*CY);
+        fill ? ctx.fill(path) : ctx.stroke(path);
+      }
+    }
+  }
+}
+
+/* ---------- painters: the automatic hands ---------- */
+class Painter {
+  constructor(delay) { this.strand = new Strand(); this.state = "rest"; this.wait = delay; }
+  begin() {
+    this.g = makeGesture(); this.u = 0; this.state = "draw"; this.fade = 0;
+    const [x,y] = this.g.at(0); this.strand.start(x, y, strokeColor());
+  }
+  update(dt) {
+    if (this.state === "rest") { this.wait -= dt; if (this.wait <= 0 && S.auto) this.begin(); return; }
+    this.u += dt * speedNow();
+    let a = 1;
+    if (this.state === "draw") {
+      this.fade = Math.min(1, this.fade + dt*1.5); a = this.fade;
+      const [tx,ty] = this.g.at(this.u); this.strand.step(tx, ty);
+      if (this.u > this.g.dur || !S.auto) { this.state = "lift"; this.lift = 1; }
+    } else if (this.state === "lift") {
+      this.lift -= dt * 1.2; a = Math.max(this.lift, 0);
+      const [tx,ty] = this.g.at(this.u); this.strand.step(tx, ty);
+      if (this.lift <= 0) { this.state = "rest"; const r = Math.random();
+        this.wait = (r < .15 ? rand(0, .3) : r < .88 ? rand(.4, 2.6) : rand(3, 6)) / Math.sqrt(speedNow()); }
+    }
+    this.strand.draw(a);
+  }
+}
+
+/* finger-drawn strand */
+const hand = { strand:new Strand(), active:false, lift:0, tx:0, ty:0, pen:false, press:.5, gain:1 };
+function updateHand() {
+  if (!hand.active && hand.lift <= 0) return;
+  let a = 1;
+  if (!hand.active) { hand.lift -= 1/60*1.4; a = Math.max(hand.lift,0); }
+  // Apple Pencil: light touch = faint silk, firm press = bright, dense silk
+  const target = hand.pen ? .25 + 1.9 * Math.pow(hand.press, 1.2) : 1;
+  hand.gain += (target - hand.gain) * .25;
+  hand.strand.step(hand.tx, hand.ty); hand.strand.draw(a * hand.gain);
+}
+
+let painters = [];
+function syncPainters() {
+  const n = S.brushes;
+  while (painters.length < n) painters.push(new Painter(painters.length * 1.3 + .2));
+  painters.length = n;
+}
+
+/* ---------- fading: multiplicative dim + small subtractive pass so trails really reach black ---------- */
+let fadeAcc = 0, clearBoost = 0;
+function fade(dt) {
+  const half = clearBoost > 0 ? 0.18 : 1.5 * Math.pow(60/1.5, S.trail); // half-life 1.5s .. 60s
+  if (gl) { GLR.fade(dt, half); return; }
+  fadeAcc += dt;
+  const a = 1 - Math.pow(.5, fadeAcc / half);
+  if (a < .035) return;
+  fadeAcc = 0;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.fillStyle = `rgba(0,0,0,${a.toFixed(4)})`; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.globalCompositeOperation = "color-burn";
+  ctx.fillStyle = "rgb(252,252,252)"; ctx.fillRect(0, 0, cv.width, cv.height);
+}
+
+/* ---------- shuffle ---------- */
+function shuffleStyle(full) {
+  S.symmetry = pick([3,4,5,6,6,7,8,8,9,10,12]);
+  S.mirror = Math.random() < .7;
+  S.spin = pick([0, .1, .2, .3, .45, .6]);
+  if (!S.palLock && S.palette !== "time") S.palette = pick(Object.keys(PALETTES).filter(k => k !== S.palette && k !== "time"));
+  if (full) { S.threads = Math.round(rand(20, 44)); }
+  save(); renderUI();
+}
+let lastShuffle = 0;
+
+/* ---------- night mode, breathing, tilt ---------- */
+let nightF = 0, breatheF = 0, zoom = 1, bloomMul = 1, lastOpacity = -1;
+const toMin = (t) => { const [h, m] = String(t || "0:0").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
+function isNight() {
+  if (!S.night) return false;
+  const d = new Date(), now = d.getHours() * 60 + d.getMinutes(), a = toMin(S.nightFrom), b = toMin(S.nightTo);
+  return a === b ? false : a < b ? (now >= a && now < b) : (now >= a || now < b);
+}
+const speedNow = () => S.speed * (1 - (1 - S.nightSpeed) * nightF);
+const tilt = { on:false, rx:0, ry:0, bx:0, by:0, px:0, py:0, got:false, init:false };
+let nightTarget = 0;
+setInterval(() => { nightTarget = isNight() ? 1 : 0; }, 15000);
+function updateAmbient(dt) {
+  nightF += (nightTarget - nightF) * Math.min(1, dt / 25);          // ease in/out over about a minute
+  breatheF += ((S.breathe ? 1 : 0) - breatheF) * Math.min(1, dt / 3);
+  const ph = Math.sin(clock * TAU / 9);
+  zoom = 1 + breatheF * .028 * (.5 + .5 * ph);
+  bloomMul = 1 + breatheF * .55 * ph;
+  const op = S.dim * (1 - (1 - S.nightDim) * nightF) * (1 - breatheF * .06 * (.5 - .5 * ph));
+  if (Math.abs(op - lastOpacity) > .002) { cv.style.opacity = op.toFixed(3); lastOpacity = op; }
+  // tilt: slow baseline so the resting angle on the desk always reads as centred
+  let tx = 0, ty = 0;
+  if (S.tilt && tilt.got) {
+    const k = Math.min(1, dt / 4); tilt.bx += (tilt.rx - tilt.bx) * k; tilt.by += (tilt.ry - tilt.by) * k;
+    const cl = v => Math.max(-1, Math.min(1, v / 18));
+    tx = cl(tilt.rx - tilt.bx) * 26; ty = cl(tilt.ry - tilt.by) * 26;
+  }
+  const kk = Math.min(1, dt / .12); tilt.px += (tx - tilt.px) * kk; tilt.py += (ty - tilt.py) * kk;
+  clockEl.style.translate = `${(tilt.px * .5).toFixed(2)}px ${(tilt.py * .5).toFixed(2)}px`;
+}
+function onOrient(e) {
+  if (e.beta == null || e.gamma == null) return;
+  const ang = ((((screen.orientation && screen.orientation.angle) ?? window.orientation ?? 0) % 360) + 360) % 360;
+  const b = e.beta, g = e.gamma; let x, y;
+  if (ang === 90) { x = b; y = -g; } else if (ang === 270) { x = -b; y = g; } else if (ang === 180) { x = -g; y = -b; } else { x = g; y = b; }
+  tilt.rx = x; tilt.ry = y;
+  if (!tilt.init) { tilt.bx = x; tilt.by = y; tilt.init = true; }
+  if (!tilt.got) { tilt.got = true; noteTilt(); }
+}
+async function enableTilt(fromGesture) {
+  if (!S.tilt) { window.removeEventListener("deviceorientation", onOrient); tilt.on = false; tilt.got = false; tilt.init = false; noteTilt(); return; }
+  if (tilt.on || tilt.asking) return;
+  if (typeof DeviceOrientationEvent === "undefined") { noteTilt("This device doesn't report tilt."); return; }
+  if (typeof DeviceOrientationEvent.requestPermission === "function") {
+    if (!fromGesture) { noteTilt(); return; }
+    tilt.asking = true;
+    try { if (await DeviceOrientationEvent.requestPermission() !== "granted") { tilt.asking = false; noteTilt("Motion access was declined. Turn the Tilt switch off and on again to ask once more."); return; } }
+    catch (e) { tilt.asking = false; noteTilt("Couldn't ask for motion access. Turn the Tilt switch off and on again."); return; }
+    tilt.asking = false;
+  }
+  window.addEventListener("deviceorientation", onOrient); tilt.on = true; noteTilt();
+}
+function noteTilt(msg) {
+  const el = document.getElementById("tiltNote");
+  if (msg) el.textContent = msg;
+  else if (!S.tilt) el.textContent = "Tilt the iPad and the silk shifts in layers. The centre moves most, the glow behind it least.";
+  else if (tilt.got) el.textContent = "On. Pick the iPad up and tilt it to see the depth.";
+  else if (tilt.on) el.textContent = "Waiting for motion data. On a Mac there's nothing to tilt; this works on the iPad.";
+  else el.textContent = "Tap the screen once to allow motion access.";
+}
+
+/* ---------- main loop ---------- */
+let last = performance.now(), stepAcc = 0;
+function frame(now) {
+  requestAnimationFrame(frame);
+  const q = QUALITY[S.quality] || QUALITY.balanced;
+  let dt = (now - last) / 1000;
+  if (q.fps < 60 && dt < 1/q.fps - .004) return;
+  last = now; dt = Math.min(dt, .1);
+  if (clearBoost > 0) clearBoost -= dt;
+  fade(dt);
+  updateAmbient(dt);
+  if (gl) GLR.setVortex(S.vortex * S.vortex * 1.6 * (S.vortexRev ? -1 : 1) * (1 - (1 - S.nightSpeed) * nightF));
+  else ctx.globalCompositeOperation = "lighter";
+  // physics runs on a fixed 60Hz step; every step lays down silk
+  stepAcc += dt; let steps = 0;
+  while (stepAcc >= 1/60 && steps < 4) {
+    stepAcc -= 1/60; steps++; clock += 1/60;
+    spinAngle = (spinAngle + (S.spin * S.spin) * .35 / 60 * (1 - (1 - S.nightSpeed) * nightF)) % TAU;
+    for (const p of painters) p.update(1/60);
+    updateHand();
+  }
+  if (gl) GLR.render(dt, Math.max(1, Math.round(S.symmetry)), S.mirror, spinAngle, S.bloom * bloomMul, 1.35,
+    { zoom, px: tilt.px, py: tilt.py, crisp: S.finish !== "soft" });
+  else cv.style.transform = `translate(${-tilt.px.toFixed(2)}px, ${-tilt.py.toFixed(2)}px) scale(${zoom.toFixed(4)})`;
+  if (S.auto && S.shuffle > 0 && clock - lastShuffle > S.shuffle * 60) { lastShuffle = clock; shuffleStyle(false); }
+}
+
+/* ---------- clock overlay ---------- */
+const clockEl = document.getElementById("clock"), clockT = document.getElementById("clockT"), clockD = document.getElementById("clockD");
+const tf = new Intl.DateTimeFormat(undefined, { hour:"numeric", minute:"2-digit" });
+const df = new Intl.DateTimeFormat(undefined, { weekday:"long", month:"long", day:"numeric" });
+function tickClock() {
+  clockEl.hidden = S.clock === "off";
+  clockEl.className = S.clock;
+  if (S.clock === "off") return;
+  const d = new Date();
+  clockT.textContent = tf.format(d).replace(/\s?[AP]M$/i, "");
+  clockD.textContent = df.format(d);
+}
+setInterval(tickClock, 1000);
+
+/* ---------- keep the screen awake ---------- */
+let wakeLock = null;
+const awakeNote = document.getElementById("awakeNote");
+const NATIVE = window.SILKFALL_NATIVE === true;   // running inside the Silkfall iPad app
+async function applyWake() {
+  if (NATIVE) { try { window.webkit.messageHandlers.silk.postMessage({ type:"awake", on: !!S.awake }); } catch (e) {} noteWake(); return; }
+  if (!S.awake) { try { await wakeLock?.release(); } catch (e) {} wakeLock = null; noteWake(); return; }
+  if (!("wakeLock" in navigator)) { noteWake(); return; }
+  if (wakeLock || document.visibilityState !== "visible") return;
+  try { wakeLock = await navigator.wakeLock.request("screen"); wakeLock.addEventListener("release", () => { wakeLock = null; noteWake(); }); }
+  catch (e) { wakeLock = null; }
+  noteWake();
+}
+function noteWake() {
+  if (NATIVE) { awakeNote.textContent = S.awake ? "On. The screen stays lit while Silkfall is open." : "Off. The iPad will follow its normal Auto-Lock setting."; return; }
+  if (!S.awake) awakeNote.textContent = "Off. The iPad will follow its normal Auto-Lock setting.";
+  else if (wakeLock) awakeNote.textContent = "On. If the screen still dims after a few minutes (iPadOS older than 18.4), set Settings › Display & Brightness › Auto-Lock to Never.";
+  else awakeNote.textContent = "Tap the screen once to turn this on. If it still sleeps, set Settings › Display & Brightness › Auto-Lock to Never.";
+}
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") applyWake(); });
+
+/* ---------- touch: tap toggles UI, drag draws ---------- */
+const fab = document.getElementById("fab"), panel = document.getElementById("panel");
+let fabTimer = 0;
+const showFab = () => { fab.classList.add("show"); clearTimeout(fabTimer); fabTimer = setTimeout(() => fab.classList.remove("show"), 4000); };
+let panelTimer = 0;
+const armPanelTimer = () => { clearTimeout(panelTimer); panelTimer = setTimeout(() => panel.classList.remove("open"), 45000); };
+const openPanel = () => { panel.classList.add("open"); fab.classList.remove("show"); armPanelTimer(); hideHint(); };
+["pointerdown","input","scroll"].forEach(ev => panel.addEventListener(ev, () => { if (panel.classList.contains("open")) armPanelTimer(); }, { passive:true }));
+const closePanel = () => panel.classList.remove("open");
+fab.addEventListener("click", openPanel);
+document.getElementById("closePanel").addEventListener("click", closePanel);
+
+let down = null;
+// screen point -> drawing coordinates (undo breathing zoom and tilt shift so silk lands under the finger)
+const toArt = (x, y) => [(x - CX) / zoom + tilt.px, (y - CY) / zoom + tilt.py];
+cv.addEventListener("pointerdown", e => {
+  if (!e.isPrimary || down) return;   // ignore extra fingers and palms
+  applyWake();
+  down = { x:e.clientX, y:e.clientY, t:performance.now(), drawing:false, id:e.pointerId };
+  hand.pen = e.pointerType === "pen"; if (hand.pen) hand.press = e.pressure || .5;
+  try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+});
+cv.addEventListener("pointermove", e => {
+  if (!down || e.pointerId !== down.id) return;
+  if (!down.drawing && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8) {
+    down.drawing = true; closePanel();
+    const [sx, sy] = toArt(down.x, down.y);
+    hand.strand.start(sx, sy, strokeColor()); hand.active = true; hand.gain = hand.pen ? .3 : 1;
+  }
+  if (hand.pen && e.pressure > 0) hand.press = e.pressure;
+  if (down.drawing) { [hand.tx, hand.ty] = toArt(e.clientX, e.clientY); }
+});
+cv.addEventListener("click", () => { if (S.tilt && !tilt.on) enableTilt(true); });
+const endPointer = e => {
+  if (!down || e.pointerId !== down.id) return;
+  if (down.drawing) { hand.active = false; hand.lift = 1; }
+  else if (performance.now() - down.t < 450) {
+    if (panel.classList.contains("open")) closePanel();
+    else if (fab.classList.contains("show")) openPanel();
+    else showFab();
+  }
+  down = null;
+};
+cv.addEventListener("pointerup", endPointer);
+cv.addEventListener("pointercancel", endPointer);
+
+/* ---------- controls ---------- */
+const fmt = {
+  spin: v => v < .02 ? "Still" : Math.round(v*100) + "%",
+  speed: v => v.toFixed(2).replace(/0$/, "") + "×",
+  threads: v => Math.round(v) + " threads",
+  glow: v => Math.round(v*100) + "%",
+  trail: v => { const s = 1.5*Math.pow(40, v); return s < 10 ? s.toFixed(1)+" s" : Math.round(s)+" s"; },
+  dim: v => Math.round(v*100) + "%",
+  nightDim: v => Math.round(v*100) + "%",
+  nightSpeed: v => Math.round(v*100) + "% speed",
+  vortex: v => v < .02 ? "Off" : Math.round(v*100) + "%",
+  bloom: v => v < .02 ? "Off" : Math.round(v*100) + "%",
+};
+if (!gl) ["vortexCtl","vortexRevCtl","vortexNote","bloomCtl","finishCtl"].forEach(id => document.getElementById(id).hidden = true);
+const palWrap = document.getElementById("palettes");
+for (const [k, p] of Object.entries(PALETTES)) {
+  const b = document.createElement("button"); b.className = "pal"; b.dataset.pal = k;
+  b.innerHTML = `<i style="background:${swatchCSS(p)}"></i>${p.name}`;
+  b.addEventListener("click", () => { S.palette = k; save(); renderUI(); });
+  palWrap.appendChild(b);
+}
+document.querySelectorAll("input[type=range][data-key]").forEach(el => {
+  el.addEventListener("input", () => { S[el.dataset.key] = parseFloat(el.value); save(); renderUI(); });
+});
+document.querySelectorAll(".switch[data-key]").forEach(el => {
+  el.addEventListener("click", () => { const k = el.dataset.key; S[k] = !S[k]; save(); renderUI();
+    if (k === "awake") applyWake(); if (k === "tilt") enableTilt(true); if (k === "night") nightTarget = isNight() ? 1 : 0; });
+});
+document.querySelectorAll(".seg[data-key]").forEach(seg => {
+  seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+    const k = seg.dataset.key, raw = b.dataset.v, v = isNaN(+raw) ? raw : +raw;
+    S[k] = v; save();
+    if (k === "quality") resize();
+    if (k === "shuffle") lastShuffle = clock;
+    renderUI();
+  }));
+});
+document.querySelectorAll("input[type=time][data-key]").forEach(el => {
+  el.addEventListener("change", () => { if (el.value) { S[el.dataset.key] = el.value; save(); nightTarget = isNight() ? 1 : 0; renderUI(); } });
+});
+document.getElementById("symMinus").addEventListener("click", () => { S.symmetry = Math.max(1, S.symmetry - 1); save(); renderUI(); });
+document.getElementById("symPlus").addEventListener("click", () => { S.symmetry = Math.min(16, S.symmetry + 1); save(); renderUI(); });
+document.getElementById("btnShuffle").addEventListener("click", () => { shuffleStyle(true); clearBoost = 1.2; lastShuffle = clock; });
+document.getElementById("btnClear").addEventListener("click", () => { clearBoost = 1.5; });
+const btnReset = document.getElementById("btnReset"); let resetArmed = 0;
+btnReset.addEventListener("click", () => {
+  if (!resetArmed) { btnReset.textContent = "Tap again to reset"; btnReset.classList.add("armed");
+    resetArmed = setTimeout(() => { resetArmed = 0; btnReset.textContent = "Reset all settings"; btnReset.classList.remove("armed"); }, 3000); return; }
+  clearTimeout(resetArmed); resetArmed = 0; btnReset.textContent = "Reset all settings"; btnReset.classList.remove("armed");
+  S = Object.assign({}, DEFAULTS); save(); resize(); clearBoost = 1.2; nightTarget = isNight() ? 1 : 0; enableTilt(false); renderUI();
+});
+const hintEl = document.getElementById("hint");
+function hideHint() { hintEl.classList.remove("show"); try { localStorage.setItem("silkfall.hinted", "1"); } catch (e) {} }
+let hinted = false; try { hinted = localStorage.getItem("silkfall.hinted") === "1"; } catch (e) {}
+if (!hinted) { setTimeout(() => hintEl.classList.add("show"), 2500); setTimeout(hideHint, 9000); }
+const btnFull = document.getElementById("btnFull");
+const isStandalone = NATIVE || window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+if (isStandalone) btnFull.textContent = "Hide panel";
+if (NATIVE) document.getElementById("ver").textContent = "Silkfall 1.0 · iPad app";
+btnFull.addEventListener("click", async () => {
+  closePanel();
+  if (isStandalone) return;
+  const el = document.documentElement;
+  try {
+    if (document.fullscreenElement || document.webkitFullscreenElement) await (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else await (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+  } catch (e) {}
+});
+
+function renderUI() {
+  document.querySelectorAll("input[type=range][data-key]").forEach(el => {
+    const k = el.dataset.key; el.value = S[k];
+    el.style.setProperty("--p", ((S[k] - el.min) / (el.max - el.min) * 100) + "%");
+    const out = document.querySelector(`output[data-for="${k}"]`); if (out) out.textContent = fmt[k] ? fmt[k](S[k]) : S[k];
+  });
+  document.querySelectorAll(".switch[data-key]").forEach(el => el.setAttribute("aria-checked", String(!!S[el.dataset.key])));
+  document.querySelectorAll(".seg[data-key]").forEach(seg => seg.querySelectorAll("button").forEach(b =>
+    b.setAttribute("aria-pressed", String(String(S[seg.dataset.key]) === b.dataset.v))));
+  document.querySelectorAll(".pal").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.pal === S.palette)));
+  document.getElementById("symOut").textContent = S.symmetry;
+  document.querySelectorAll("input[type=time][data-key]").forEach(el => { el.value = S[el.dataset.key]; });
+  const todEl = document.getElementById("todNote");
+  todEl.hidden = S.palette !== "time";
+  if (S.palette === "time") todEl.textContent = `Now: ${todNow().label}. Pastels in the morning, clear colours at midday, gold at sunset, deep blues at night. Shuffle leaves this palette alone.`;
+  const nn = document.getElementById("nightNote");
+  const hm = t => { const m = toMin(t), d = new Date(); d.setHours(Math.floor(m / 60), m % 60, 0, 0); return tf.format(d); };
+  nn.textContent = !S.night ? "Off." : isNight() ? `Night mode is on now, until ${hm(S.nightTo)}.` : `Starts at ${hm(S.nightFrom)}. Changes fade in over about a minute.`;
+  lastOpacity = -1; noteTilt();
+  syncPainters(); tickClock(); noteWake();
+}
+
+/* ---------- start ---------- */
+resize(); nightTarget = isNight() ? 1 : 0; nightF = nightTarget; renderUI(); applyWake(); enableTilt(false);
+requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
+
+// offline support when installed on the home screen (skipped inside previews)
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost") && window.self === window.top && document.querySelector('link[rel="manifest"]')) {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+})();
+</script>
+
+</body>
+</html>
