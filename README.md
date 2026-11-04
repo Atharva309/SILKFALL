@@ -1,6 +1,12 @@
 # Silkfall
 
-Generative silk for an iPad desk display. It weaves glowing, symmetric patterns on its own, with palettes, a vortex, breathing, tilt parallax and a night mode.
+Generative art for an iPad desk display. Three scenes that run on their own:
+
+- **Silk**: glowing, symmetric threads.
+- **Ink**: colour dropped into water, blooming and swirling.
+- **Board**: a split-flap board with the time, date and your messages.
+
+Pick one, or let them take turns with **Rotate**. Palettes, a customizable clock, breathing, tilt parallax and a night mode work across all of them.
 
 This repository holds two versions of the same app:
 

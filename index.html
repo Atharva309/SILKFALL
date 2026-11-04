@@ -13,238 +13,331 @@
 <link rel="icon" href="icon-512.png">
 <title>Silkfall</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Manrope:wght@200;400;600&display=swap" media="print" onload="this.media='all'">
 <style>
-/* Layout: full-bleed canvas; a glass control sheet slides in from the right (bottom on phones). Single dark look by design. */
+/* Layout: full-bleed art; an iPadOS-style inset-grouped settings sheet slides in from the right (bottom on phones). Single dark look by design. */
 :root{
-  --ink:#050507;
-  --glass:rgba(16,14,22,.74);
-  --line:rgba(236,226,206,.13);
-  --pearl:#ece2ce;
-  --pearl-dim:rgba(236,226,206,.58);
-  --accent:#f1d9a6;
-  --accent-ink:#1b1408;
-  --display:"Cormorant Garamond","Iowan Old Style","Palatino",Georgia,serif;
-  --ui:"Manrope",-apple-system,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;
+  /* iPadOS dark system colours */
+  --bg:#000;
+  --sheet:rgba(22,22,24,.80);
+  --group:rgba(44,44,46,.72);
+  --group-solid:#1c1c1e;
+  --fill:rgba(118,118,128,.24);
+  --fill-strong:#636366;
+  --sep:rgba(84,84,88,.6);
+  --label:#fff;
+  --label2:rgba(235,235,245,.6);
+  --label3:rgba(235,235,245,.3);
+  --blue:#0a84ff;
+  --green:#30d158;
+  --red:#ff453a;
+  --ui:-apple-system,"SF Pro Text",system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
+  --display:-apple-system,"SF Pro Display",system-ui,"Helvetica Neue",Helvetica,Arial,sans-serif;
   color-scheme:dark;
 }
-html,body{height:100%;margin:0;background:var(--ink);color:var(--pearl);overflow:hidden;
+html,body{height:100%;margin:0;background:var(--bg);color:var(--label);overflow:hidden;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
-  font-family:var(--ui);overscroll-behavior:none}
+  font-family:var(--ui);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 #silk{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;transition:opacity .6s ease}
+#mech{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none;opacity:0}
+.cell textarea{width:100%;box-sizing:border-box;min-height:92px;border:0;border-radius:8px;padding:8px 10px;background:var(--fill);color:var(--label);font:400 17px/1.35 var(--ui);resize:none;-webkit-user-select:text;user-select:text;text-transform:uppercase}
 
-/* clock */
-#clock{position:fixed;pointer-events:none;color:var(--pearl);text-align:center;transition:opacity .8s ease;
-  font-variant-numeric:tabular-nums;mix-blend-mode:screen}
-#clock .t{font-weight:200;letter-spacing:.02em;line-height:1}
-#clock .d{font-size:.95rem;letter-spacing:.22em;text-transform:uppercase;opacity:.6;margin-top:.6em}
-#clock.center{left:0;right:0;top:50%;transform:translateY(-50%)}
-#clock.center .t{font-size:clamp(5rem,16vw,13rem);opacity:.78}
-#clock.corner{left:calc(28px + env(safe-area-inset-left,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));text-align:left}
-#clock.corner .t{font-size:3.4rem;opacity:.7}
-#clock.corner .d{font-size:.72rem}
+/* ---------- clock ---------- */
+#clock{position:fixed;inset:0;pointer-events:none;display:grid;transition:opacity .8s ease;
+  padding-block:calc(36px + env(safe-area-inset-top,0px)) calc(32px + env(safe-area-inset-bottom,0px));
+  padding-left:max(40px, calc(28px + env(safe-area-inset-left,0px)));padding-right:max(40px, calc(28px + env(safe-area-inset-right,0px)))}
+#clock .box{display:flex;flex-direction:column;font-variant-numeric:tabular-nums;color:var(--clock-color,#fff);opacity:var(--clock-opacity,.85)}
+#clock .t{font-family:var(--clock-font);font-weight:var(--clock-weight,200);font-size:min(calc(var(--clock-size,1) * min(10vw, 17vh)), var(--clock-max,22vw));line-height:.95;letter-spacing:-.01em;white-space:nowrap}
+#clock .t small{font-size:.42em;font-weight:inherit;opacity:.65;margin-left:.08em}
+#clock .d{font-family:var(--ui);font-weight:600;font-size:max(13px, calc(var(--clock-size,1) * min(1.5vw, 2.6vh)));letter-spacing:.02em;opacity:.7;margin-top:.55em}
+#clock.glow .box{text-shadow:0 0 .35em var(--clock-glow,rgba(255,255,255,.55)),0 0 1.4em var(--clock-glow,rgba(255,255,255,.35))}
+#clock[data-pos^="t"]{align-items:start}#clock[data-pos^="m"]{align-items:center}#clock[data-pos^="b"]{align-items:end}
+#clock[data-pos$="l"]{justify-items:start}#clock[data-pos$="c"]{justify-items:center}#clock[data-pos$="r"]{justify-items:end}
+#clock[data-pos$="l"] .box{align-items:flex-start;text-align:left}
+#clock[data-pos$="c"] .box{align-items:center;text-align:center}
+#clock[data-pos$="r"] .box{align-items:flex-end;text-align:right}
 
-/* floating button */
+/* ---------- floating button ---------- */
 #fab{position:fixed;top:calc(18px + env(safe-area-inset-top,0px));right:calc(18px + env(safe-area-inset-right,0px));
-  width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--glass);
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);color:var(--pearl);display:grid;place-items:center;
-  opacity:0;pointer-events:none;transition:opacity .4s ease;cursor:pointer}
+  width:48px;height:48px;border-radius:50%;border:0;background:rgba(58,58,60,.62);
+  -webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);color:#fff;display:grid;place-items:center;
+  box-shadow:0 4px 18px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .35s ease,transform .2s ease;cursor:pointer}
 #fab.show{opacity:1;pointer-events:auto}
+#fab:active{transform:scale(.92)}
 #fab svg{width:22px;height:22px}
 
-/* panel */
-#panel{position:fixed;top:0;right:0;bottom:0;width:min(360px,100%);box-sizing:border-box;
-  background:var(--glass);-webkit-backdrop-filter:blur(28px) saturate(1.3);backdrop-filter:blur(28px) saturate(1.3);
-  border-left:1px solid var(--line);transform:translateX(105%);transition:transform .45s cubic-bezier(.2,.8,.2,1);
+/* ---------- settings sheet ---------- */
+#panel{position:fixed;top:0;right:0;bottom:0;width:min(390px,100%);box-sizing:border-box;
+  background:var(--sheet);-webkit-backdrop-filter:blur(40px) saturate(1.8);backdrop-filter:blur(40px) saturate(1.8);
+  border-left:.5px solid var(--sep);transform:translateX(105%);transition:transform .42s cubic-bezier(.32,.72,0,1);
   overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding-block:calc(22px + env(safe-area-inset-top,0px)) calc(28px + env(safe-area-inset-bottom,0px));
-  padding-left:22px;padding-right:max(22px, env(safe-area-inset-right,0px));
-  display:flex;flex-direction:column;gap:22px}
+  padding-block:0 calc(34px + env(safe-area-inset-bottom,0px));
+  padding-left:20px;padding-right:max(20px, env(safe-area-inset-right,0px))}
 #panel.open{transform:none}
 @media (max-width:560px){
-  #panel{top:auto;width:100%;max-height:78%;border-left:0;border-top:1px solid var(--line);border-radius:22px 22px 0 0;
-    transform:translateY(105%);padding-left:max(18px, env(safe-area-inset-left,0px));padding-right:max(18px, env(safe-area-inset-right,0px));
-    padding-block:20px calc(24px + env(safe-area-inset-bottom,0px))}
+  #panel{top:auto;width:100%;max-height:82%;border-left:0;border-radius:14px 14px 0 0;transform:translateY(105%);
+    padding-left:max(16px, env(safe-area-inset-left,0px));padding-right:max(16px, env(safe-area-inset-right,0px));
+    padding-block:0 calc(28px + env(safe-area-inset-bottom,0px))}
 }
-.head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.mark{font-family:var(--display);font-style:italic;font-weight:500;font-size:2.1rem;letter-spacing:.01em;line-height:1;margin:0}
-.mark small{display:block;font-family:var(--ui);font-style:normal;font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--pearl-dim);margin-top:6px}
-.icon-btn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--pearl);display:grid;place-items:center;cursor:pointer}
-.icon-btn svg{width:18px;height:18px}
+.nav{position:sticky;top:0;z-index:2;display:flex;justify-content:flex-end;
+  margin:0 -20px;padding:calc(8px + env(safe-area-inset-top,0px)) 20px 6px;
+  background:rgba(28,28,30,.92);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-bottom:.5px solid var(--sep)}
+@media (max-width:560px){.nav{margin:0 -16px;padding-inline:16px}}
+.done{border:0;background:transparent;color:var(--blue);font:600 17px var(--ui);padding:8px 2px;cursor:pointer}
+.large-title{margin:14px 0 6px;font:700 34px/1.1 var(--display);letter-spacing:.01em}
+.subtitle{margin:0 0 4px;color:var(--label2);font-size:15px}
 
-.auto{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 16px;border-radius:16px;
-  background:linear-gradient(120deg,rgba(241,217,166,.16),rgba(170,140,230,.10));border:1px solid var(--line)}
-.auto b{display:block;font-weight:600;font-size:1rem}
-.auto span{font-size:.78rem;color:var(--pearl-dim)}
+.ghead{margin:26px 16px 7px;font:400 13px var(--ui);color:var(--label2);text-transform:uppercase;letter-spacing:.02em}
+.gfoot{margin:7px 16px 0;font:400 13px/1.38 var(--ui);color:var(--label2)}
+.group{background:var(--group);border-radius:10px;overflow:hidden}
+.cell{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;box-sizing:border-box;
+  padding:6px 16px;font:400 17px var(--ui);letter-spacing:-.01em}
+.cell + .cell::before{content:"";position:absolute;top:0;left:16px;right:0;border-top:.5px solid var(--sep)}
+.cell > span,.cell > label{min-width:0}
+.cell output{color:var(--label2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cell.stack{flex-direction:column;align-items:stretch;gap:8px;padding-block:11px 12px}
+.cell.stack .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.cell.btn{justify-content:flex-start;border:0;background:transparent;width:100%;text-align:left;color:var(--blue);cursor:pointer}
+.cell.btn.red{color:var(--red)}
+.cell.btn:active{background:rgba(255,255,255,.08)}
 
-section{display:flex;flex-direction:column;gap:14px}
-section h2{margin:0;font-size:.66rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--pearl-dim)}
-.row{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:.9rem}
-.row label{flex:0 0 auto}
-.row output{font-variant-numeric:tabular-nums;color:var(--pearl-dim);font-size:.82rem;min-width:3ch;text-align:right}
-.ctl{display:flex;flex-direction:column;gap:8px}
-.ctl .top{display:flex;justify-content:space-between;font-size:.9rem}
-.ctl .top output{color:var(--pearl-dim);font-size:.82rem;font-variant-numeric:tabular-nums}
+/* iOS switch */
+.switch{position:relative;flex:0 0 auto;width:51px;height:31px;border-radius:31px;border:0;padding:0;background:rgba(120,120,128,.32);cursor:pointer;transition:background .25s ease}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,.15),0 3px 1px rgba(0,0,0,.06);transition:transform .28s cubic-bezier(.3,.7,.3,1.15)}
+.switch[aria-checked=true]{background:var(--green)}
+.switch[aria-checked=true]::after{transform:translateX(20px)}
 
-input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;margin:0}
-input[type=range]::-webkit-slider-runnable-track{height:3px;border-radius:3px;background:linear-gradient(90deg,var(--accent) var(--p,50%),rgba(236,226,206,.16) var(--p,50%))}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--pearl);margin-top:-9.5px;box-shadow:0 2px 10px rgba(0,0,0,.5)}
-input[type=range]::-moz-range-track{height:3px;border-radius:3px;background:rgba(236,226,206,.16)}
-input[type=range]::-moz-range-progress{height:3px;background:var(--accent)}
-input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:var(--pearl)}
-
-.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;border:1px solid var(--line);border-radius:12px;padding:3px;gap:3px}
+/* iOS segmented control */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);background:var(--fill);border-radius:9px;padding:2px;gap:2px}
 .seg.grid3{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr))}
-.seg button{border:0;background:transparent;color:var(--pearl-dim);font:600 .8rem var(--ui);padding:9px 4px;border-radius:9px;cursor:pointer}
-.seg button[aria-pressed=true]{background:var(--pearl);color:var(--accent-ink)}
+.seg button{border:0;background:transparent;color:var(--label);font:500 13px var(--ui);padding:6px 4px;border-radius:7px;cursor:pointer;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .2s ease}
+.seg button[aria-pressed=true]{background:var(--fill-strong);font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.04)}
 
-.switch{position:relative;width:52px;height:30px;border-radius:30px;border:0;background:rgba(236,226,206,.18);cursor:pointer;flex:0 0 auto;transition:background .25s}
-.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:var(--pearl);transition:transform .25s cubic-bezier(.3,.7,.3,1)}
-.switch[aria-checked=true]{background:var(--accent)}
-.switch[aria-checked=true]::after{transform:translateX(22px);background:var(--accent-ink)}
+/* clock position picker: a 3x3 grid that mirrors the screen */
+.seg.posgrid{display:grid;grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;aspect-ratio:4/3;max-width:100%;padding:8px;border-radius:10px;background:rgba(0,0,0,.35)}
+.seg.posgrid button{padding:0;border:0;border-radius:7px;background:var(--fill);cursor:pointer;display:grid;place-items:center;color:var(--label3);font:600 11px var(--ui)}
+.seg.posgrid button::after{content:"";width:28%;height:12%;min-height:4px;border-radius:3px;background:currentColor}
+.seg.posgrid button[aria-pressed=true]{box-shadow:none;background:var(--blue);color:#fff}
 
-.stepper{display:flex;align-items:center;gap:6px}
-.stepper button{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:transparent;color:var(--pearl);font:400 1.2rem var(--ui);cursor:pointer}
-.stepper output{min-width:2.2ch;text-align:center;font-size:1.05rem;color:var(--pearl)}
+/* iOS slider */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;margin:0}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(90deg,var(--blue) var(--p,50%),rgba(120,120,128,.36) var(--p,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:28px;height:28px;border-radius:50%;background:#fff;margin-top:-12px;
+  box-shadow:0 3px 8px rgba(0,0,0,.15),0 1px 1px rgba(0,0,0,.16),0 3px 1px rgba(0,0,0,.1)}
+input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:rgba(120,120,128,.36)}
+input[type=range]::-moz-range-progress{height:4px;border-radius:4px;background:var(--blue)}
+input[type=range]::-moz-range-thumb{width:28px;height:28px;border:0;border-radius:50%;background:#fff}
 
-.palettes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.pal{display:flex;flex-direction:column;gap:7px;padding:8px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--pearl);text-align:left;cursor:pointer;font:400 .78rem var(--ui)}
-.pal i{display:block;height:16px;border-radius:6px}
-.pal[aria-pressed=true]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+/* iOS stepper */
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper output{color:var(--label2);min-width:2ch;text-align:right}
+.stepper .pill{display:flex;background:var(--fill);border-radius:8px;overflow:hidden}
+.stepper button{width:47px;height:32px;border:0;background:transparent;color:#fff;font:400 22px/1 var(--ui);cursor:pointer;position:relative}
+.stepper button + button::before{content:"";position:absolute;left:0;top:7px;bottom:7px;border-left:.5px solid var(--label3)}
+.stepper button:active{background:rgba(255,255,255,.1)}
 
-.times{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.times label{display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--pearl-dim)}
-.times input{font:600 1rem var(--ui);color:var(--pearl);background:rgba(236,226,206,.06);border:1px solid var(--line);border-radius:10px;padding:9px 10px;min-width:0;-webkit-appearance:none;appearance:none}
-.actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.actions button{border:1px solid var(--line);background:rgba(236,226,206,.05);color:var(--pearl);border-radius:12px;padding:12px 6px;font:600 .8rem var(--ui);cursor:pointer}
-.actions button:active,.seg button:active,.pal:active{transform:scale(.97)}
-.note{font-size:.76rem;line-height:1.5;color:var(--pearl-dim);margin:0}
-.note b{color:var(--pearl);font-weight:600}
+/* palettes */
+.palettes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px;padding:14px 16px}
+.pal{display:flex;flex-direction:column;align-items:center;gap:7px;padding:0;border:0;background:transparent;color:var(--label);font:400 12px var(--ui);cursor:pointer}
+.pal i{display:block;width:100%;aspect-ratio:1.7/1;border-radius:9px;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.12);position:relative}
+.pal[aria-pressed=true] i{box-shadow:0 0 0 2.5px var(--bg),0 0 0 4.5px var(--blue)}
+.pal[aria-pressed=true]{color:var(--blue);font-weight:600}
+
+/* time inputs */
+.cell input[type=time]{font:400 17px var(--ui);color:var(--label);background:var(--fill);border:0;border-radius:8px;padding:6px 10px;min-width:0;-webkit-appearance:none;appearance:none}
+
+/* hint toast */
 #hint{position:fixed;left:50%;bottom:calc(36px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);
-  padding:12px 20px;border-radius:30px;background:var(--glass);border:1px solid var(--line);
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);color:var(--pearl);font-size:.88rem;white-space:nowrap;
+  padding:12px 20px;border-radius:30px;background:rgba(58,58,60,.7);
+  -webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);color:#fff;font:500 15px var(--ui);white-space:nowrap;
   pointer-events:none;opacity:0;transition:opacity 1s ease}
 #hint.show{opacity:1}
-.foot{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:.72rem;color:var(--pearl-dim);letter-spacing:.04em}
-.foot button{border:0;background:transparent;color:var(--pearl-dim);font:600 .76rem var(--ui);text-decoration:underline;text-underline-offset:3px;padding:6px 0;cursor:pointer}
-.foot button.armed{color:var(--accent)}
-button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-@media (prefers-reduced-motion:reduce){#panel,#fab,#clock{transition:none}}
+.ver{margin:26px 16px 0;text-align:center;color:var(--label3);font-size:13px}
+[hidden]{display:none!important}
+#clock .box{transition:color 4s ease}
+button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){#panel,#fab,#clock,.switch::after{transition:none}}
 </style>
 
 </head>
 <body>
-<canvas id="silk" aria-label="Generative silk animation"></canvas>
+<canvas id="silk" aria-label="Generative silk and ink animation"></canvas>
+<canvas id="mech" aria-label="Split-flap board"></canvas>
 <div id="hint">Tap anywhere for settings</div>
-<div id="clock" hidden><div class="t" id="clockT"></div><div class="d" id="clockD"></div></div>
+<div id="clock" hidden data-pos="mc"><div class="box"><div class="t" id="clockT"></div><div class="d" id="clockD"></div></div></div>
 
 <button id="fab" aria-label="Open settings">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></svg>
 </button>
 
 <aside id="panel" aria-label="Silkfall settings">
-  <div class="head">
-    <h1 class="mark">Silkfall<small>Generative silk</small></h1>
-    <button class="icon-btn" id="closePanel" aria-label="Close settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  </div>
+  <div class="nav"><button class="done" id="closePanel">Done</button></div>
+  <h1 class="large-title">Silkfall</h1>
 
-  <div class="auto">
-    <div><b>Automatic mode</b><span>Keeps weaving new designs on its own</span></div>
-    <button class="switch" role="switch" id="sw-auto" data-key="auto" aria-label="Automatic mode"></button>
+  <div class="group" style="margin-top:14px">
+    <div class="cell"><label for="sw-auto">Automatic Mode</label><button class="switch" role="switch" id="sw-auto" data-key="auto" aria-label="Automatic mode"></button></div>
+    <div class="cell stack" id="sceneCtl"><div class="row"><span>Scene</span></div>
+      <div class="seg" data-key="scene"><button data-v="silk">Silk</button><button data-v="ink" id="sceneInkBtn">Ink</button><button data-v="board">Board</button><button data-v="rotate">Rotate</button></div></div>
   </div>
+  <p class="gfoot" id="sceneNote">Automatic mode keeps creating new designs on its own.</p>
 
-  <section>
-    <h2>Pattern</h2>
-    <div class="row"><label>Symmetry</label>
-      <div class="stepper"><button id="symMinus" aria-label="Fewer mirrors">−</button><output id="symOut">6</output><button id="symPlus" aria-label="More mirrors">+</button></div></div>
-    <div class="row"><label for="sw-mirror">Mirror</label><button class="switch" role="switch" id="sw-mirror" data-key="mirror"></button></div>
-    <div class="ctl"><div class="top"><label for="r-spin">Spin</label><output data-for="spin"></output></div>
+  <h2 class="ghead" data-when-rotate>Scenes in Rotation</h2>
+  <div class="group" data-when-rotate>
+    <div class="cell"><label for="sw-rotSilk">Silk</label><button class="switch" role="switch" id="sw-rotSilk" data-key="rotSilk"></button></div>
+    <div class="cell" id="rotInkRow"><label for="sw-rotInk">Ink</label><button class="switch" role="switch" id="sw-rotInk" data-key="rotInk"></button></div>
+    <div class="cell"><label for="sw-rotBoard">Board</label><button class="switch" role="switch" id="sw-rotBoard" data-key="rotBoard"></button></div>
+  </div>
+  <p class="gfoot" data-when-rotate id="rotNote"></p>
+
+  <!-- SILK -->
+  <h2 class="ghead" data-scene="silk">Pattern</h2>
+  <div class="group" data-scene="silk">
+    <div class="cell"><span>Symmetry</span>
+      <div class="stepper"><output id="symOut">6</output><div class="pill"><button id="symMinus" aria-label="Fewer mirrors">−</button><button id="symPlus" aria-label="More mirrors">+</button></div></div></div>
+    <div class="cell"><label for="sw-mirror">Mirror</label><button class="switch" role="switch" id="sw-mirror" data-key="mirror"></button></div>
+    <div class="cell stack"><div class="row"><label for="r-spin">Spin</label><output data-for="spin"></output></div>
       <input type="range" id="r-spin" data-key="spin" min="0" max="1" step="0.01"></div>
-    <div class="ctl" id="vortexCtl"><div class="top"><label for="r-vortex">Vortex</label><output data-for="vortex"></output></div>
+    <div class="cell stack" id="vortexCtl"><div class="row"><label for="r-vortex">Vortex</label><output data-for="vortex"></output></div>
       <input type="range" id="r-vortex" data-key="vortex" min="0" max="1" step="0.01"></div>
-    <div class="row" id="vortexRevCtl"><label for="sw-vortexRev">Reverse vortex</label><button class="switch" role="switch" id="sw-vortexRev" data-key="vortexRev"></button></div>
-    <p class="note" id="vortexNote">Spin turns where new silk lands. Vortex turns the whole picture, faster toward the centre.</p>
-    <div class="ctl" id="finishCtl"><div class="top"><span>Silk finish</span></div>
+    <div class="cell" id="vortexRevCtl"><label for="sw-vortexRev">Reverse Vortex</label><button class="switch" role="switch" id="sw-vortexRev" data-key="vortexRev"></button></div>
+    <div class="cell stack" id="finishCtl"><div class="row"><span>Silk Finish</span></div>
       <div class="seg" data-key="finish"><button data-v="crisp">Crisp</button><button data-v="soft">Soft</button></div></div>
-  </section>
-
-  <section>
-    <h2>Colour</h2>
-    <div class="palettes" id="palettes"></div>
-    <p class="note" id="todNote" hidden></p>
-    <div class="row"><label for="sw-palLock">Keep this colour when shuffling</label><button class="switch" role="switch" id="sw-palLock" data-key="palLock"></button></div>
-  </section>
-
-  <section>
-    <h2>Brush stroke</h2>
-    <div class="seg grid3" data-key="stroke"><button data-v="mix">Mix</button><button data-v="curvy">Curvy</button><button data-v="straight">Straight</button><button data-v="wavy">Wavy</button><button data-v="fan">Fan</button><button data-v="dust">Dust</button></div>
-    <p class="note">Mix picks a different stroke for every new line.</p>
-  </section>
-
-  <section>
-    <h2>Motion</h2>
-    <div class="ctl"><div class="top"><span>Brushes</span></div>
-      <div class="seg" data-key="brushes"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button></div></div>
-    <div class="ctl"><div class="top"><label for="r-speed">Speed</label><output data-for="speed"></output></div>
-      <input type="range" id="r-speed" data-key="speed" min="0.2" max="2.5" step="0.05"></div>
-    <div class="ctl"><div class="top"><label for="r-threads">Silk density</label><output data-for="threads"></output></div>
-      <input type="range" id="r-threads" data-key="threads" min="10" max="60" step="1"></div>
-    <div class="ctl"><div class="top"><label for="r-glow">Glow</label><output data-for="glow"></output></div>
-      <input type="range" id="r-glow" data-key="glow" min="0.15" max="1.5" step="0.05"></div>
-    <div class="ctl" id="bloomCtl"><div class="top"><label for="r-bloom">Bloom</label><output data-for="bloom"></output></div>
-      <input type="range" id="r-bloom" data-key="bloom" min="0" max="1" step="0.01"></div>
-    <div class="ctl"><div class="top"><label for="r-trail">Trail length</label><output data-for="trail"></output></div>
-      <input type="range" id="r-trail" data-key="trail" min="0" max="1" step="0.01"></div>
-  </section>
-
-  <section>
-    <h2>Evolve</h2>
-    <div class="ctl"><div class="top"><span>Shuffle the style every</span></div>
-      <div class="seg" data-key="shuffle"><button data-v="0">Off</button><button data-v="1">1 min</button><button data-v="3">3 min</button><button data-v="10">10 min</button></div></div>
-  </section>
-
-  <section>
-    <h2>Atmosphere</h2>
-    <div class="row"><label for="sw-breathe">Breathing</label><button class="switch" role="switch" id="sw-breathe" data-key="breathe"></button></div>
-    <p class="note">The picture slowly swells and softens, about once every nine seconds.</p>
-    <div class="row"><label for="sw-tilt">Tilt parallax</label><button class="switch" role="switch" id="sw-tilt" data-key="tilt"></button></div>
-    <p class="note" id="tiltNote">Tilt the iPad and the silk shifts in layers. The centre moves most, the glow behind it least.</p>
-  </section>
-
-  <section>
-    <h2>Night mode</h2>
-    <div class="row"><label for="sw-night">Dim and slow down at night</label><button class="switch" role="switch" id="sw-night" data-key="night"></button></div>
-    <div class="times">
-      <label for="t-from">From<input type="time" id="t-from" data-key="nightFrom"></label>
-      <label for="t-to">Until<input type="time" id="t-to" data-key="nightTo"></label>
-    </div>
-    <div class="ctl"><div class="top"><label for="r-nightDim">Night brightness</label><output data-for="nightDim"></output></div>
-      <input type="range" id="r-nightDim" data-key="nightDim" min="0.08" max="1" step="0.01"></div>
-    <div class="ctl"><div class="top"><label for="r-nightSpeed">Night speed</label><output data-for="nightSpeed"></output></div>
-      <input type="range" id="r-nightSpeed" data-key="nightSpeed" min="0.15" max="1" step="0.05"></div>
-    <p class="note" id="nightNote"></p>
-  </section>
-
-  <section>
-    <h2>Display</h2>
-    <div class="ctl"><div class="top"><span>Clock</span></div>
-      <div class="seg" data-key="clock"><button data-v="off">Off</button><button data-v="corner">Corner</button><button data-v="center">Centre</button></div></div>
-    <div class="ctl"><div class="top"><label for="r-dim">Brightness</label><output data-for="dim"></output></div>
-      <input type="range" id="r-dim" data-key="dim" min="0.15" max="1" step="0.01"></div>
-    <div class="ctl"><div class="top"><span>Quality</span></div>
-      <div class="seg" data-key="quality"><button data-v="battery">Battery</button><button data-v="balanced">Balanced</button><button data-v="sharp">Sharp</button></div></div>
-    <div class="row"><label for="sw-awake">Keep screen awake</label><button class="switch" role="switch" id="sw-awake" data-key="awake"></button></div>
-    <p class="note" id="awakeNote"></p>
-  </section>
-
-  <div class="actions">
-    <button id="btnShuffle">Shuffle now</button>
-    <button id="btnClear">Clear</button>
-    <button id="btnFull">Fullscreen</button>
   </div>
-  <p class="note"><b>Tap</b> the screen to show or hide controls. <b>Drag</b> to weave your own silk, even while automatic mode runs. Settings save automatically.</p>
-  <div class="foot"><span id="ver">Silkfall 1.0</span><button id="btnReset">Reset all settings</button></div>
+  <p class="gfoot" id="vortexNote" data-scene="silk">Spin turns where new silk lands. Vortex turns the whole picture, faster toward the centre.</p>
+
+  <h2 class="ghead" data-scene="silk">Brush Stroke</h2>
+  <div class="group" data-scene="silk">
+    <div class="cell stack"><div class="seg grid3" data-key="stroke"><button data-v="mix">Mix</button><button data-v="curvy">Curvy</button><button data-v="straight">Straight</button><button data-v="wavy">Wavy</button><button data-v="fan">Fan</button><button data-v="dust">Dust</button></div></div>
+  </div>
+  <p class="gfoot" data-scene="silk">Mix picks a different stroke for every new line.</p>
+
+  <h2 class="ghead" data-scene="silk">Silk Motion</h2>
+  <div class="group" data-scene="silk">
+    <div class="cell stack"><div class="row"><span>Brushes</span></div>
+      <div class="seg" data-key="brushes"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button></div></div>
+    <div class="cell stack"><div class="row"><label for="r-speed">Speed</label><output data-for="speed"></output></div>
+      <input type="range" id="r-speed" data-key="speed" min="0.2" max="2.5" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-threads">Silk Density</label><output data-for="threads"></output></div>
+      <input type="range" id="r-threads" data-key="threads" min="10" max="60" step="1"></div>
+    <div class="cell stack"><div class="row"><label for="r-glow">Glow</label><output data-for="glow"></output></div>
+      <input type="range" id="r-glow" data-key="glow" min="0.15" max="1.5" step="0.05"></div>
+    <div class="cell stack" id="bloomCtl"><div class="row"><label for="r-bloom">Bloom</label><output data-for="bloom"></output></div>
+      <input type="range" id="r-bloom" data-key="bloom" min="0" max="1" step="0.01"></div>
+    <div class="cell stack"><div class="row"><label for="r-trail">Trail Length</label><output data-for="trail"></output></div>
+      <input type="range" id="r-trail" data-key="trail" min="0" max="1" step="0.01"></div>
+  </div>
+
+  <!-- INK -->
+  <h2 class="ghead" data-scene="ink">Ink</h2>
+  <div class="group" data-scene="ink">
+    <div class="cell stack"><div class="row"><span>Kaleidoscope</span></div>
+      <div class="seg" data-key="inkKaleido"><button data-v="1">Off</button><button data-v="2">2</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="6">6</button></div></div>
+    <div class="cell stack"><div class="row"><label for="r-inkDrops">Drops</label><output data-for="inkDrops"></output></div>
+      <input type="range" id="r-inkDrops" data-key="inkDrops" min="0.2" max="3" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-inkSize">Drop Size</label><output data-for="inkSize"></output></div>
+      <input type="range" id="r-inkSize" data-key="inkSize" min="0.3" max="2.5" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-inkSwirl">Swirl</label><output data-for="inkSwirl"></output></div>
+      <input type="range" id="r-inkSwirl" data-key="inkSwirl" min="0" max="1" step="0.01"></div>
+    <div class="cell stack"><div class="row"><label for="r-inkFlow">Flow Speed</label><output data-for="inkFlow"></output></div>
+      <input type="range" id="r-inkFlow" data-key="inkFlow" min="0.2" max="2" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-inkFade">Linger</label><output data-for="inkFade"></output></div>
+      <input type="range" id="r-inkFade" data-key="inkFade" min="0" max="1" step="0.01"></div>
+    <div class="cell"><label for="sw-inkShade">Depth Shading</label><button class="switch" role="switch" id="sw-inkShade" data-key="inkShade"></button></div>
+  </div>
+  <p class="gfoot" data-scene="ink">Drops of colour bloom and swirl like dye in water. Drag across the screen to stir it.</p>
+
+  <!-- BOARD -->
+  <h2 class="ghead" data-scene="board">Board</h2>
+  <div class="group" data-scene="board">
+    <div class="cell stack"><div class="row"><span>Flaps</span></div>
+      <div class="seg" data-key="boardColor"><button data-v="classic">Classic</button><button data-v="amber">Amber</button><button data-v="graphite">Graphite</button><button data-v="palette">Palette</button></div></div>
+    <div class="cell stack"><div class="row"><label for="r-boardSpeed">Flip Speed</label><output data-for="boardSpeed"></output></div>
+      <input type="range" id="r-boardSpeed" data-key="boardSpeed" min="0.4" max="2" step="0.05"></div>
+    <div class="cell"><label for="sw-boardSeconds">Show Seconds</label><button class="switch" role="switch" id="sw-boardSeconds" data-key="boardSeconds"></button></div>
+    <div class="cell stack"><div class="row"><label for="boardMsgs">Messages</label></div>
+      <textarea id="boardMsgs" rows="4" placeholder="One message per line" spellcheck="false" autocapitalize="characters"></textarea></div>
+  </div>
+  <p class="gfoot" data-scene="board">Shows the time, the date and a greeting, then your messages one by one, every 12 seconds. Up to 36 letters each. Uses 24-Hour Time from the Clock settings.</p>
+
+  <h2 class="ghead">Colour</h2>
+  <div class="group">
+    <div class="palettes" id="palettes"></div>
+    <div class="cell"><label for="sw-palLock">Keep When Shuffling</label><button class="switch" role="switch" id="sw-palLock" data-key="palLock"></button></div>
+  </div>
+  <p class="gfoot" id="todNote" hidden></p>
+
+  <h2 class="ghead">Evolve</h2>
+  <div class="group">
+    <div class="cell stack"><div class="row"><span>Shuffle Style Every</span></div>
+      <div class="seg" data-key="shuffle"><button data-v="0">Off</button><button data-v="1">1 min</button><button data-v="3">3 min</button><button data-v="10">10 min</button></div></div>
+  </div>
+
+  <h2 class="ghead">Clock</h2>
+  <div class="group">
+    <div class="cell"><label for="sw-clockOn">Show Clock</label><button class="switch" role="switch" id="sw-clockOn" data-key="clockOn"></button></div>
+    <div class="cell stack" data-show="clockOn"><div class="row"><span>Position</span></div>
+      <div class="seg posgrid" data-key="clockPos">
+        <button data-v="tl" aria-label="Top left"></button><button data-v="tc" aria-label="Top centre"></button><button data-v="tr" aria-label="Top right"></button>
+        <button data-v="ml" aria-label="Middle left"></button><button data-v="mc" aria-label="Centre"></button><button data-v="mr" aria-label="Middle right"></button>
+        <button data-v="bl" aria-label="Bottom left"></button><button data-v="bc" aria-label="Bottom centre"></button><button data-v="br" aria-label="Bottom right"></button>
+      </div></div>
+    <div class="cell stack" data-show="clockOn"><div class="row"><span>Font</span></div>
+      <div class="seg" data-key="clockFont"><button data-v="system">Default</button><button data-v="rounded">Rounded</button><button data-v="serif">Serif</button><button data-v="mono">Mono</button></div></div>
+    <div class="cell stack" data-show="clockOn"><div class="row"><label for="r-clockWeight">Weight</label><output data-for="clockWeight"></output></div>
+      <input type="range" id="r-clockWeight" data-key="clockWeight" min="100" max="800" step="100"></div>
+    <div class="cell stack" data-show="clockOn"><div class="row"><label for="r-clockSize">Size</label><output data-for="clockSize"></output></div>
+      <input type="range" id="r-clockSize" data-key="clockSize" min="0.35" max="2.2" step="0.05"></div>
+    <div class="cell stack" data-show="clockOn"><div class="row"><span>Colour</span></div>
+      <div class="seg" data-key="clockColor"><button data-v="white">White</button><button data-v="warm">Warm</button><button data-v="tint">Match Art</button></div></div>
+    <div class="cell stack" data-show="clockOn"><div class="row"><label for="r-clockOpacity">Opacity</label><output data-for="clockOpacity"></output></div>
+      <input type="range" id="r-clockOpacity" data-key="clockOpacity" min="0.15" max="1" step="0.01"></div>
+    <div class="cell" data-show="clockOn"><label for="sw-clockGlow">Glow</label><button class="switch" role="switch" id="sw-clockGlow" data-key="clockGlow"></button></div>
+    <div class="cell" data-show="clockOn"><label for="sw-clockDate">Show Date</label><button class="switch" role="switch" id="sw-clockDate" data-key="clockDate"></button></div>
+    <div class="cell" data-show="clockOn"><label for="sw-clockSeconds">Show Seconds</label><button class="switch" role="switch" id="sw-clockSeconds" data-key="clockSeconds"></button></div>
+    <div class="cell" data-show="clockOn"><label for="sw-clock24">24-Hour Time</label><button class="switch" role="switch" id="sw-clock24" data-key="clock24"></button></div>
+  </div>
+
+  <h2 class="ghead">Atmosphere</h2>
+  <div class="group">
+    <div class="cell"><label for="sw-breathe">Breathing</label><button class="switch" role="switch" id="sw-breathe" data-key="breathe"></button></div>
+    <div class="cell"><label for="sw-tilt">Tilt Parallax</label><button class="switch" role="switch" id="sw-tilt" data-key="tilt"></button></div>
+  </div>
+  <p class="gfoot" id="tiltNote">Tilt the iPad and the picture shifts in layers. The centre moves most, the glow behind it least.</p>
+
+  <h2 class="ghead">Night Mode</h2>
+  <div class="group">
+    <div class="cell"><label for="sw-night">Dim and Slow Down</label><button class="switch" role="switch" id="sw-night" data-key="night"></button></div>
+    <div class="cell" data-show="night"><label for="t-from">From</label><input type="time" id="t-from" data-key="nightFrom"></div>
+    <div class="cell" data-show="night"><label for="t-to">Until</label><input type="time" id="t-to" data-key="nightTo"></div>
+    <div class="cell stack" data-show="night"><div class="row"><label for="r-nightDim">Brightness</label><output data-for="nightDim"></output></div>
+      <input type="range" id="r-nightDim" data-key="nightDim" min="0.08" max="1" step="0.01"></div>
+    <div class="cell stack" data-show="night"><div class="row"><label for="r-nightSpeed">Speed</label><output data-for="nightSpeed"></output></div>
+      <input type="range" id="r-nightSpeed" data-key="nightSpeed" min="0.15" max="1" step="0.05"></div>
+  </div>
+  <p class="gfoot" id="nightNote"></p>
+
+  <h2 class="ghead">Display</h2>
+  <div class="group">
+    <div class="cell stack"><div class="row"><label for="r-dim">Brightness</label><output data-for="dim"></output></div>
+      <input type="range" id="r-dim" data-key="dim" min="0.15" max="1" step="0.01"></div>
+    <div class="cell stack"><div class="row"><span>Quality</span></div>
+      <div class="seg" data-key="quality"><button data-v="battery">Battery</button><button data-v="balanced">Balanced</button><button data-v="sharp">Sharp</button></div></div>
+    <div class="cell"><label for="sw-awake">Keep Screen Awake</label><button class="switch" role="switch" id="sw-awake" data-key="awake"></button></div>
+  </div>
+  <p class="gfoot" id="awakeNote"></p>
+
+  <div class="group" style="margin-top:30px">
+    <button class="cell btn" id="btnShuffle">Shuffle Now</button>
+    <button class="cell btn" id="btnClear">Clear Canvas</button>
+    <button class="cell btn" id="btnFull">Enter Full Screen</button>
+  </div>
+  <p class="gfoot">Tap the screen to show or hide settings. Drag to draw your own, even while automatic mode runs. Settings save automatically.</p>
+
+  <div class="group" style="margin-top:30px">
+    <button class="cell btn red" id="btnReset">Reset All Settings</button>
+  </div>
+  <p class="ver" id="ver">Silkfall 1.3</p>
 </aside>
 
 <script>
@@ -253,11 +346,29 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline
 /* ---------- settings ---------- */
 const DEFAULTS = { auto:true, symmetry:6, mirror:true, spin:0.25, palette:"silk", palLock:false, brushes:2, stroke:"mix", vortex:0.35, vortexRev:false, bloom:0.35, finish:"crisp", breathe:true, tilt:false,
   night:false, nightFrom:"22:00", nightTo:"07:00", nightDim:0.35, nightSpeed:0.5,
-  speed:1, threads:30, glow:1, trail:0.4, shuffle:3, clock:"off", dim:1, quality:"balanced", awake:true };
+  speed:1, threads:30, glow:1, trail:0.4, shuffle:3, dim:1, quality:"balanced", awake:true,
+  scene:"silk", rotSilk:true, rotInk:true, rotBoard:true,
+  boardColor:"classic", boardSpeed:1, boardSeconds:false, boardMsgs:"",
+  inkKaleido:1, inkDrops:1, inkSize:1, inkSwirl:0.4, inkFlow:1, inkFade:0.55, inkShade:true,
+  clockOn:false, clockPos:"mc", clockFont:"system", clockWeight:200, clockSize:1, clockColor:"white", clockOpacity:0.85,
+  clockGlow:false, clockDate:true, clockSeconds:false, clock24: (() => { try { return !new Intl.DateTimeFormat(undefined, { hour:"numeric" }).resolvedOptions().hour12; } catch (e) { return false; } })() };
 const KEY = "silkfall.v1";
 const STROKES = ["curvy","curvy","straight","wavy","fan","dust"];
 let S = Object.assign({}, DEFAULTS);
-try { const saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved) Object.assign(S, saved); } catch (e) {}
+try {
+  const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+  if (saved) {
+    Object.assign(S, saved);
+    // settings from version 1.0 had a single clock option
+    if (typeof saved.clock === "string" && saved.clockOn === undefined) { S.clockOn = saved.clock !== "off"; S.clockPos = saved.clock === "corner" ? "bl" : "mc"; }
+    delete S.clock;
+    // "Both" (Silk + Ink) became Rotate, keeping the same two scenes
+    if (saved.scene === "both") { S.scene = "rotate"; S.rotSilk = true; S.rotInk = true; S.rotBoard = false; }
+    // Watch and Marbles were removed in 1.3
+    if (saved.scene === "watch" || saved.scene === "marbles") S.scene = "silk";
+    for (const k of Object.keys(S)) if (/^(watch|marble|rotWatch|rotMarbles)/.test(k)) delete S[k];
+  }
+} catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 
 /* ---------- palettes: lists of [hue, sat, light] ---------- */
@@ -385,7 +496,7 @@ const GLR = (() => {
     return { p, u };
   }
   function init(context) {
-    gl = context; tex = []; fbo = []; cur = 0;   // old objects died with the previous context
+    gl = context; tex = []; fbo = []; cur = 0; emptyVao = null;   // old objects died with the previous context
     try {
       isFloat = !!gl.getExtension("EXT_color_buffer_float");
       pLine = prog(VS_LINE, FS_LINE); pFade = prog(VS_FULL, FS_CONST); pSub = pFade;
@@ -428,7 +539,8 @@ const GLR = (() => {
     if (u.uCrisp) gl.uniform1f(u.uCrisp, view.crisp ? 1 : 0);
     gl.uniform1f(u.uT, T); gl.uniform1f(u.uVortex, vortexNow); gl.uniform1f(u.uR, R); gl.uniform1f(u.uDpr, DPR);
   };
-  function fullTri() { gl.bindVertexArray(vao); gl.drawArrays(gl.TRIANGLES, 0, 3); }
+  let emptyVao = null;
+  function fullTri() { if (!emptyVao) emptyVao = gl.createVertexArray(); gl.bindVertexArray(emptyVao); gl.drawArrays(gl.TRIANGLES, 0, 3); }
   function fade(dt, half) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[cur]); gl.viewport(0, 0, w, h);
     gl.enable(gl.BLEND); gl.useProgram(pFade.p); gl.uniform4f(pFade.u.uC, 0, 0, 0, 0);
@@ -507,6 +619,197 @@ const GLR = (() => {
   return { init, resize, fade, stroke, render, setVortex, clearAll, get isFloat() { return isFloat; } };
 })();
 
+
+/* ---------- Ink in water: GPU fluid simulation (stable fluids, half-float textures) ---------- */
+const InkR = (() => {
+  let gl = null, ok = false, vao = null, P = {}, vel, dye, divg, curlT, pres, made = [];
+  let blendSplats = true, checkedBlend = false;   // fall back to a full copy pass if a GPU can't blend half-floats
+  const VS = `#version 300 es
+    precision highp float;
+    uniform vec2 texelSize;
+    out vec2 vUv, vL, vR, vT, vB;
+    void main(){
+      vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2));
+      vUv = p; vL = vUv - vec2(texelSize.x, 0.0); vR = vUv + vec2(texelSize.x, 0.0);
+      vT = vUv + vec2(0.0, texelSize.y); vB = vUv - vec2(0.0, texelSize.y);
+      gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+    }`;
+  const HEAD = `#version 300 es
+    precision highp float; precision highp sampler2D;
+    in vec2 vUv, vL, vR, vT, vB; out vec4 o;
+    `;
+  const FS = {
+    splat: `uniform float aspectRatio, radius; uniform vec3 color; uniform vec2 point;
+      void main(){ vec2 p = vUv - point; p.x *= aspectRatio; o = vec4(exp(-dot(p, p) / radius) * color, 0.0); }`,
+    splatCopy: `uniform sampler2D uTarget; uniform float aspectRatio, radius; uniform vec3 color; uniform vec2 point;
+      void main(){ vec2 p = vUv - point; p.x *= aspectRatio; o = vec4(texture(uTarget, vUv).xyz + exp(-dot(p, p) / radius) * color, 1.0); }`,
+    advect: `uniform sampler2D uVelocity; uniform sampler2D uSource; uniform vec2 velTexel; uniform float dt, dissipation, floorAmt;
+      void main(){
+        vec2 coord = vUv - dt * texture(uVelocity, vUv).xy * velTexel;
+        vec4 v = texture(uSource, coord) / (1.0 + dissipation * dt);
+        o = floorAmt > 0.0 ? max(v - floorAmt * dt, vec4(0.0)) : v;
+      }`,
+    divergence: `uniform sampler2D uVelocity;
+      void main(){
+        float L = texture(uVelocity, vL).x, R = texture(uVelocity, vR).x, T = texture(uVelocity, vT).y, B = texture(uVelocity, vB).y;
+        vec2 C = texture(uVelocity, vUv).xy;
+        if (vL.x < 0.0) { L = -C.x; } if (vR.x > 1.0) { R = -C.x; } if (vT.y > 1.0) { T = -C.y; } if (vB.y < 0.0) { B = -C.y; }
+        o = vec4(0.5 * (R - L + T - B), 0.0, 0.0, 1.0); }`,
+    curl: `uniform sampler2D uVelocity;
+      void main(){ float L = texture(uVelocity, vL).y, R = texture(uVelocity, vR).y, T = texture(uVelocity, vT).x, B = texture(uVelocity, vB).x;
+        o = vec4(0.5 * (R - L - T + B), 0.0, 0.0, 1.0); }`,
+    vorticity: `uniform sampler2D uVelocity; uniform sampler2D uCurl; uniform float curl, dt;
+      void main(){
+        float L = texture(uCurl, vL).x, R = texture(uCurl, vR).x, T = texture(uCurl, vT).x, B = texture(uCurl, vB).x, C = texture(uCurl, vUv).x;
+        vec2 f = 0.5 * vec2(abs(T) - abs(B), abs(R) - abs(L)); f /= length(f) + 0.0001; f *= curl * C; f.y *= -1.0;
+        vec2 v = texture(uVelocity, vUv).xy + f * dt; o = vec4(clamp(v, vec2(-1000.0), vec2(1000.0)), 0.0, 1.0); }`,
+    pressure: `uniform sampler2D uPressure; uniform sampler2D uDivergence;
+      void main(){ float L = texture(uPressure, vL).x, R = texture(uPressure, vR).x, T = texture(uPressure, vT).x, B = texture(uPressure, vB).x;
+        o = vec4((L + R + B + T - texture(uDivergence, vUv).x) * 0.25, 0.0, 0.0, 1.0); }`,
+    gradient: `uniform sampler2D uPressure; uniform sampler2D uVelocity;
+      void main(){ float L = texture(uPressure, vL).x, R = texture(uPressure, vR).x, T = texture(uPressure, vT).x, B = texture(uPressure, vB).x;
+        o = vec4(texture(uVelocity, vUv).xy - vec2(R - L, T - B), 0.0, 1.0); }`,
+    scale: `uniform sampler2D uTexture; uniform float value; void main(){ o = value * texture(uTexture, vUv); }`,
+    show: `uniform sampler2D uTexture; uniform vec2 dyeTexel, uRes, uCenter, uPar; uniform float uZoom, uDpr, uR, uShade, uExp;
+      void main(){
+        vec2 pc = (vec2(gl_FragCoord.x, uRes.y - gl_FragCoord.y) - uCenter) / uDpr;
+        pc /= uZoom; pc -= uPar * (0.35 + 0.65 * exp(-length(pc) / (0.55 * uR)));
+        vec2 pix = uCenter + pc * uDpr, uv = vec2(pix.x / uRes.x, 1.0 - pix.y / uRes.y);
+        vec3 c = texture(uTexture, uv).rgb;
+        if (uShade > 0.5) {   // light the ink as if it had depth
+          vec3 l = texture(uTexture, uv - vec2(dyeTexel.x, 0.0)).rgb, r = texture(uTexture, uv + vec2(dyeTexel.x, 0.0)).rgb;
+          vec3 t = texture(uTexture, uv + vec2(0.0, dyeTexel.y)).rgb, b = texture(uTexture, uv - vec2(0.0, dyeTexel.y)).rgb;
+          vec3 n = normalize(vec3(length(r) - length(l), length(t) - length(b), length(dyeTexel) * 2.0));
+          c *= clamp(dot(n, vec3(0.0, 0.0, 1.0)) + 0.7, 0.7, 1.0);
+        }
+        c = 1.0 - exp(-max(c, vec3(0.0)) * uExp);
+        o = vec4(c, 1.0);
+      }`,
+  };
+  function compile(fs) {
+    const mk = (t, src) => { const sh = gl.createShader(t); gl.shaderSource(sh, src); gl.compileShader(sh);
+      if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(sh)); return sh; };
+    const p = gl.createProgram(); gl.attachShader(p, mk(gl.VERTEX_SHADER, VS)); gl.attachShader(p, mk(gl.FRAGMENT_SHADER, HEAD + fs)); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const nm = gl.getActiveUniform(p, i).name; u[nm] = gl.getUniformLocation(p, nm); }
+    return { p, u };
+  }
+  function init(context) {
+    gl = context; ok = false; made = []; P = {}; vao = null; blendSplats = true; checkedBlend = false;
+    try {
+      if (!gl.getExtension("EXT_color_buffer_float")) return false;   // the fluid needs half-float render targets
+      for (const k in FS) P[k] = compile(FS[k]);
+      vao = gl.createVertexArray();
+      ok = true;
+    } catch (e) { console.warn("Ink unavailable:", e); ok = false; }
+    return ok;
+  }
+  function target(w, h, internal, format) {
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, internal, w, h, 0, format, gl.HALF_FLOAT, null);
+    const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+    const complete = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    gl.viewport(0, 0, w, h); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT);
+    made.push(t, f);
+    return { t, f, w, h, complete };
+  }
+  function pair(w, h, k) {
+    let a = target(w, h, k[0], k[1]), b = target(w, h, k[0], k[1]);
+    return { get read() { return a; }, get write() { return b; }, swap() { const x = a; a = b; b = x; }, w, h, tx: 1 / w, ty: 1 / h, complete: a.complete && b.complete };
+  }
+  function size(base) {
+    const a = W / H, lo = Math.round(base), hi = Math.round(base * (a > 1 ? a : 1 / a));
+    const max = gl.getParameter(gl.MAX_TEXTURE_SIZE);
+    return W > H ? [Math.min(hi, max), lo] : [lo, Math.min(hi, max)];
+  }
+  function resize() {
+    if (!ok) return;
+    for (const o of made) { if (o instanceof WebGLTexture) gl.deleteTexture(o); else gl.deleteFramebuffer(o); }
+    made = [];
+    const RGBA = [gl.RGBA16F, gl.RGBA]; let RG = [gl.RG16F, gl.RG], R1 = [gl.R16F, gl.RED];
+    const [sw, sh] = size(128), dq = { battery:512, balanced:900, sharp:1280 }[S.quality] || 900, [dw, dh] = size(dq);
+    // some GPUs can't render to 1- or 2-channel half floats; fall back to 4 channels
+    const probe = target(4, 4, RG[0], RG[1]); if (!probe.complete) { RG = RGBA; R1 = RGBA; }
+    vel = pair(sw, sh, RG); dye = pair(dw, dh, RGBA); pres = pair(sw, sh, R1);
+    const d1 = target(sw, sh, R1[0], R1[1]), c1 = target(sw, sh, R1[0], R1[1]);
+    divg = { ...d1, tx: 1 / sw, ty: 1 / sh }; curlT = { ...c1, tx: 1 / sw, ty: 1 / sh };
+    if (!(vel.complete && dye.complete && pres.complete && d1.complete && c1.complete)) { ok = false; console.warn("Ink unavailable: render targets incomplete"); }
+  }
+  function draw(t) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, t ? t.f : null);
+    gl.viewport(0, 0, t ? t.w : cv.width, t ? t.h : cv.height);
+    gl.bindVertexArray(vao); gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+  function use(p, tx, ty) { gl.useProgram(p.p); if (p.u.texelSize) gl.uniform2f(p.u.texelSize, tx, ty); return p.u; }
+  function bind(unit, t) { gl.activeTexture(gl.TEXTURE0 + unit); gl.bindTexture(gl.TEXTURE_2D, t.t); return unit; }
+  const corr = r => (W > H ? r * W / H : r);
+  function scissorFor(t, x, y, r) {
+    // the splat is invisible beyond exp(-7); box it in so only nearby pixels are processed
+    const ry = Math.sqrt(7 * r), rx = ry / (W / H);
+    const x0 = Math.max(0, Math.floor((x - rx) * t.w) - 2), x1 = Math.min(t.w, Math.ceil((x + rx) * t.w) + 2);
+    const y0 = Math.max(0, Math.floor((y - ry) * t.h) - 2), y1 = Math.min(t.h, Math.ceil((y + ry) * t.h) + 2);
+    if (x1 <= x0 || y1 <= y0) return false;
+    gl.scissor(x0, y0, x1 - x0, y1 - y0); return true;
+  }
+  function splat(x, y, dx, dy, rgb, radius) {
+    if (!ok) return;
+    gl.disable(gl.BLEND);
+    const r = corr(radius / 100);
+    if (!blendSplats) {
+      const c = use(P.splatCopy, vel.tx, vel.ty);
+      gl.uniform1f(c.aspectRatio, W / H); gl.uniform2f(c.point, x, y); gl.uniform1f(c.radius, r);
+      gl.uniform1i(c.uTarget, bind(0, vel.read)); gl.uniform3f(c.color, dx, dy, 0); draw(vel.write); vel.swap();
+      if (rgb) { gl.uniform1i(c.uTarget, bind(0, dye.read)); gl.uniform3f(c.color, rgb[0], rgb[1], rgb[2]); draw(dye.write); dye.swap(); }
+      return;
+    }
+    const u = use(P.splat, vel.tx, vel.ty);
+    gl.uniform1f(u.aspectRatio, W / H); gl.uniform2f(u.point, x, y); gl.uniform1f(u.radius, r);
+    // add the splat straight onto the current texture: additive blend, only inside its box
+    gl.enable(gl.SCISSOR_TEST); gl.enable(gl.BLEND); gl.blendEquation(gl.FUNC_ADD); gl.blendFunc(gl.ONE, gl.ONE);
+    if (scissorFor(vel.read, x, y, r)) { gl.uniform3f(u.color, dx, dy, 0); draw(vel.read); }
+    if (rgb && scissorFor(dye.read, x, y, r)) { gl.uniform3f(u.color, rgb[0], rgb[1], rgb[2]); draw(dye.read); }
+    gl.disable(gl.SCISSOR_TEST); gl.disable(gl.BLEND);
+    if (!checkedBlend) { checkedBlend = true; if (gl.getError() !== gl.NO_ERROR) { blendSplats = false; console.warn("Ink: using copy splats"); } }
+  }
+  function step(dt, curlAmt, velDiss, dyeDiss) {
+    if (!ok) return;
+    gl.disable(gl.BLEND);
+    let u = use(P.curl, vel.tx, vel.ty); gl.uniform1i(u.uVelocity, bind(0, vel.read)); draw(curlT);
+    u = use(P.vorticity, vel.tx, vel.ty); gl.uniform1i(u.uVelocity, bind(0, vel.read)); gl.uniform1i(u.uCurl, bind(1, curlT));
+    gl.uniform1f(u.curl, curlAmt); gl.uniform1f(u.dt, dt); draw(vel.write); vel.swap();
+    u = use(P.divergence, vel.tx, vel.ty); gl.uniform1i(u.uVelocity, bind(0, vel.read)); draw(divg);
+    u = use(P.scale, pres.tx, pres.ty); gl.uniform1i(u.uTexture, bind(0, pres.read)); gl.uniform1f(u.value, .8); draw(pres.write); pres.swap();
+    u = use(P.pressure, pres.tx, pres.ty); gl.uniform1i(u.uDivergence, bind(1, divg));
+    for (let i = 0; i < 20; i++) { gl.uniform1i(u.uPressure, bind(0, pres.read)); draw(pres.write); pres.swap(); }
+    u = use(P.gradient, vel.tx, vel.ty); gl.uniform1i(u.uPressure, bind(0, pres.read)); gl.uniform1i(u.uVelocity, bind(1, vel.read)); draw(vel.write); vel.swap();
+    u = use(P.advect, vel.tx, vel.ty); gl.uniform2f(u.velTexel, vel.tx, vel.ty); gl.uniform1f(u.dt, dt);
+    gl.uniform1i(u.uVelocity, bind(0, vel.read)); gl.uniform1i(u.uSource, bind(0, vel.read)); gl.uniform1f(u.dissipation, velDiss);
+    gl.uniform1f(u.floorAmt, 0);
+    draw(vel.write); vel.swap();
+    u = use(P.advect, dye.tx, dye.ty); gl.uniform1i(u.uVelocity, bind(0, vel.read)); gl.uniform1i(u.uSource, bind(1, dye.read));
+    gl.uniform1f(u.dissipation, dyeDiss); gl.uniform1f(u.floorAmt, .02); draw(dye.write); dye.swap();
+  }
+  function show(view, shade, exposure) {
+    if (!ok) return;
+    gl.disable(gl.BLEND);
+    const u = use(P.show, dye.tx, dye.ty);
+    gl.uniform1i(u.uTexture, bind(0, dye.read)); gl.uniform2f(u.dyeTexel, dye.tx, dye.ty);
+    gl.uniform2f(u.uRes, cv.width, cv.height); gl.uniform2f(u.uCenter, CX * DPR, CY * DPR); gl.uniform2f(u.uPar, view.px, view.py);
+    gl.uniform1f(u.uZoom, view.zoom); gl.uniform1f(u.uDpr, DPR); gl.uniform1f(u.uR, R);
+    gl.uniform1f(u.uShade, shade ? 1 : 0); gl.uniform1f(u.uExp, exposure);
+    draw(null);
+  }
+  function clear() {
+    if (!ok) return;
+    for (const t of [vel.read, vel.write, dye.read, dye.write, pres.read, pres.write]) { gl.bindFramebuffer(gl.FRAMEBUFFER, t.f); gl.viewport(0, 0, t.w, t.h); gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT); }
+  }
+  return { init, resize, splat, step, show, clear, get ok() { return ok; } };
+})();
+
 function hslToRgb(h, s, l) {
   h = ((h % 360) + 360) % 360 / 360; s /= 100; l /= 100;
   const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q;
@@ -522,6 +825,7 @@ if (gl && !GLR.init(gl)) {          // GPU path failed: swap in a fresh canvas f
   gl = null; const fresh = cv.cloneNode(); cv.replaceWith(fresh); cv = fresh;
 }
 if (!gl) ctx = cv.getContext("2d", { alpha:false });
+if (gl) InkR.init(gl);
 let W = 0, H = 0, DPR = 1, CX = 0, CY = 0, R = 1;
 const QUALITY = { battery:{ dpr:1, fps:30 }, balanced:{ dpr:1.5, fps:60 }, sharp:{ dpr:2, fps:60 } };
 function resize() {
@@ -530,13 +834,14 @@ function resize() {
   W = window.innerWidth; H = window.innerHeight;
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   CX = W / 2; CY = H / 2; R = Math.min(W, H) * 0.5;
-  if (gl) { GLR.resize(cv.width, cv.height); return; }
+  if (typeof Mech !== "undefined") Mech.resize();
+  if (gl) { GLR.resize(cv.width, cv.height); InkR.resize(); return; }
   ctx.setTransform(1,0,0,1,0,0); ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = "#000"; ctx.fillRect(0, 0, cv.width, cv.height);
 }
 window.addEventListener("resize", resize);
 cv.addEventListener("webglcontextlost", e => e.preventDefault());
-cv.addEventListener("webglcontextrestored", () => { if (GLR.init(gl)) resize(); });
+cv.addEventListener("webglcontextrestored", () => { const okG = GLR.init(gl); InkR.init(gl); if (okG) resize(); if (typeof renderUI === "function") renderUI(); });
 
 /* ---------- helpers ---------- */
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -780,13 +1085,29 @@ function shuffleStyle(full) {
   S.mirror = Math.random() < .7;
   S.spin = pick([0, .1, .2, .3, .45, .6]);
   if (!S.palLock && S.palette !== "time") S.palette = pick(Object.keys(PALETTES).filter(k => k !== S.palette && k !== "time"));
+  if (S.scene !== "silk") S.inkKaleido = pick([1, 1, 2, 3, 4, 6]);
   if (full) { S.threads = Math.round(rand(20, 44)); }
   save(); renderUI();
 }
 let lastShuffle = 0;
 
 /* ---------- night mode, breathing, tilt ---------- */
-let nightF = 0, breatheF = 0, zoom = 1, bloomMul = 1, lastOpacity = -1;
+let nightF = 0, breatheF = 0, zoom = 1, bloomMul = 1, lastOpacity = "";
+// scenes: "silk" or "ink"; S.scene can also be "both", which alternates between them
+let activeScene = "silk", pendingScene = null, sceneF = 1, lastSceneSwap = 0;
+const inkAvailable = () => !!gl && InkR.ok;
+const ALL_SCENES = ["silk", "ink", "board"];
+const ROT_KEY = { silk: "rotSilk", ink: "rotInk", board: "rotBoard" };
+function rotList() {
+  const l = ALL_SCENES.filter(sc => S[ROT_KEY[sc]] && (sc !== "ink" || inkAvailable()));
+  return l.length ? l : ["silk"];
+}
+function sceneWanted() {
+  if (S.scene === "rotate") { const l = rotList(); return l.includes(activeScene) ? activeScene : l[0]; }
+  if (S.scene === "ink" && !inkAvailable()) return "silk";
+  return ALL_SCENES.includes(S.scene) ? S.scene : "silk";
+}
+function requestScene(sc) { pendingScene = sc === activeScene ? null : sc; }
 const toMin = (t) => { const [h, m] = String(t || "0:0").split(":").map(Number); return (h || 0) * 60 + (m || 0); };
 function isNight() {
   if (!S.night) return false;
@@ -803,8 +1124,16 @@ function updateAmbient(dt) {
   const ph = Math.sin(clock * TAU / 9);
   zoom = 1 + breatheF * .028 * (.5 + .5 * ph);
   bloomMul = 1 + breatheF * .55 * ph;
-  const op = S.dim * (1 - (1 - S.nightDim) * nightF) * (1 - breatheF * .06 * (.5 - .5 * ph));
-  if (Math.abs(op - lastOpacity) > .002) { cv.style.opacity = op.toFixed(3); lastOpacity = op; }
+  sceneF += ((pendingScene ? 0 : 1) - sceneF) * Math.min(1, dt / .22);
+  if (pendingScene && sceneF < .03) {                     // swap while the screen is dark
+    if (isMech(activeScene)) Mech.leave(activeScene);     // free the old scene's big canvases
+    activeScene = pendingScene; pendingScene = null;
+    if (activeScene === "silk" && gl) GLR.clearAll(); else if (activeScene === "ink") { InkR.clear(); ink.timer = .2; ink.pours = []; }
+    else if (isMech(activeScene)) Mech.enter(activeScene);
+  }
+  const op = S.dim * (1 - (1 - S.nightDim) * nightF) * (1 - breatheF * .06 * (.5 - .5 * ph)) * sceneF;
+  const mechOn = isMech(activeScene), opKey = (mechOn ? "m" : "g") + op.toFixed(3);
+  if (opKey !== lastOpacity) { cv.style.opacity = mechOn ? "0" : op.toFixed(3); mcv.style.opacity = mechOn ? op.toFixed(3) : "0"; lastOpacity = opKey; }
   // tilt: slow baseline so the resting angle on the desk always reads as centred
   let tx = 0, ty = 0;
   if (S.tilt && tilt.got) {
@@ -813,7 +1142,12 @@ function updateAmbient(dt) {
     tx = cl(tilt.rx - tilt.bx) * 26; ty = cl(tilt.ry - tilt.by) * 26;
   }
   const kk = Math.min(1, dt / .12); tilt.px += (tx - tilt.px) * kk; tilt.py += (ty - tilt.py) * kk;
-  clockEl.style.translate = `${(tilt.px * .5).toFixed(2)}px ${(tilt.py * .5).toFixed(2)}px`;
+  if (S.clockOn) {
+    const tr = `${(tilt.px * .5).toFixed(1)}px ${(tilt.py * .5).toFixed(1)}px`;
+    if (clockEl.style.translate !== tr) clockEl.style.translate = tr;
+    const dimNow = (S.dim * (1 - (1 - S.nightDim) * nightF)).toFixed(2);
+    if (clockEl.dataset.dim !== dimNow) { clockEl.dataset.dim = dimNow; clockEl.style.opacity = dimNow; }
+  }
 }
 function onOrient(e) {
   if (e.beta == null || e.gamma == null) return;
@@ -840,7 +1174,7 @@ async function enableTilt(fromGesture) {
 function noteTilt(msg) {
   const el = document.getElementById("tiltNote");
   if (msg) el.textContent = msg;
-  else if (!S.tilt) el.textContent = "Tilt the iPad and the silk shifts in layers. The centre moves most, the glow behind it least.";
+  else if (!S.tilt) el.textContent = "Tilt the iPad and the picture shifts in layers. The centre moves most, the glow behind it least.";
   else if (tilt.got) el.textContent = "On. Pick the iPad up and tilt it to see the depth.";
   else if (tilt.on) el.textContent = "Waiting for motion data. On a Mac there's nothing to tilt; this works on the iPad.";
   else el.textContent = "Tap the screen once to allow motion access.";
@@ -855,8 +1189,24 @@ function frame(now) {
   if (q.fps < 60 && dt < 1/q.fps - .004) return;
   last = now; dt = Math.min(dt, .1);
   if (clearBoost > 0) clearBoost -= dt;
-  fade(dt);
   updateAmbient(dt);
+  if (S.scene === "rotate" && !pendingScene && clock - lastSceneSwap > Math.max(S.shuffle || 5, 3) * 60) {
+    const l = rotList(); lastSceneSwap = clock;
+    if (l.length > 1) requestScene(l[(l.indexOf(activeScene) + 1) % l.length]);
+  }
+  if (isMech(activeScene)) {
+    clock += dt;
+    Mech.frame(activeScene, dt);
+    if (S.auto && S.shuffle > 0 && clock - lastShuffle > S.shuffle * 60) { lastShuffle = clock; shuffleStyle(false); }
+    return;
+  }
+  if (activeScene === "ink" && inkAvailable()) {
+    clock += dt;
+    inkFrame(dt);
+    if (S.auto && S.shuffle > 0 && clock - lastShuffle > S.shuffle * 60) { lastShuffle = clock; shuffleStyle(false); }
+    return;
+  }
+  fade(dt);
   if (gl) GLR.setVortex(S.vortex * S.vortex * 1.6 * (S.vortexRev ? -1 : 1) * (1 - (1 - S.nightSpeed) * nightF));
   else ctx.globalCompositeOperation = "lighter";
   // physics runs on a fixed 60Hz step; every step lays down silk
@@ -873,19 +1223,270 @@ function frame(now) {
   if (S.auto && S.shuffle > 0 && clock - lastShuffle > S.shuffle * 60) { lastShuffle = clock; shuffleStyle(false); }
 }
 
+/* ---------- ink: automatic drops, a gentle current, and stirring by hand ---------- */
+const ink = { timer: .5, stirA: rand(0, TAU), stirT: 0, handColor: [1, 1, 1], last: null, pours: [] };
+function inkColor(mult) { const c = strokeColor(); const [r, g, b] = hslToRgb(c.h, c.s, c.l); return [r * mult, g * mult, b * mult]; }
+// one splat, repeated around the centre when Kaleidoscope is on (x, y, vx, vy in screen px from the centre)
+function inkSplat(x, y, vx, vy, rgb, radius) {
+  const n = Math.max(1, S.inkKaleido | 0);
+  for (let k = 0; k < n; k++) {
+    const t = k * TAU / n, c = Math.cos(t), s = Math.sin(t);
+    const px = x * c - y * s, py = x * s + y * c, qx = vx * c - vy * s, qy = vx * s + vy * c;
+    InkR.splat((CX + px) / W, 1 - (CY + py) / H, qx, -qy, rgb, radius);
+  }
+}
+function inkDrop() {
+  const mn = Math.min(W, H), n = S.inkKaleido | 0;
+  let x, y;
+  if (n > 1) { const rr = mn * rand(.04, .42), a = rand(0, TAU); x = rr * Math.cos(a); y = rr * Math.sin(a); }
+  else { x = (rand(.12, .88) - .5) * W; y = (rand(.12, .88) - .5) * H; }
+  const r = Math.random(), around = Math.atan2(y, x);
+  const ang = r < .45 ? around + (Math.random() < .5 ? 1 : -1) * Math.PI / 2 : r < .62 ? around + Math.PI : rand(0, TAU);
+  const M = rand(250, 750) * Math.sqrt(S.inkFlow);
+  const burst = Math.random() < .22 ? Math.floor(rand(2, 5)) : 1;
+  for (let b = 0; b < burst; b++) {
+    const bx = x + (b ? rand(-.07, .07) * mn : 0), by = y + (b ? rand(-.07, .07) * mn : 0), ba = ang + (b ? rand(-.9, .9) : 0);
+    const k = Math.pow(Math.max(1, S.inkKaleido | 0), -.85);   // kaleidoscope copies share the ink
+    const col = inkColor(rand(.5, 1.05) * k), size = S.inkSize * (b ? .6 : 1);
+    // the drop lands as a bloom, then keeps pouring along a curving path, trailing tendrils
+    inkSplat(bx, by, Math.cos(ba) * M, Math.sin(ba) * M, col, rand(.1, .3) * size);
+    ink.pours.push({ x: bx, y: by, a: ba, v: mn * rand(.25, .7), turn: rand(-1.6, 1.6), life: rand(.4, 1.1), force: M * .4,
+      col: col.map(c => c * .014), rad: rand(.015, .05) * size });
+  }
+}
+function inkPours(dt) {
+  const f = dt * 60;   // same amount of ink per second at 30, 60 or 120 fps
+  for (const p of ink.pours) {
+    p.life -= dt; p.a += p.turn * dt;
+    p.x += Math.cos(p.a) * p.v * dt; p.y += Math.sin(p.a) * p.v * dt;
+    inkSplat(p.x, p.y, Math.cos(p.a) * p.force * f, Math.sin(p.a) * p.force * f, p.col.map(c => c * f), p.rad);
+  }
+  ink.pours = ink.pours.filter(p => p.life > 0);
+}
+function inkStir(dt) {   // a slow invisible current so the water never goes completely still
+  ink.stirT -= dt; if (ink.stirT > 0) return; ink.stirT = .35;
+  ink.stirA += .3;
+  const rr = Math.min(W, H) * .3, x = rr * Math.cos(ink.stirA), y = rr * Math.sin(ink.stirA), va = ink.stirA + Math.PI / 2;
+  InkR.splat((CX + x) / W, 1 - (CY + y) / H, Math.cos(va) * 60, -Math.sin(va) * 60, null, .9);
+}
+function inkFrame(dt) {
+  const slow = 1 - (1 - S.nightSpeed) * nightF;
+  if (S.auto) {
+    ink.timer -= dt * slow;
+    if (ink.timer <= 0) { inkDrop(); ink.timer = rand(.9, 3.4) / S.inkDrops; }
+    inkStir(dt * slow);
+  }
+  inkPours(Math.min(dt, 1 / 30) * slow);
+  const dyeDiss = clearBoost > 0 ? 5 : .08 + Math.pow(1 - S.inkFade, 2) * 1.8;
+  InkR.step(Math.min(dt, 1 / 30) * S.inkFlow * slow, S.inkSwirl * 30, clearBoost > 0 ? 3 : .25, dyeDiss);
+  InkR.show({ zoom, px: tilt.px, py: tilt.py }, S.inkShade, 2.2 * (1 + .12 * (bloomMul - 1)));
+}
+function inkStroke(x0, y0, x1, y1) {
+  const [ax0, ay0] = toArt(x0, y0), [ax1, ay1] = toArt(x1, y1);
+  const a = W / H, F = 6000;
+  let dx = (ax1 - ax0) / W, dy = (ay1 - ay0) / H;
+  if (a < 1) dx *= a; if (a > 1) dy /= a;
+  const g = hand.pen ? .3 + 1.7 * hand.press : 1;
+  const c = ink.handColor.map(v => v * .2 * g * Math.pow(Math.max(1, S.inkKaleido | 0), -.85));
+  inkSplat(ax1, ay1, dx * F, dy * F, c, .25 * S.inkSize * (hand.pen ? .5 + hand.press : 1));
+}
+
+
+/* ====================== BOARD SCENE ======================
+   Drawn with Canvas 2D on its own layer (#mech), so the Silk and Ink renderers are untouched. */
+const mcv = document.getElementById("mech"), mctx = mcv.getContext("2d");
+const MECH_SCENES = ["board"];
+const isMech = sc => MECH_SCENES.includes(sc);
+const mechSlow = () => 1 - (1 - S.nightSpeed) * nightF;
+const hsla = (c, a = 1, dl = 0) => `hsla(${Math.round(c[0])},${Math.round(c[1])}%,${Math.round(Math.max(0, Math.min(100, c[2] + dl)))}%,${a})`;
+// a stable colour from the current palette (index i), used by the mechanical scenes
+function paletteColor(i) {
+  const p = PALETTES[S.palette] || PALETTES.silk;
+  if (p.tod) return todNow().c[i % 5];
+  if (p.c) return p.c[i % p.c.length];
+  return [((i * 67) + (p.cycle ? clock * 14 : 0)) % 360, 85, 62];
+}
+/* ---------- Split-flap board: time, date and messages ---------- */
+const Board = (() => {
+  const SET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,:'-!?&/+#";
+  const DIGITS = "0123456789";                       // time flaps carry digits only; colon and blank snap in
+  const COLS = 18;
+  const STYLES = {
+    classic:  { flap: ["#2a2a2d", "#1d1d20"], text: "#f2f2f7" },
+    amber:    { flap: ["#232220", "#181715"], text: "#ffb340" },
+    graphite: { flap: ["#48484b", "#38383b"], text: "#ececf0" },
+    palette:  { flap: ["#232326", "#18181b"], text: null },
+  };
+  let key = "", rows = [], housing = null, msgIdx = -1, msgT = 0, lastTime = "", lastDate = "", dirty = true, lastView = "";
+  let fmtKey = "", fmtTime = null;
+  const fmtDay = new Intl.DateTimeFormat("en-US", { weekday: "long" }), fmtMon = new Intl.DateTimeFormat("en-US", { month: "short" });
+  const invalidate = () => { key = ""; dirty = true; };
+  function makeRow(n, x, y, w, h, gap, set = SET) {
+    const cells = []; for (let i = 0; i < n; i++) cells.push({ x: x + i * (w + gap), y, w, h, ch: " ", target: " ", next: null, p: 0, delay: 0, set });
+    return cells;
+  }
+  function layout() {
+    const sec = !!S.boardSeconds, nT = sec ? 8 : 5, bw = Math.min(W * .9, H * 1.5);
+    let bwBig = Math.min(bw / (nT + (nT - 1) * .1), H * .2 * .7 * 1.0);
+    if (W < H) bwBig = Math.min(bwBig, (W * .9) / (nT + (nT - 1) * .1));
+    const bh = bwBig * 1.42, sw = Math.min(bw / (COLS + (COLS - 1) * .12), bwBig * .48), sh = sw * 1.42, sg = sw * .12;
+    const total = bh + bh * .3 + sh * 3 + sh * .18 * 2 + sh * .35;
+    let y = CY - total / 2;
+    const tw = nT * bwBig + (nT - 1) * bwBig * .1;
+    const tRow = makeRow(nT, CX - tw / 2, y, bwBig, bh, bwBig * .1, DIGITS); y += bh + bh * .3;
+    const sw2 = COLS * sw + (COLS - 1) * sg;
+    const dRow = makeRow(COLS, CX - sw2 / 2, y, sw, sh, sg); y += sh + sh * .35;
+    const m1 = makeRow(COLS, CX - sw2 / 2, y, sw, sh, sg); y += sh + sh * .18;
+    const m2 = makeRow(COLS, CX - sw2 / 2, y, sw, sh, sg);
+    rows = [tRow, dRow, m1, m2];
+    const pad = sw * .9, x0 = Math.min(CX - tw / 2, CX - sw2 / 2) - pad, x1 = Math.max(CX + tw / 2, CX + sw2 / 2) + pad;
+    housing = { x: x0, y: tRow[0].y - pad, w: x1 - x0, h: (m2[0].y + sh + pad) - (tRow[0].y - pad), r: pad * .8 };
+    lastTime = lastDate = ""; msgT = 0; dirty = true;
+  }
+  const clean = t => String(t || "").toUpperCase().split("").map(c => (SET.includes(c) ? c : " ")).join("");
+  function setRow(row, text, stagger = .035, center = true) {
+    let t = clean(text).slice(0, row.length);
+    if (center) { const padL = Math.floor((row.length - t.length) / 2); t = " ".repeat(padL) + t; }
+    t = t.padEnd(row.length, " ");
+    row.forEach((c, i) => { if (c.target !== t[i]) { c.target = t[i]; c.delay = i * stagger; } });
+  }
+  function wrap2(text) {
+    const words = clean(text).split(/\s+/).filter(Boolean), out = [""];
+    for (const w of words) { const cur = out[out.length - 1];
+      if (!cur) out[out.length - 1] = w.slice(0, COLS);
+      else if (cur.length + 1 + w.length <= COLS) out[out.length - 1] = cur + " " + w;
+      else if (out.length < 2) out.push(w.slice(0, COLS)); else break; }
+    return [out[0] || "", out[1] || ""];
+  }
+  function messages() {
+    const h = new Date().getHours(), greet = h < 5 ? "GOOD NIGHT" : h < 12 ? "GOOD MORNING" : h < 17 ? "GOOD AFTERNOON" : h < 22 ? "GOOD EVENING" : "GOOD NIGHT";
+    const own = String(S.boardMsgs || "").split(/\n/).map(s => s.trim()).filter(Boolean);
+    return own.length ? [greet, ...own] : [greet, "HAVE A GREAT DAY", "STAY CURIOUS"];
+  }
+  function timeText(d) {
+    const k = S.clock24 + "|" + S.boardSeconds;
+    if (k !== fmtKey) { fmtKey = k; const o = { hour: "2-digit", minute: "2-digit", hourCycle: S.clock24 ? "h23" : "h12" }; if (S.boardSeconds) o.second = "2-digit"; fmtTime = new Intl.DateTimeFormat("en-GB", o); }
+    let t = fmtTime.formatToParts(d).filter(p => p.type !== "dayPeriod" && p.type !== "literal" || p.value.trim() === ":").map(p => p.type === "literal" ? ":" : p.value).join("");
+    if (!S.clock24 && t[0] === "0") t = " " + t.slice(1);
+    return t;
+  }
+  function dateText(d) {
+    return fmtDay.format(d) + " " + fmtMon.format(d) + " " + d.getDate();
+  }
+  function drawCell(c, st, textColor) {
+    const { x, y, w, h } = c, r = w * .09, mid = y + h / 2, font = `600 ${h * .74}px -apple-system,"SF Pro Display",system-ui,sans-serif`;
+    const half = (top, ch, sy = 1, shade = 0) => {
+      mctx.save(); mctx.beginPath(); if (top) mctx.rect(x, y, w, h / 2 - .5); else mctx.rect(x, mid + .5, w, h / 2); mctx.clip();
+      if (sy !== 1) { mctx.translate(0, mid); mctx.scale(1, sy); mctx.translate(0, -mid); }
+      const g = mctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, st.flap[0]); g.addColorStop(1, st.flap[1]);
+      mctx.beginPath(); mctx.roundRect(x, y, w, h, r); mctx.fillStyle = g; mctx.fill();
+      mctx.fillStyle = textColor; mctx.font = font; mctx.textAlign = "center"; mctx.textBaseline = "middle"; mctx.fillText(ch, x + w / 2, mid + h * .035);
+      if (shade) { mctx.fillStyle = `rgba(0,0,0,${shade})`; mctx.fillRect(x, y, w, h); }
+      mctx.restore();
+    };
+    if (c.next === null) { half(true, c.ch); half(false, c.ch); }
+    else {
+      const p = c.p;
+      half(true, c.next); half(false, c.ch);                       // behind: new top, old bottom
+      if (p < .5) half(true, c.ch, Math.cos(p * Math.PI), p * .9); // old top folds down
+      else half(false, c.next, -Math.cos(p * Math.PI), (1 - p) * .9); // new bottom falls into place
+    }
+    mctx.fillStyle = "rgba(0,0,0,.65)"; mctx.fillRect(x, mid - .75, w, 1.5);
+    mctx.fillStyle = "rgba(255,255,255,.05)"; mctx.fillRect(x + w * .04, y + 1, w * .92, 1);
+  }
+  function frame(dt) {
+    const k = [W, H, DPR, S.boardSeconds].join("|");
+    if (k !== key) { key = k; layout(); }
+    const d = new Date(), tt = timeText(d), dd = dateText(d);
+    if (tt !== lastTime) { setRow(rows[0], tt, .05); lastTime = tt; }
+    if (dd !== lastDate) { setRow(rows[1], dd); lastDate = dd; }
+    msgT -= dt;
+    if (msgT <= 0) { const list = messages(); msgIdx = (msgIdx + 1) % list.length; const [a, b] = wrap2(list[msgIdx]); setRow(rows[2], a); setRow(rows[3], b, .035); msgT = 12; }
+    const flipT = .065 / (S.boardSpeed * mechSlow());
+    for (const row of rows) for (const c of row) {
+      if (c.delay > 0 && c.next === null) { c.delay -= dt; continue; }   // never freeze a flap mid-fold
+      if (c.next === null && c.ch !== c.target) {
+        const i = c.set.indexOf(c.ch);
+        c.next = c.set.indexOf(c.target) < 0 ? c.target : c.set[((i < 0 ? 0 : i) + 1) % c.set.length];   // unknown characters snap straight in
+        c.p = 0;
+      }
+      if (c.next !== null) { c.p += dt / flipT; dirty = true; if (c.p >= 1) { c.ch = c.next; c.next = null; c.p = 0; } }
+    }
+    // breathing and tilt move the finished board as a whole (cheap), so the cells only redraw when a flap moves
+    const tr = `translate(${(tilt.px * .6).toFixed(1)}px,${(tilt.py * .6).toFixed(1)}px) scale(${zoom.toFixed(4)})`;
+    if (mcv.style.transform !== tr) mcv.style.transform = tr;
+    const textColor0 = (STYLES[S.boardColor] || STYLES.classic).text || hsla(paletteColor(0), 1, 18);
+    const view = [S.boardColor, textColor0].join("|");
+    if (!dirty && view === lastView) return;          // nothing moved: leave the last frame on screen
+    dirty = false; lastView = view;
+    const st = STYLES[S.boardColor] || STYLES.classic, textColor = textColor0;
+    mctx.setTransform(DPR, 0, 0, DPR, 0, 0); mctx.clearRect(0, 0, W, H);
+    mctx.beginPath(); mctx.roundRect(housing.x, housing.y, housing.w, housing.h, housing.r); mctx.fillStyle = "#0c0c0e"; mctx.fill();
+    mctx.strokeStyle = "rgba(255,255,255,.07)"; mctx.lineWidth = 1; mctx.stroke();
+    for (const row of rows) for (const c of row) drawCell(c, st, textColor);
+  }
+  return { frame, invalidate, enter: () => { key = ""; dirty = true; }, leave: () => { mcv.style.transform = ""; } };
+})();
+
+const Mech = {
+  frame(sc, dt) { Board.frame(dt); },
+  enter(sc) { mcv.style.transform = ""; mctx.setTransform(1, 0, 0, 1, 0, 0); mctx.clearRect(0, 0, mcv.width, mcv.height); Board.enter(); },
+  leave(sc) { Board.leave(); },
+  resize() { mcv.width = Math.round(W * DPR); mcv.height = Math.round(H * DPR); Board.invalidate(); },
+};
+
 /* ---------- clock overlay ---------- */
 const clockEl = document.getElementById("clock"), clockT = document.getElementById("clockT"), clockD = document.getElementById("clockD");
 const tf = new Intl.DateTimeFormat(undefined, { hour:"numeric", minute:"2-digit" });
 const df = new Intl.DateTimeFormat(undefined, { weekday:"long", month:"long", day:"numeric" });
+const CLOCK_FONTS = {
+  system: '-apple-system,"SF Pro Display",system-ui,"Helvetica Neue",sans-serif',
+  rounded: 'ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif',
+  serif: 'ui-serif,"New York",Georgia,"Times New Roman",serif',
+  mono: 'ui-monospace,"SF Mono",Menlo,Consolas,monospace',
+};
+let clockFmtKey = "", clockFmt = null;
+function clockTime(d) {
+  const key = S.clock24 + "|" + S.clockSeconds;
+  if (key !== clockFmtKey) {
+    clockFmtKey = key;
+    const o = { hour:"numeric", minute:"2-digit", hourCycle: S.clock24 ? "h23" : "h12" };
+    if (S.clockSeconds) o.second = "2-digit";
+    clockFmt = new Intl.DateTimeFormat(undefined, o);
+  }
+  // like StandBy, leave out AM/PM for a cleaner face
+  return clockFmt.formatToParts(d).filter(p => p.type !== "dayPeriod").map(p => p.value).join("").trim();
+}
+function paletteTint() {
+  const p = PALETTES[S.palette] || PALETTES.silk;
+  if (p.tod) return todNow().c[0];
+  if (p.c) return p.c[Math.floor(Date.now() / 20000) % p.c.length];   // drifts through the palette
+  return [(Date.now() / 1000 * 3) % 360, 80, 70];
+}
+function clockColor(a) {
+  if (S.clockColor === "warm") return `rgba(255,236,206,${a})`;
+  if (S.clockColor === "tint") { const c = paletteTint(); return `hsla(${Math.round(c[0])},${Math.min(c[1], 85)}%,80%,${a})`; }
+  return `rgba(255,255,255,${a})`;
+}
 function tickClock() {
-  clockEl.hidden = S.clock === "off";
-  clockEl.className = S.clock;
-  if (S.clock === "off") return;
+  clockEl.hidden = !S.clockOn || activeScene === "board";
+  if (clockEl.hidden) return;
+  clockEl.dataset.pos = S.clockPos;
+  clockEl.classList.toggle("glow", !!S.clockGlow);
+  const st = clockEl.style;
+  st.setProperty("--clock-font", CLOCK_FONTS[S.clockFont] || CLOCK_FONTS.system);
+  st.setProperty("--clock-weight", String(S.clockWeight));
+  st.setProperty("--clock-size", String(S.clockSize));
+  st.setProperty("--clock-opacity", String(S.clockOpacity));
+  st.setProperty("--clock-color", clockColor(1));
+  st.setProperty("--clock-glow", clockColor(.55));
   const d = new Date();
-  clockT.textContent = tf.format(d).replace(/\s?[AP]M$/i, "");
+  clockT.textContent = clockTime(d);
+  st.setProperty("--clock-max", S.clockSeconds ? "16vw" : "22vw");   // never wider than the screen
+  clockD.hidden = !S.clockDate;
   clockD.textContent = df.format(d);
 }
-setInterval(tickClock, 1000);
+(function tickOnTheSecond() { tickClock(); setTimeout(tickOnTheSecond, 1000 - (Date.now() % 1000) + 5); })();
 
 /* ---------- keep the screen awake ---------- */
 let wakeLock = null;
@@ -922,7 +1523,12 @@ document.getElementById("closePanel").addEventListener("click", closePanel);
 
 let down = null;
 // screen point -> drawing coordinates (undo breathing zoom and tilt shift so silk lands under the finger)
-const toArt = (x, y) => [(x - CX) / zoom + tilt.px, (y - CY) / zoom + tilt.py];
+const toArt = (x, y) => {
+  const zx = (x - CX) / zoom, zy = (y - CY) / zoom;
+  if (!gl) return [zx + tilt.px, zy + tilt.py];                 // 2D fallback moves the whole canvas
+  const f = .35 + .65 * Math.exp(-Math.hypot(zx, zy) / (.55 * R));   // same depth falloff as the shaders
+  return [zx - tilt.px * f, zy - tilt.py * f];
+};
 cv.addEventListener("pointerdown", e => {
   if (!e.isPrimary || down) return;   // ignore extra fingers and palms
   applyWake();
@@ -934,16 +1540,23 @@ cv.addEventListener("pointermove", e => {
   if (!down || e.pointerId !== down.id) return;
   if (!down.drawing && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8) {
     down.drawing = true; closePanel();
-    const [sx, sy] = toArt(down.x, down.y);
-    hand.strand.start(sx, sy, strokeColor()); hand.active = true; hand.gain = hand.pen ? .3 : 1;
+    down.ink = activeScene === "ink" && inkAvailable();
+    down.mech = isMech(activeScene);
+    if (down.ink) { ink.handColor = inkColor(1); ink.last = [down.x, down.y]; }
+    else if (down.mech) { /* the mechanical scenes run themselves */ }
+    else {
+      const [sx, sy] = toArt(down.x, down.y);
+      hand.strand.start(sx, sy, strokeColor()); hand.active = true; hand.gain = hand.pen ? .3 : 1;
+    }
   }
   if (hand.pen && e.pressure > 0) hand.press = e.pressure;
-  if (down.drawing) { [hand.tx, hand.ty] = toArt(e.clientX, e.clientY); }
+  if (down.drawing && down.ink) { inkStroke(ink.last[0], ink.last[1], e.clientX, e.clientY); ink.last = [e.clientX, e.clientY]; }
+  else if (down.drawing) { [hand.tx, hand.ty] = toArt(e.clientX, e.clientY); }
 });
 cv.addEventListener("click", () => { if (S.tilt && !tilt.on) enableTilt(true); });
 const endPointer = e => {
   if (!down || e.pointerId !== down.id) return;
-  if (down.drawing) { hand.active = false; hand.lift = 1; }
+  if (down.drawing) { if (!down.ink && !down.mech) { hand.active = false; hand.lift = 1; } }
   else if (performance.now() - down.t < 450) {
     if (panel.classList.contains("open")) closePanel();
     else if (fab.classList.contains("show")) openPanel();
@@ -966,8 +1579,20 @@ const fmt = {
   nightSpeed: v => Math.round(v*100) + "% speed",
   vortex: v => v < .02 ? "Off" : Math.round(v*100) + "%",
   bloom: v => v < .02 ? "Off" : Math.round(v*100) + "%",
+  inkDrops: v => v.toFixed(1) + "×",
+  inkSize: v => Math.round(v*100) + "%",
+  inkSwirl: v => v < .02 ? "Calm" : Math.round(v*100) + "%",
+  inkFlow: v => v.toFixed(1) + "×",
+  inkFade: v => v < .2 ? "Brief" : v < .5 ? "Short" : v < .8 ? "Long" : "Very long",
+  boardSpeed: v => v.toFixed(2).replace(/0$/, "") + "×",
+  clockWeight: v => ({100:"Ultralight",200:"Thin",300:"Light",400:"Regular",500:"Medium",600:"Semibold",700:"Bold",800:"Heavy"})[v] || v,
+  clockSize: v => Math.round(v*100) + "%",
+  clockOpacity: v => Math.round(v*100) + "%",
 };
-if (!gl) ["vortexCtl","vortexRevCtl","vortexNote","bloomCtl","finishCtl"].forEach(id => document.getElementById(id).hidden = true);
+if (!gl) ["vortexCtl","vortexRevCtl","vortexNote","bloomCtl","finishCtl"].forEach(id => { const el = document.getElementById(id); el.hidden = true; el.dataset.off = "1"; });
+if (!inkAvailable()) { for (const id of ["sceneInkBtn", "rotInkRow"]) { const el = document.getElementById(id); el.hidden = true; el.dataset.off = "1"; } }
+const boardMsgs = document.getElementById("boardMsgs");
+boardMsgs.addEventListener("input", () => { S.boardMsgs = boardMsgs.value; save(); });
 const palWrap = document.getElementById("palettes");
 for (const [k, p] of Object.entries(PALETTES)) {
   const b = document.createElement("button"); b.className = "pal"; b.dataset.pal = k;
@@ -980,7 +1605,8 @@ document.querySelectorAll("input[type=range][data-key]").forEach(el => {
 });
 document.querySelectorAll(".switch[data-key]").forEach(el => {
   el.addEventListener("click", () => { const k = el.dataset.key; S[k] = !S[k]; save(); renderUI();
-    if (k === "awake") applyWake(); if (k === "tilt") enableTilt(true); if (k === "night") nightTarget = isNight() ? 1 : 0; });
+    if (k === "awake") applyWake(); if (k === "tilt") enableTilt(true); if (k === "night") nightTarget = isNight() ? 1 : 0;
+    if (k.startsWith("rot")) requestScene(sceneWanted()); });
 });
 document.querySelectorAll(".seg[data-key]").forEach(seg => {
   seg.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
@@ -988,6 +1614,7 @@ document.querySelectorAll(".seg[data-key]").forEach(seg => {
     S[k] = v; save();
     if (k === "quality") resize();
     if (k === "shuffle") lastShuffle = clock;
+    if (k === "scene") { lastSceneSwap = clock; requestScene(sceneWanted()); }
     renderUI();
   }));
 });
@@ -1000,10 +1627,11 @@ document.getElementById("btnShuffle").addEventListener("click", () => { shuffleS
 document.getElementById("btnClear").addEventListener("click", () => { clearBoost = 1.5; });
 const btnReset = document.getElementById("btnReset"); let resetArmed = 0;
 btnReset.addEventListener("click", () => {
-  if (!resetArmed) { btnReset.textContent = "Tap again to reset"; btnReset.classList.add("armed");
-    resetArmed = setTimeout(() => { resetArmed = 0; btnReset.textContent = "Reset all settings"; btnReset.classList.remove("armed"); }, 3000); return; }
-  clearTimeout(resetArmed); resetArmed = 0; btnReset.textContent = "Reset all settings"; btnReset.classList.remove("armed");
-  S = Object.assign({}, DEFAULTS); save(); resize(); clearBoost = 1.2; nightTarget = isNight() ? 1 : 0; enableTilt(false); renderUI();
+  if (!resetArmed) { btnReset.textContent = "Tap Again to Reset"; btnReset.classList.add("armed");
+    resetArmed = setTimeout(() => { resetArmed = 0; btnReset.textContent = "Reset All Settings"; btnReset.classList.remove("armed"); }, 3000); return; }
+  clearTimeout(resetArmed); resetArmed = 0; btnReset.textContent = "Reset All Settings"; btnReset.classList.remove("armed");
+  S = Object.assign({}, DEFAULTS); save(); resize(); clearBoost = 1.2; nightTarget = isNight() ? 1 : 0; enableTilt(false);
+  requestScene(sceneWanted()); renderUI();
 });
 const hintEl = document.getElementById("hint");
 function hideHint() { hintEl.classList.remove("show"); try { localStorage.setItem("silkfall.hinted", "1"); } catch (e) {} }
@@ -1011,8 +1639,8 @@ let hinted = false; try { hinted = localStorage.getItem("silkfall.hinted") === "
 if (!hinted) { setTimeout(() => hintEl.classList.add("show"), 2500); setTimeout(hideHint, 9000); }
 const btnFull = document.getElementById("btnFull");
 const isStandalone = NATIVE || window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
-if (isStandalone) btnFull.textContent = "Hide panel";
-if (NATIVE) document.getElementById("ver").textContent = "Silkfall 1.0 · iPad app";
+if (isStandalone) btnFull.textContent = "Hide Settings";
+if (NATIVE) document.getElementById("ver").textContent = "Silkfall 1.3 · iPad App";
 btnFull.addEventListener("click", async () => {
   closePanel();
   if (isStandalone) return;
@@ -1041,12 +1669,31 @@ function renderUI() {
   const nn = document.getElementById("nightNote");
   const hm = t => { const m = toMin(t), d = new Date(); d.setHours(Math.floor(m / 60), m % 60, 0, 0); return tf.format(d); };
   nn.textContent = !S.night ? "Off." : isNight() ? `Night mode is on now, until ${hm(S.nightTo)}.` : `Starts at ${hm(S.nightFrom)}. Changes fade in over about a minute.`;
-  lastOpacity = -1; noteTilt();
+  // show only the sections that apply to the chosen scene, and hide clock/night details while they're off
+  const sc = S.scene === "rotate" ? "rotate" : sceneWanted();
+  const shown = sc === "rotate" ? rotList() : [sc];
+  document.querySelectorAll("[data-scene]").forEach(el => { el.hidden = el.dataset.off === "1" || !shown.includes(el.dataset.scene); });
+  document.querySelectorAll("[data-when-rotate]").forEach(el => { el.hidden = sc !== "rotate"; });
+  document.querySelectorAll("[data-show]").forEach(el => { el.hidden = !S[el.dataset.show]; });
+  if (document.activeElement !== boardMsgs) boardMsgs.value = S.boardMsgs || "";
+  const mins = Math.max(S.shuffle || 5, 3);
+  document.getElementById("rotNote").textContent = `Turned-on scenes take turns, switching every ${mins} minutes. Set Shuffle Style Every to change how often.`;
+  document.getElementById("sceneNote").textContent = {
+    silk: "Automatic mode keeps weaving new silk on its own.",
+    ink: "Automatic mode keeps dropping new ink into the water on its own.",
+    board: "A split-flap board with the time, date and your messages.",
+    rotate: "Your chosen scenes take turns on the screen.",
+  }[sc];
+  lastOpacity = ""; noteTilt();
   syncPainters(); tickClock(); noteWake();
 }
 
 /* ---------- start ---------- */
-resize(); nightTarget = isNight() ? 1 : 0; nightF = nightTarget; renderUI(); applyWake(); enableTilt(false);
+resize(); nightTarget = isNight() ? 1 : 0; nightF = nightTarget;
+if (S.scene === "ink" && !inkAvailable()) S.scene = "silk";
+activeScene = sceneWanted();
+if (isMech(activeScene)) Mech.enter(activeScene);
+renderUI(); applyWake(); enableTilt(false);
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 
 // offline support when installed on the home screen (skipped inside previews)
