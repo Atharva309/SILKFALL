@@ -38,7 +38,7 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--label);overflow:
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;
   font-family:var(--ui);-webkit-font-smoothing:antialiased;overscroll-behavior:none}
 #silk{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;transition:opacity .6s ease}
-#mech{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none;opacity:0}
+#mech,#fx{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none;opacity:0}
 .cell textarea{width:100%;box-sizing:border-box;min-height:92px;border:0;border-radius:8px;padding:8px 10px;background:var(--fill);color:var(--label);font:400 17px/1.35 var(--ui);resize:none;-webkit-user-select:text;user-select:text;text-transform:uppercase}
 
 /* ---------- clock ---------- */
@@ -110,6 +110,31 @@ html,body{height:100%;margin:0;background:var(--bg);color:var(--label);overflow:
 /* iOS segmented control */
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);background:var(--fill);border-radius:9px;padding:2px;gap:2px}
 .seg.grid3{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr))}
+.seg.grid2{grid-auto-flow:row;grid-template-columns:repeat(2,minmax(0,1fr))}
+/* settings-style rows with icons */
+.cell.pick,.cell.drill{border:0;background:transparent;width:100%;text-align:left;color:var(--label);cursor:pointer;justify-content:flex-start;gap:12px;font:400 17px var(--ui);letter-spacing:-.01em}
+.cell.pick:active,.cell.drill:active{background:rgba(255,255,255,.08)}
+.group.icons .cell + .cell::before{left:57px}
+.ico{flex:0 0 auto;width:29px;height:29px;border-radius:7px;display:grid;place-items:center;box-shadow:inset 0 0 0 .5px rgba(255,255,255,.12)}
+.ico svg{width:19px;height:19px}
+.lbl{flex:1;min-width:0;text-align:left}
+.check{flex:0 0 auto;width:20px;height:20px;color:var(--blue);opacity:0}
+.pick[aria-checked=true] .check{opacity:1}
+.cell.unavail{opacity:.45}
+.cell.unavail .lbl::after{content:"Not available on this device";display:block;font-size:13px;color:var(--label2);margin-top:1px}
+[data-mesh][aria-pressed=true] i{box-shadow:0 0 0 2.5px var(--bg),0 0 0 4.5px var(--blue)}
+[data-mesh][aria-pressed=true]{color:var(--blue);font-weight:600}
+.val{color:var(--label2);white-space:nowrap}
+.chev{flex:0 0 auto;width:9px;height:15px;color:var(--label3)}
+/* drill-down pages */
+.nav{justify-content:space-between!important;align-items:center}
+.back{display:flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--blue);font:400 17px var(--ui);padding:8px 2px;cursor:pointer;min-width:0}
+.back svg{width:11px;height:19px;flex:0 0 auto}
+.back span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#panel.in-sub > :not(.nav):not(#subTitle):not(.box.active){display:none!important}
+#panel.in-sub .box.active{animation:pagein .34s cubic-bezier(.32,.72,0,1)}
+@keyframes pagein{from{transform:translateX(28px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){#panel.in-sub .box.active{animation:none}}
 .seg button{border:0;background:transparent;color:var(--label);font:500 13px var(--ui);padding:6px 4px;border-radius:7px;cursor:pointer;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:background .2s ease}
 .seg button[aria-pressed=true]{background:var(--fill-strong);font-weight:600;box-shadow:0 3px 8px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.04)}
@@ -163,7 +188,8 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 </head>
 <body>
 <canvas id="silk" aria-label="Generative silk and ink animation"></canvas>
-<canvas id="mech" aria-label="Split-flap board"></canvas>
+<canvas id="mech" width="1" height="1" aria-label="Split-flap board"></canvas>
+<canvas id="fx" width="1" height="1" aria-label="Bokeh lights and gradient"></canvas>
 <div id="hint">Tap anywhere for settings</div>
 <div id="clock" hidden data-pos="mc"><div class="box"><div class="t" id="clockT"></div><div class="d" id="clockD"></div></div></div>
 
@@ -172,25 +198,56 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 </button>
 
 <aside id="panel" aria-label="Silkfall settings">
-  <div class="nav"><button class="done" id="closePanel">Done</button></div>
-  <h1 class="large-title">Silkfall</h1>
+  <div class="nav"><button class="back" id="navBack" hidden><svg viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2L2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Silkfall</span></button><span></span><button class="done" id="closePanel">Done</button></div>
+  <h1 class="large-title" tabindex="-1">Silkfall</h1>
+  <h1 class="large-title" id="subTitle" tabindex="-1" hidden></h1>
 
   <div class="group" style="margin-top:14px">
     <div class="cell"><label for="sw-auto">Automatic Mode</label><button class="switch" role="switch" id="sw-auto" data-key="auto" aria-label="Automatic mode"></button></div>
-    <div class="cell stack" id="sceneCtl"><div class="row"><span>Scene</span></div>
-      <div class="seg" data-key="scene"><button data-v="silk">Silk</button><button data-v="ink" id="sceneInkBtn">Ink</button><button data-v="board">Board</button><button data-v="rotate">Rotate</button></div></div>
   </div>
-  <p class="gfoot" id="sceneNote">Automatic mode keeps creating new designs on its own.</p>
+  <p class="gfoot">Keeps creating new designs on its own.</p>
 
-  <h2 class="ghead" data-when-rotate>Scenes in Rotation</h2>
-  <div class="group" data-when-rotate>
-    <div class="cell"><label for="sw-rotSilk">Silk</label><button class="switch" role="switch" id="sw-rotSilk" data-key="rotSilk"></button></div>
-    <div class="cell" id="rotInkRow"><label for="sw-rotInk">Ink</label><button class="switch" role="switch" id="sw-rotInk" data-key="rotInk"></button></div>
-    <div class="cell"><label for="sw-rotBoard">Board</label><button class="switch" role="switch" id="sw-rotBoard" data-key="rotBoard"></button></div>
+  <h2 class="ghead">Scene</h2>
+  <div role="radiogroup" aria-label="Scene">
+  <div class="group icons">
+    <button class="cell pick" role="radio" data-pick="silk"><span class="ico" style="background:linear-gradient(135deg,#bf5af2,#ff375f)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12c3.5-7.5 13.5-7.5 17 0M3.5 12c3.5 7.5 13.5 7.5 17 0M8 12c1.8-3.4 6.2-3.4 8 0"/></svg></span><span class="lbl">Silk</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
+    <button class="cell pick" role="radio" data-pick="ink" data-needs="ink"><span class="ico" style="background:linear-gradient(135deg,#0a84ff,#64d2ff)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path fill="#fff" stroke="none" d="M12 3.2c3.6 4.4 6.2 7.5 6.2 10.6A6.2 6.2 0 0 1 5.8 13.8C5.8 10.7 8.4 7.6 12 3.2z"/></svg></span><span class="lbl">Ink</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
+    <button class="cell pick" role="radio" data-pick="board"><span class="ico" style="background:linear-gradient(135deg,#8e8e93,#48484a)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.4" height="14" rx="1.6"/><rect x="13.1" y="5" width="7.4" height="14" rx="1.6"/><path d="M3.5 12h17"/></svg></span><span class="lbl">Board</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
+    <button class="cell pick" role="radio" data-pick="bokeh" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#ff9f0a,#ff375f)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="5" fill="#fff" fill-opacity=".55"/><circle cx="16" cy="15.5" r="4" fill="#fff" fill-opacity=".8"/><circle cx="16.8" cy="6.5" r="2.1" fill="#fff"/></svg></span><span class="lbl">Bokeh Lights</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
+    <button class="cell pick" role="radio" data-pick="mesh" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#30d158,#0a84ff 55%,#bf5af2)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path fill="#fff" fill-opacity=".85" stroke="none" d="M5.2 15.6C3.8 10.4 7.4 4.8 12.6 4.8s7.9 3.6 6.9 7.9-4.8 6.9-9 6.9c-2.4 0-4.4-1-5.3-4z"/></svg></span><span class="lbl">Gradient</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
+  </div>
+  <div class="group icons" style="margin-top:14px">
+    <button class="cell pick" role="radio" data-pick="rotate"><span class="ico" style="background:linear-gradient(135deg,#34c759,#248a3d)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 0 1-13.1 5M4.5 12a7.5 7.5 0 0 1 13.1-5"/><path d="M17.8 3.5V7h-3.5M6.2 20.5V17h3.5"/></svg></span><span class="lbl">Rotate</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
+  </div>
+  </div>
+  <p class="gfoot" id="sceneNote"></p>
+
+  <h2 class="ghead" data-when-rotate>Take Turns</h2>
+  <div class="group icons" data-when-rotate>
+    <div class="cell"><span class="ico" style="background:linear-gradient(135deg,#bf5af2,#ff375f)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12c3.5-7.5 13.5-7.5 17 0M3.5 12c3.5 7.5 13.5 7.5 17 0M8 12c1.8-3.4 6.2-3.4 8 0"/></svg></span><label class="lbl" for="sw-rotSilk">Silk</label><button class="switch" role="switch" id="sw-rotSilk" data-key="rotSilk"></button></div>
+    <div class="cell" data-needs="ink"><span class="ico" style="background:linear-gradient(135deg,#0a84ff,#64d2ff)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path fill="#fff" stroke="none" d="M12 3.2c3.6 4.4 6.2 7.5 6.2 10.6A6.2 6.2 0 0 1 5.8 13.8C5.8 10.7 8.4 7.6 12 3.2z"/></svg></span><label class="lbl" for="sw-rotInk">Ink</label><button class="switch" role="switch" id="sw-rotInk" data-key="rotInk"></button></div>
+    <div class="cell"><span class="ico" style="background:linear-gradient(135deg,#8e8e93,#48484a)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.4" height="14" rx="1.6"/><rect x="13.1" y="5" width="7.4" height="14" rx="1.6"/><path d="M3.5 12h17"/></svg></span><label class="lbl" for="sw-rotBoard">Board</label><button class="switch" role="switch" id="sw-rotBoard" data-key="rotBoard"></button></div>
+    <div class="cell" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#ff9f0a,#ff375f)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="5" fill="#fff" fill-opacity=".55"/><circle cx="16" cy="15.5" r="4" fill="#fff" fill-opacity=".8"/><circle cx="16.8" cy="6.5" r="2.1" fill="#fff"/></svg></span><label class="lbl" for="sw-rotBokeh">Bokeh Lights</label><button class="switch" role="switch" id="sw-rotBokeh" data-key="rotBokeh"></button></div>
+    <div class="cell" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#30d158,#0a84ff 55%,#bf5af2)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path fill="#fff" fill-opacity=".85" stroke="none" d="M5.2 15.6C3.8 10.4 7.4 4.8 12.6 4.8s7.9 3.6 6.9 7.9-4.8 6.9-9 6.9c-2.4 0-4.4-1-5.3-4z"/></svg></span><label class="lbl" for="sw-rotMesh">Gradient</label><button class="switch" role="switch" id="sw-rotMesh" data-key="rotMesh"></button></div>
+  </div>
+  <div class="group" data-when-rotate style="margin-top:14px">
+    <div class="cell stack"><div class="row"><span>Switch Every</span></div>
+      <div class="seg" data-key="rotEvery"><button data-v="0.5">30 sec</button><button data-v="1">1 min</button><button data-v="2">2 min</button><button data-v="5">5 min</button><button data-v="10">10 min</button></div></div>
+    <button class="cell btn" id="btnRotNext">Show Next Scene Now</button>
   </div>
   <p class="gfoot" data-when-rotate id="rotNote"></p>
 
+  <h2 class="ghead" data-when-rotate>Scene Settings</h2>
+  <div class="group icons" data-when-rotate>
+    <button class="cell drill" data-open="silk"><span class="ico" style="background:linear-gradient(135deg,#bf5af2,#ff375f)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12c3.5-7.5 13.5-7.5 17 0M3.5 12c3.5 7.5 13.5 7.5 17 0M8 12c1.8-3.4 6.2-3.4 8 0"/></svg></span><span class="lbl">Silk</span><span class="val" data-rotval="silk"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="cell drill" data-open="ink" data-needs="ink"><span class="ico" style="background:linear-gradient(135deg,#0a84ff,#64d2ff)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path fill="#fff" stroke="none" d="M12 3.2c3.6 4.4 6.2 7.5 6.2 10.6A6.2 6.2 0 0 1 5.8 13.8C5.8 10.7 8.4 7.6 12 3.2z"/></svg></span><span class="lbl">Ink</span><span class="val" data-rotval="ink"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="cell drill" data-open="board"><span class="ico" style="background:linear-gradient(135deg,#8e8e93,#48484a)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.4" height="14" rx="1.6"/><rect x="13.1" y="5" width="7.4" height="14" rx="1.6"/><path d="M3.5 12h17"/></svg></span><span class="lbl">Board</span><span class="val" data-rotval="board"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="cell drill" data-open="bokeh" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#ff9f0a,#ff375f)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="5" fill="#fff" fill-opacity=".55"/><circle cx="16" cy="15.5" r="4" fill="#fff" fill-opacity=".8"/><circle cx="16.8" cy="6.5" r="2.1" fill="#fff"/></svg></span><span class="lbl">Bokeh Lights</span><span class="val" data-rotval="bokeh"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="cell drill" data-open="mesh" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#30d158,#0a84ff 55%,#bf5af2)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path fill="#fff" fill-opacity=".85" stroke="none" d="M5.2 15.6C3.8 10.4 7.4 4.8 12.6 4.8s7.9 3.6 6.9 7.9-4.8 6.9-9 6.9c-2.4 0-4.4-1-5.3-4z"/></svg></span><span class="lbl">Gradient</span><span class="val" data-rotval="mesh"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  </div>
+
   <!-- SILK -->
+  <div class="box" data-box="silk">
   <h2 class="ghead" data-scene="silk">Pattern</h2>
   <div class="group" data-scene="silk">
     <div class="cell"><span>Symmetry</span>
@@ -228,7 +285,9 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
       <input type="range" id="r-trail" data-key="trail" min="0" max="1" step="0.01"></div>
   </div>
 
+  </div>
   <!-- INK -->
+  <div class="box" data-box="ink">
   <h2 class="ghead" data-scene="ink">Ink</h2>
   <div class="group" data-scene="ink">
     <div class="cell stack"><div class="row"><span>Kaleidoscope</span></div>
@@ -247,18 +306,94 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
   </div>
   <p class="gfoot" data-scene="ink">Drops of colour bloom and swirl like dye in water. Drag across the screen to stir it.</p>
 
+  </div>
   <!-- BOARD -->
-  <h2 class="ghead" data-scene="board">Board</h2>
-  <div class="group" data-scene="board">
-    <div class="cell stack"><div class="row"><span>Flaps</span></div>
-      <div class="seg" data-key="boardColor"><button data-v="classic">Classic</button><button data-v="amber">Amber</button><button data-v="graphite">Graphite</button><button data-v="palette">Palette</button></div></div>
+  <div class="box" data-box="board">
+  <h2 class="ghead">Layout</h2>
+  <div class="group">
+    <div class="cell stack"><div class="seg grid2" data-key="boardLayout"><button data-v="clock">Clock</button><button data-v="clockdate">Clock + Date</button><button data-v="full">Full Board</button><button data-v="departures">Departures</button></div></div>
+  </div>
+  <p class="gfoot" id="boardNote"></p>
+
+  <h2 class="ghead">Flaps</h2>
+  <div class="group">
+    <div class="cell stack"><div class="row"><span>Style</span></div>
+      <div class="seg grid3" data-key="boardColor"><button data-v="classic">Classic</button><button data-v="amber">Amber</button><button data-v="graphite">Graphite</button><button data-v="white">White</button><button data-v="cream">Cream</button><button data-v="palette">Palette</button></div></div>
+    <div class="cell stack"><div class="row"><span>Font</span></div>
+      <div class="seg" data-key="boardFont"><button data-v="system">Default</button><button data-v="rounded">Rounded</button><button data-v="mono">Mono</button><button data-v="condensed">Narrow</button></div></div>
+    <div class="cell stack"><div class="row"><label for="r-boardSize">Flap Size</label><output data-for="boardSize"></output></div>
+      <input type="range" id="r-boardSize" data-key="boardSize" min="0.6" max="1.6" step="0.05"></div>
     <div class="cell stack"><div class="row"><label for="r-boardSpeed">Flip Speed</label><output data-for="boardSpeed"></output></div>
       <input type="range" id="r-boardSpeed" data-key="boardSpeed" min="0.4" max="2" step="0.05"></div>
     <div class="cell"><label for="sw-boardSeconds">Show Seconds</label><button class="switch" role="switch" id="sw-boardSeconds" data-key="boardSeconds"></button></div>
-    <div class="cell stack"><div class="row"><label for="boardMsgs">Messages</label></div>
+  </div>
+  <p class="gfoot">The whole screen is a wall of flaps. Smaller flaps fit a bigger clock. Uses 24-Hour Time from the Clock settings.</p>
+
+  <h2 class="ghead" data-if="boardLayout:full">Messages</h2>
+  <div class="group" data-if="boardLayout:full">
+    <div class="cell stack"><div class="row"><span>Lines</span></div>
+      <div class="seg" data-key="boardMsgRows"><button data-v="1">1</button><button data-v="2">2</button><button data-v="3">3</button></div></div>
+    <div class="cell stack"><div class="row"><label for="r-boardMsgSecs">Change Every</label><output data-for="boardMsgSecs"></output></div>
+      <input type="range" id="r-boardMsgSecs" data-key="boardMsgSecs" min="5" max="60" step="1"></div>
+    <div class="cell stack"><div class="row"><label for="boardMsgs">Your Messages</label></div>
       <textarea id="boardMsgs" rows="4" placeholder="One message per line" spellcheck="false" autocapitalize="characters"></textarea></div>
   </div>
-  <p class="gfoot" data-scene="board">Shows the time, the date and a greeting, then your messages one by one, every 12 seconds. Up to 36 letters each. Uses 24-Hour Time from the Clock settings.</p>
+  <p class="gfoot" data-if="boardLayout:full">A greeting comes first, then your messages one by one.</p>
+
+  <h2 class="ghead" data-if="boardLayout:departures">Departures</h2>
+  <div class="group icons" data-if="boardLayout:departures">
+    <button class="cell drill" data-open="cities"><span class="ico" style="background:linear-gradient(135deg,#64d2ff,#0a84ff)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.3"/><path d="M3.7 12h16.6M12 3.7c2.4 2.5 3.4 5.2 3.4 8.3s-1 5.8-3.4 8.3c-2.4-2.5-3.4-5.2-3.4-8.3s1-5.8 3.4-8.3z"/></svg></span><span class="lbl">Cities</span><span class="val" id="cityCount"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <div class="cell stack"><div class="row"><label for="r-boardMsgSecs2">Next Page Every</label><output data-for="boardMsgSecs"></output></div>
+      <input type="range" id="r-boardMsgSecs2" data-key="boardMsgSecs" min="5" max="60" step="1"></div>
+  </div>
+  <p class="gfoot" data-if="boardLayout:departures">Local time for each city. If there are more cities than rows, the board pages through them.</p>
+  </div>
+
+  <!-- CITIES (opened from the Board page) -->
+  <div class="box" data-box="cities">
+  <div class="group" id="cityList" style="margin-top:14px"></div>
+  <p class="gfoot">Turned-on cities appear on the Departures board in this order.</p>
+  </div>
+
+  <!-- BOKEH -->
+  <div class="box" data-box="bokeh">
+  <h2 class="ghead">Lights</h2>
+  <div class="group">
+    <div class="cell stack"><div class="row"><span>Colours</span></div>
+      <div class="seg" data-key="bokehColors"><button data-v="city">City Lights</button><button data-v="palette">Palette</button></div></div>
+    <div class="cell stack"><div class="row"><label for="r-bokehAmount">Amount</label><output data-for="bokehAmount"></output></div>
+      <input type="range" id="r-bokehAmount" data-key="bokehAmount" min="0" max="1" step="0.01"></div>
+    <div class="cell stack"><div class="row"><label for="r-bokehSize">Light Size</label><output data-for="bokehSize"></output></div>
+      <input type="range" id="r-bokehSize" data-key="bokehSize" min="0.5" max="1.8" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-bokehSpeed">Drift</label><output data-for="bokehSpeed"></output></div>
+      <input type="range" id="r-bokehSpeed" data-key="bokehSpeed" min="0" max="3" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-bokehGlow">Brightness</label><output data-for="bokehGlow"></output></div>
+      <input type="range" id="r-bokehGlow" data-key="bokehGlow" min="0.4" max="1.8" step="0.05"></div>
+    <div class="cell"><label for="sw-bokehRain">Rain on Glass</label><button class="switch" role="switch" id="sw-bokehRain" data-key="bokehRain"></button></div>
+  </div>
+  <p class="gfoot">Out-of-focus lights drift and pulse. Rain on Glass adds droplets that bend the lights behind them, and now and then one runs down the glass.</p>
+  </div>
+
+  <!-- GRADIENT -->
+  <div class="box" data-box="mesh">
+  <h2 class="ghead">Gradient</h2>
+  <div class="group">
+    <div class="cell stack"><div class="row"><span>Tone</span></div>
+      <div class="seg" data-key="meshTone"><button data-v="vivid">Vivid</button><button data-v="deep">Deep</button><button data-v="pastel">Pastel</button></div></div>
+    <div class="cell stack"><div class="row"><label for="r-meshSpeed">Speed</label><output data-for="meshSpeed"></output></div>
+      <input type="range" id="r-meshSpeed" data-key="meshSpeed" min="0.2" max="3" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-meshWarp">Flow</label><output data-for="meshWarp"></output></div>
+      <input type="range" id="r-meshWarp" data-key="meshWarp" min="0" max="1.5" step="0.05"></div>
+    <div class="cell"><label for="sw-meshGrain">Film Grain</label><button class="switch" role="switch" id="sw-meshGrain" data-key="meshGrain"></button></div>
+  </div>
+  <p class="gfoot">Speed is how fast the colours travel. Flow is how much their shapes bend and swirl: low gives round, calm blobs; high gives liquid, wavy shapes.</p>
+
+  <h2 class="ghead">Gradient Colours</h2>
+  <div class="group">
+    <div class="palettes" id="meshSets"></div>
+  </div>
+  <p class="gfoot" id="meshSetNote"></p>
+  </div>
 
   <h2 class="ghead">Colour</h2>
   <div class="group">
@@ -337,7 +472,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
   <div class="group" style="margin-top:30px">
     <button class="cell btn red" id="btnReset">Reset All Settings</button>
   </div>
-  <p class="ver" id="ver">Silkfall 1.3</p>
+  <p class="ver" id="ver">Silkfall 1.6</p>
 </aside>
 
 <script>
@@ -347,8 +482,12 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 const DEFAULTS = { auto:true, symmetry:6, mirror:true, spin:0.25, palette:"silk", palLock:false, brushes:2, stroke:"mix", vortex:0.35, vortexRev:false, bloom:0.35, finish:"crisp", breathe:true, tilt:false,
   night:false, nightFrom:"22:00", nightTo:"07:00", nightDim:0.35, nightSpeed:0.5,
   speed:1, threads:30, glow:1, trail:0.4, shuffle:3, dim:1, quality:"balanced", awake:true,
-  scene:"silk", rotSilk:true, rotInk:true, rotBoard:true,
+  scene:"silk", rotSilk:true, rotInk:true, rotBoard:true, rotBokeh:true, rotMesh:true, rotEvery:1,
+  bokehAmount:0.5, bokehSize:1, bokehSpeed:1, bokehGlow:1, bokehRain:true, bokehColors:"city",
+  meshSpeed:1, meshWarp:0.6, meshGrain:true, meshTone:"vivid", meshColors:"palette",
   boardColor:"classic", boardSpeed:1, boardSeconds:false, boardMsgs:"",
+  boardLayout:"clockdate", boardFont:"system", boardSize:1, boardMsgRows:2, boardMsgSecs:12,
+  boardCities:["london","newyork","mumbai","dubai","tokyo","singapore","sydney","paris"],
   inkKaleido:1, inkDrops:1, inkSize:1, inkSwirl:0.4, inkFlow:1, inkFade:0.55, inkShade:true,
   clockOn:false, clockPos:"mc", clockFont:"system", clockWeight:200, clockSize:1, clockColor:"white", clockOpacity:0.85,
   clockGlow:false, clockDate:true, clockSeconds:false, clock24: (() => { try { return !new Intl.DateTimeFormat(undefined, { hour:"numeric" }).resolvedOptions().hour12; } catch (e) { return false; } })() };
@@ -363,10 +502,12 @@ try {
     if (typeof saved.clock === "string" && saved.clockOn === undefined) { S.clockOn = saved.clock !== "off"; S.clockPos = saved.clock === "corner" ? "bl" : "mc"; }
     delete S.clock;
     // "Both" (Silk + Ink) became Rotate, keeping the same two scenes
-    if (saved.scene === "both") { S.scene = "rotate"; S.rotSilk = true; S.rotInk = true; S.rotBoard = false; }
+    if (saved.scene === "both") { S.scene = "rotate"; S.rotSilk = true; S.rotInk = true; S.rotBoard = false; S.rotBokeh = false; S.rotMesh = false; }
+    // Particle Clock was removed in 1.5
+    if (saved.scene === "particles") S.scene = "silk";
     // Watch and Marbles were removed in 1.3
     if (saved.scene === "watch" || saved.scene === "marbles") S.scene = "silk";
-    for (const k of Object.keys(S)) if (/^(watch|marble|rotWatch|rotMarbles)/.test(k)) delete S[k];
+    for (const k of Object.keys(S)) if (/^(watch|marble|rotWatch|rotMarbles|rotParticles|pc[A-Z])/.test(k)) delete S[k];
   }
 } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
@@ -835,6 +976,7 @@ function resize() {
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
   CX = W / 2; CY = H / 2; R = Math.min(W, H) * 0.5;
   if (typeof Mech !== "undefined") Mech.resize();
+  if (typeof FX !== "undefined") FX.resize();
   if (gl) { GLR.resize(cv.width, cv.height); InkR.resize(); return; }
   ctx.setTransform(1,0,0,1,0,0); ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = "#000"; ctx.fillRect(0, 0, cv.width, cv.height);
@@ -1096,15 +1238,16 @@ let nightF = 0, breatheF = 0, zoom = 1, bloomMul = 1, lastOpacity = "";
 // scenes: "silk" or "ink"; S.scene can also be "both", which alternates between them
 let activeScene = "silk", pendingScene = null, sceneF = 1, lastSceneSwap = 0;
 const inkAvailable = () => !!gl && InkR.ok;
-const ALL_SCENES = ["silk", "ink", "board"];
-const ROT_KEY = { silk: "rotSilk", ink: "rotInk", board: "rotBoard" };
+const ALL_SCENES = ["silk", "ink", "board", "bokeh", "mesh"];
+const ROT_KEY = { silk: "rotSilk", ink: "rotInk", board: "rotBoard", bokeh: "rotBokeh", mesh: "rotMesh" };
+const sceneAvailable = sc => sc === "ink" ? inkAvailable() : isFx(sc) ? FX.available() : true;
 function rotList() {
-  const l = ALL_SCENES.filter(sc => S[ROT_KEY[sc]] && (sc !== "ink" || inkAvailable()));
+  const l = ALL_SCENES.filter(sc => S[ROT_KEY[sc]] && sceneAvailable(sc));
   return l.length ? l : ["silk"];
 }
 function sceneWanted() {
   if (S.scene === "rotate") { const l = rotList(); return l.includes(activeScene) ? activeScene : l[0]; }
-  if (S.scene === "ink" && !inkAvailable()) return "silk";
+  if (!sceneAvailable(S.scene)) return "silk";
   return ALL_SCENES.includes(S.scene) ? S.scene : "silk";
 }
 function requestScene(sc) { pendingScene = sc === activeScene ? null : sc; }
@@ -1127,13 +1270,20 @@ function updateAmbient(dt) {
   sceneF += ((pendingScene ? 0 : 1) - sceneF) * Math.min(1, dt / .22);
   if (pendingScene && sceneF < .03) {                     // swap while the screen is dark
     if (isMech(activeScene)) Mech.leave(activeScene);     // free the old scene's big canvases
+    if (isFx(activeScene) && !isFx(pendingScene)) FX.leave();
     activeScene = pendingScene; pendingScene = null;
     if (activeScene === "silk" && gl) GLR.clearAll(); else if (activeScene === "ink") { InkR.clear(); ink.timer = .2; ink.pours = []; }
     else if (isMech(activeScene)) Mech.enter(activeScene);
+    else if (isFx(activeScene) && !FX.enter(activeScene)) { activeScene = "silk"; if (gl) GLR.clearAll(); }
+    tickClock();
   }
   const op = S.dim * (1 - (1 - S.nightDim) * nightF) * (1 - breatheF * .06 * (.5 - .5 * ph)) * sceneF;
-  const mechOn = isMech(activeScene), opKey = (mechOn ? "m" : "g") + op.toFixed(3);
-  if (opKey !== lastOpacity) { cv.style.opacity = mechOn ? "0" : op.toFixed(3); mcv.style.opacity = mechOn ? op.toFixed(3) : "0"; lastOpacity = opKey; }
+  const layer = isMech(activeScene) ? "m" : isFx(activeScene) ? "f" : "g", opKey = layer + op.toFixed(3);
+  if (opKey !== lastOpacity) {
+    const o = op.toFixed(3);
+    cv.style.opacity = layer === "g" ? o : "0"; mcv.style.opacity = layer === "m" ? o : "0"; fxcv.style.opacity = layer === "f" ? o : "0";
+    lastOpacity = opKey;
+  }
   // tilt: slow baseline so the resting angle on the desk always reads as centred
   let tx = 0, ty = 0;
   if (S.tilt && tilt.got) {
@@ -1190,9 +1340,15 @@ function frame(now) {
   last = now; dt = Math.min(dt, .1);
   if (clearBoost > 0) clearBoost -= dt;
   updateAmbient(dt);
-  if (S.scene === "rotate" && !pendingScene && clock - lastSceneSwap > Math.max(S.shuffle || 5, 3) * 60) {
+  if (S.scene === "rotate" && !pendingScene && clock - lastSceneSwap > (S.rotEvery || 1) * 60) {
     const l = rotList(); lastSceneSwap = clock;
     if (l.length > 1) requestScene(l[(l.indexOf(activeScene) + 1) % l.length]);
+  }
+  if (isFx(activeScene)) {
+    clock += dt;
+    FX.frame(activeScene, dt);
+    if (S.auto && S.shuffle > 0 && clock - lastShuffle > S.shuffle * 60) { lastShuffle = clock; shuffleStyle(false); }
+    return;
   }
   if (isMech(activeScene)) {
     clock += dt;
@@ -1306,134 +1462,665 @@ function paletteColor(i) {
   if (p.c) return p.c[i % p.c.length];
   return [((i * 67) + (p.cycle ? clock * 14 : 0)) % 360, 85, 62];
 }
-/* ---------- Split-flap board: time, date and messages ---------- */
+/* ---------- Split-flap board: a full-screen wall of real flaps ---------- */
+const DEPART_CITIES = [
+  ["london", "London", "Europe/London"], ["paris", "Paris", "Europe/Paris"], ["berlin", "Berlin", "Europe/Berlin"],
+  ["istanbul", "Istanbul", "Europe/Istanbul"], ["moscow", "Moscow", "Europe/Moscow"], ["cairo", "Cairo", "Africa/Cairo"],
+  ["dubai", "Dubai", "Asia/Dubai"], ["mumbai", "Mumbai", "Asia/Kolkata"], ["delhi", "Delhi", "Asia/Kolkata"],
+  ["singapore", "Singapore", "Asia/Singapore"], ["hongkong", "Hong Kong", "Asia/Hong_Kong"], ["shanghai", "Shanghai", "Asia/Shanghai"],
+  ["seoul", "Seoul", "Asia/Seoul"], ["tokyo", "Tokyo", "Asia/Tokyo"], ["sydney", "Sydney", "Australia/Sydney"],
+  ["auckland", "Auckland", "Pacific/Auckland"], ["honolulu", "Honolulu", "Pacific/Honolulu"], ["la", "Los Angeles", "America/Los_Angeles"],
+  ["sf", "San Francisco", "America/Los_Angeles"], ["chicago", "Chicago", "America/Chicago"], ["toronto", "Toronto", "America/Toronto"],
+  ["newyork", "New York", "America/New_York"], ["mexico", "Mexico City", "America/Mexico_City"], ["saopaulo", "Sao Paulo", "America/Sao_Paulo"],
+  ["reykjavik", "Reykjavik", "Atlantic/Reykjavik"],
+];
 const Board = (() => {
   const SET = " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,:'-!?&/+#";
-  const DIGITS = "0123456789";                       // time flaps carry digits only; colon and blank snap in
-  const COLS = 18;
-  const STYLES = {
-    classic:  { flap: ["#2a2a2d", "#1d1d20"], text: "#f2f2f7" },
-    amber:    { flap: ["#232220", "#181715"], text: "#ffb340" },
-    graphite: { flap: ["#48484b", "#38383b"], text: "#ececf0" },
-    palette:  { flap: ["#232326", "#18181b"], text: null },
+  const TILE = "■";                                    // a solid colour flap, used to draw the big clock
+  const STYLES = {   // flap shades: top edge, top at hinge, bottom at hinge, bottom edge
+    classic:  { bg: "#0b0b0d", slot: "#030304", bevel: ["#3a3a3f", "#000"], pin: ["#9a9aa0", "#3a3a3d"], flap: ["#2e2e32", "#26262a", "#1f1f22", "#17171a"], text: "#f2f2f7" },
+    amber:    { bg: "#0c0b09", slot: "#030302", bevel: ["#3b3730", "#000"], pin: ["#a39a88", "#3d3830"], flap: ["#2c2a26", "#24221f", "#1e1c19", "#161513"], text: "#ffb340" },
+    graphite: { bg: "#1c1c1f", slot: "#0b0b0c", bevel: ["#5a5a60", "#08080a"], pin: ["#c4c4ca", "#4a4a4f"], flap: ["#5c5c62", "#505056", "#46464b", "#3b3b40"], text: "#f5f5f7" },
+    white:    { bg: "#d6d6db", slot: "#8a8a91", bevel: ["#ffffff", "#9a9aa1"], pin: ["#ffffff", "#8e8e95"], flap: ["#fdfdfd", "#f3f3f5", "#e9e9ec", "#dcdce0"], text: "#1c1c1e" },
+    cream:    { bg: "#cdc2aa", slot: "#8a7e66", bevel: ["#f5eedd", "#a2967d"], pin: ["#fbf6ea", "#93876e"], flap: ["#f8f1e2", "#eee5d1", "#e4d9c2", "#d8ccb2"], text: "#3b2c1c" },
+    palette:  { bg: "#0b0b0d", slot: "#030304", bevel: ["#3a3a3f", "#000"], pin: ["#9a9aa0", "#3a3a3d"], flap: ["#2a2a2e", "#232327", "#1d1d20", "#161619"], text: null },
   };
-  let key = "", rows = [], housing = null, msgIdx = -1, msgT = 0, lastTime = "", lastDate = "", dirty = true, lastView = "";
-  let fmtKey = "", fmtTime = null;
-  const fmtDay = new Intl.DateTimeFormat("en-US", { weekday: "long" }), fmtMon = new Intl.DateTimeFormat("en-US", { month: "short" });
-  const invalidate = () => { key = ""; dirty = true; };
-  function makeRow(n, x, y, w, h, gap, set = SET) {
-    const cells = []; for (let i = 0; i < n; i++) cells.push({ x: x + i * (w + gap), y, w, h, ch: " ", target: " ", next: null, p: 0, delay: 0, set });
-    return cells;
-  }
+  const FONTS = {
+    system: ['-apple-system,"SF Pro Display",system-ui,sans-serif', 600, .74],
+    rounded: ['ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif', 700, .74],
+    mono: ['ui-monospace,"SF Mono",Menlo,Consolas,monospace', 600, .7],
+    condensed: ['"Avenir Next Condensed","SF Pro Display",system-ui,sans-serif', 600, .84],
+  };
+  const F57 = { w: 5, h: 7, g: {
+    "0": [".###.", "#...#", "#..##", "#.#.#", "##..#", "#...#", ".###."], "1": ["..#..", ".##..", "..#..", "..#..", "..#..", "..#..", ".###."],
+    "2": [".###.", "#...#", "....#", "...#.", "..#..", ".#...", "#####"], "3": [".###.", "#...#", "....#", "..##.", "....#", "#...#", ".###."],
+    "4": ["...#.", "..##.", ".#.#.", "#..#.", "#####", "...#.", "...#."], "5": ["#####", "#....", "####.", "....#", "....#", "#...#", ".###."],
+    "6": ["..##.", ".#...", "#....", "####.", "#...#", "#...#", ".###."], "7": ["#####", "....#", "...#.", "..#..", ".#...", ".#...", ".#..."],
+    "8": [".###.", "#...#", "#...#", ".###.", "#...#", "#...#", ".###."], "9": [".###.", "#...#", "#...#", ".####", "....#", "...#.", ".##.."],
+    ":": [".", ".", "#", ".", "#", ".", "."] } };
+  F57.g["0"] = [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."];
+  const F35 = { w: 3, h: 5, g: {
+    "0": ["###", "#.#", "#.#", "#.#", "###"], "1": [".#.", "##.", ".#.", ".#.", "###"], "2": ["###", "..#", "###", "#..", "###"],
+    "3": ["###", "..#", ".##", "..#", "###"], "4": ["#.#", "#.#", "###", "..#", "..#"], "5": ["###", "#..", "###", "..#", "###"],
+    "6": ["###", "#..", "###", "#.#", "###"], "7": ["###", "..#", ".#.", ".#.", ".#."], "8": ["###", "#.#", "###", "#.#", "###"],
+    "9": ["###", "#.#", "###", "..#", "###"], ":": [".", "#", ".", "#", "."] } };
+
+  let cols = 0, rows = 0, cw = 0, chh = 0, gap = 0, ox = 0, oy = 0, cells = [], key = "", full = true;
+  let sprites = new Map(), spriteKey = "", sig = "", msgIdx = -1, msgT = 0, pageIdx = -1, pageT = 0, fmts = new Map();
+  const st = () => STYLES[S.boardColor] || STYLES.classic;
+  const invalidate = () => { key = ""; full = true; };
+
+  /* ----- geometry ----- */
   function layout() {
-    const sec = !!S.boardSeconds, nT = sec ? 8 : 5, bw = Math.min(W * .9, H * 1.5);
-    let bwBig = Math.min(bw / (nT + (nT - 1) * .1), H * .2 * .7 * 1.0);
-    if (W < H) bwBig = Math.min(bwBig, (W * .9) / (nT + (nT - 1) * .1));
-    const bh = bwBig * 1.42, sw = Math.min(bw / (COLS + (COLS - 1) * .12), bwBig * .48), sh = sw * 1.42, sg = sw * .12;
-    const total = bh + bh * .3 + sh * 3 + sh * .18 * 2 + sh * .35;
-    let y = CY - total / 2;
-    const tw = nT * bwBig + (nT - 1) * bwBig * .1;
-    const tRow = makeRow(nT, CX - tw / 2, y, bwBig, bh, bwBig * .1, DIGITS); y += bh + bh * .3;
-    const sw2 = COLS * sw + (COLS - 1) * sg;
-    const dRow = makeRow(COLS, CX - sw2 / 2, y, sw, sh, sg); y += sh + sh * .35;
-    const m1 = makeRow(COLS, CX - sw2 / 2, y, sw, sh, sg); y += sh + sh * .18;
-    const m2 = makeRow(COLS, CX - sw2 / 2, y, sw, sh, sg);
-    rows = [tRow, dRow, m1, m2];
-    const pad = sw * .9, x0 = Math.min(CX - tw / 2, CX - sw2 / 2) - pad, x1 = Math.max(CX + tw / 2, CX + sw2 / 2) + pad;
-    housing = { x: x0, y: tRow[0].y - pad, w: x1 - x0, h: (m2[0].y + sh + pad) - (tRow[0].y - pad), r: pad * .8 };
-    lastTime = lastDate = ""; msgT = 0; dirty = true;
+    cw = Math.max(14, Math.max(W, H) / 27 * S.boardSize * (W < H ? 1.05 : 1));   // bigger setting = bigger flaps
+    gap = Math.max(2, cw * .1);
+    const m = Math.max(12, cw * .42);
+    cols = Math.max(6, Math.floor((W - 2 * m + gap) / (cw + gap)));
+    rows = Math.max(3, Math.floor((H - 2 * m + gap) / (cw * 1.38 + gap)));
+    cw = (W - 2 * m + gap) / cols - gap;                        // stretch so the wall fills the screen edge to edge
+    chh = Math.min(cw * 1.6, (H - 2 * m + gap) / rows - gap);
+    ox = (W - (cols * (cw + gap) - gap)) / 2; oy = (H - (rows * (chh + gap) - gap)) / 2;
+    cells = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++)
+      cells.push({ r, c, x: ox + c * (cw + gap), y: oy + r * (chh + gap), ch: " ", col: "", target: " ", tcol: "", next: null, ncol: "", p: 0, dur: .1, fin: false, delay: 0 });
+    sig = ""; full = true; clearSprites();
+  }
+
+  /* ----- colours ----- */
+  let pal = null;                                            // palette snapshot, refreshed with the sprite cache
+  const palAt = c => (pal || (pal = [0, 1, 2, 3, 4].map(i => paletteColor(i))))[Math.min(4, Math.floor(c / cols * 5))];
+  function textCol(c) { const s = st(); if (s.text) return s.text; return hsla(palAt(c), 1, 16); }
+  function tileCol(c) { const s = st(); if (s.text) return s.text; return hsla(palAt(c), 1, 4); }
+  function clearSprites() { for (const c of sprites.values()) { c.width = 0; c.height = 0; } sprites.clear(); }
+
+  /* ----- flap artwork, cached per character and colour ----- */
+  function sprite(ch, col) {
+    const k = ch + "|" + col;
+    let c = sprites.get(k); if (c) return c;
+    if (sprites.size > 420) clearSprites();
+    const s = st(), pw = Math.max(1, Math.ceil(cw * DPR)), ph = Math.max(1, Math.ceil(chh * DPR));
+    c = document.createElement("canvas"); c.width = pw; c.height = ph;
+    const g = c.getContext("2d"); g.scale(DPR, DPR);
+    const r = Math.min(cw, chh) * .09, tile = ch === TILE;
+    let f = s.flap;
+    if (tile) { const base = col; f = [base, base, base, base]; }
+    const half = (y0, a, b) => {
+      const gr = g.createLinearGradient(0, y0, 0, y0 + chh / 2); gr.addColorStop(0, a); gr.addColorStop(1, b);
+      g.save(); g.beginPath(); g.rect(0, y0, cw, chh / 2); g.clip(); g.beginPath(); g.roundRect(0, 0, cw, chh, r); g.fillStyle = gr; g.fill(); g.restore();
+    };
+    half(0, f[0], f[1]); half(chh / 2, f[2], f[3]);
+    if (tile) {   // tiles get the same curvature as the flaps: lighter at the top edge, darker at the bottom
+      let gr = g.createLinearGradient(0, 0, 0, chh); gr.addColorStop(0, "rgba(255,255,255,.16)"); gr.addColorStop(.5, "rgba(255,255,255,0)"); gr.addColorStop(.5, "rgba(0,0,0,.05)"); gr.addColorStop(1, "rgba(0,0,0,.22)");
+      g.save(); g.beginPath(); g.roundRect(0, 0, cw, chh, r); g.clip(); g.fillStyle = gr; g.fillRect(0, 0, cw, chh); g.restore();
+    }
+    // curvature near the hinge, and a fine highlight on the top edge
+    const hg = g.createLinearGradient(0, chh * .36, 0, chh * .64);
+    hg.addColorStop(0, "rgba(0,0,0,0)"); hg.addColorStop(.5, "rgba(0,0,0,.2)"); hg.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = hg; g.fillRect(0, chh * .36, cw, chh * .28);
+    g.fillStyle = "rgba(255,255,255,.08)"; g.fillRect(r, .5, cw - 2 * r, 1);
+    if (!tile && ch !== " ") {
+      const [fam, wt, sc] = FONTS[S.boardFont] || FONTS.system;
+      g.font = `${wt} ${(chh * sc).toFixed(1)}px ${fam}`; g.textAlign = "center"; g.textBaseline = "middle";
+      g.fillStyle = col; g.fillText(ch, cw / 2, chh / 2 + chh * .045);
+      g.save(); g.beginPath(); g.rect(0, chh / 2, cw, chh / 2); g.clip();     // the lower half of each letter sits a touch darker
+      g.globalAlpha = .12; g.fillStyle = "#000"; g.fillText(ch, cw / 2, chh / 2 + chh * .045); g.restore();
+    }
+    sprites.set(k, c); return c;
+  }
+
+  /* ----- drawing ----- */
+  function drawHalf(cell, ch, col, top, scale = 1, dark = 0) {
+    const sp = sprite(ch, col), mid = cell.y + chh / 2, hh = chh / 2 * scale;
+    if (hh <= .2) return;
+    const sy = top ? 0 : sp.height / 2, dy = top ? mid - hh : mid;
+    mctx.drawImage(sp, 0, sy, sp.width, sp.height / 2, cell.x, dy, cw, hh);
+    if (dark > .005) { mctx.fillStyle = `rgba(0,0,0,${dark.toFixed(3)})`; mctx.fillRect(cell.x, dy, cw, hh); }
+  }
+  function theta(cell) {          // flap angle: falls with gravity, the last flip lands with a small bounce
+    const p = Math.min(1, cell.p);
+    if (!cell.fin) return Math.PI * p * p;
+    const land = .62;
+    if (p < land) { const q = p / land; return Math.PI * q * q; }
+    const q = (p - land) / (1 - land);
+    return Math.PI - .2 * Math.PI * Math.sin(Math.PI * q) * (1 - q);
+  }
+  function drawCell(cell) {
+    const s = st(), x = cell.x, y = cell.y, mid = y + chh / 2;
+    mctx.fillStyle = s.slot; mctx.fillRect(x - gap / 2, y - gap / 2, cw + gap, chh + gap);
+    if (cell.next === null) { drawHalf(cell, cell.ch, cell.col, true); drawHalf(cell, cell.ch, cell.col, false); }
+    else {
+      const th = theta(cell);
+      drawHalf(cell, cell.next, cell.ncol, true, 1, .5 * Math.max(0, Math.cos(th)));     // new top, in the falling flap's shadow
+      if (th < Math.PI / 2) {
+        drawHalf(cell, cell.ch, cell.col, false);
+        drawHalf(cell, cell.ch, cell.col, true, Math.cos(th), .5 * (1 - Math.cos(th)));    // old top folds down
+      } else {
+        const k = -Math.cos(th);
+        drawHalf(cell, cell.ch, cell.col, false, 1, .35 * (1 - k));                         // old bottom, darkened by the shadow
+        drawHalf(cell, cell.next, cell.ncol, false, k, .45 * (1 - k));                       // new bottom falls into place
+      }
+    }
+    // the hinge: a thin gap between the halves, and a pin on each side
+    const gh = Math.max(1, chh * .022);
+    mctx.fillStyle = s.slot; mctx.fillRect(x, mid - gh / 2, cw, gh);
+    const pw = Math.max(2, cw * .07), ph = Math.max(3, chh * .085);
+    const pg = mctx.createLinearGradient(0, mid - ph / 2, 0, mid + ph / 2); pg.addColorStop(0, s.pin[0]); pg.addColorStop(1, s.pin[1]);
+    mctx.fillStyle = pg;
+    mctx.beginPath(); mctx.roundRect(x - pw * .55, mid - ph / 2, pw, ph, pw * .35); mctx.roundRect(x + cw - pw * .45, mid - ph / 2, pw, ph, pw * .35); mctx.fill();
+  }
+  function drawAll() {
+    const s = st();
+    mctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    mctx.fillStyle = s.bg; mctx.fillRect(0, 0, W, H);
+    // the housing: a recessed panel with a bevelled lip around the wall of flaps
+    const pad = gap * 1.6, x0 = ox - pad, y0 = oy - pad, x1 = W - ox + pad, y1 = H - oy + pad, rr = Math.max(6, gap * 2.2);
+    const bev = mctx.createLinearGradient(x0, y0, x1, y1); bev.addColorStop(0, s.bevel[0]); bev.addColorStop(1, s.bevel[1]);
+    mctx.beginPath(); mctx.roundRect(x0 - 3, y0 - 3, x1 - x0 + 6, y1 - y0 + 6, rr + 3); mctx.fillStyle = bev; mctx.fill();
+    mctx.beginPath(); mctx.roundRect(x0, y0, x1 - x0, y1 - y0, rr); mctx.fillStyle = s.slot; mctx.fill();
+    const inner = mctx.createLinearGradient(0, y0, 0, y0 + pad * 2.5); inner.addColorStop(0, "rgba(0,0,0,.55)"); inner.addColorStop(1, "rgba(0,0,0,0)");
+    mctx.fillStyle = inner; mctx.fillRect(x0, y0, x1 - x0, pad * 2.5);
+    for (const cell of cells) drawCell(cell);
+  }
+
+  /* ----- what the board says ----- */
+  function fmt(zone, sec) {
+    const k = (zone || "") + "|" + S.clock24 + "|" + sec;
+    let f = fmts.get(k);
+    if (!f) { const o = { hour: "2-digit", minute: "2-digit", hourCycle: S.clock24 ? "h23" : "h12" }; if (sec) o.second = "2-digit"; if (zone) o.timeZone = zone;
+      f = new Intl.DateTimeFormat("en-GB", o); fmts.set(k, f); }
+    return f;
+  }
+  function timeText(d, sec, zone) {
+    let t = fmt(zone, sec).formatToParts(d).filter(p => p.type === "hour" || p.type === "minute" || p.type === "second").map(p => p.value).join(":");
+    if (!S.clock24 && t[0] === "0") t = t.slice(1);
+    return t;
+  }
+  const dayFmt = new Map();
+  function dayText(d, zone) { let f = dayFmt.get(zone); if (!f) { f = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: zone }); dayFmt.set(zone, f); } return f.format(d).toUpperCase(); }
+  const fmtWd = new Intl.DateTimeFormat("en-US", { weekday: "long" }), fmtMo = new Intl.DateTimeFormat("en-US", { month: "short" });
+  function dateText(d, max) {
+    const wd = fmtWd.format(d), ws = wd.slice(0, 3), mo = fmtMo.format(d), dn = d.getDate();
+    for (const t of [`${wd} ${mo} ${dn}`, `${ws} ${mo} ${dn}`, `${mo} ${dn}`]) if (t.length <= max) return t.toUpperCase();
+    return `${dn}`;
   }
   const clean = t => String(t || "").toUpperCase().split("").map(c => (SET.includes(c) ? c : " ")).join("");
-  function setRow(row, text, stagger = .035, center = true) {
-    let t = clean(text).slice(0, row.length);
-    if (center) { const padL = Math.floor((row.length - t.length) / 2); t = " ".repeat(padL) + t; }
-    t = t.padEnd(row.length, " ");
-    row.forEach((c, i) => { if (c.target !== t[i]) { c.target = t[i]; c.delay = i * stagger; } });
-  }
-  function wrap2(text) {
+  function wrapN(text, width, n) {
     const words = clean(text).split(/\s+/).filter(Boolean), out = [""];
     for (const w of words) { const cur = out[out.length - 1];
-      if (!cur) out[out.length - 1] = w.slice(0, COLS);
-      else if (cur.length + 1 + w.length <= COLS) out[out.length - 1] = cur + " " + w;
-      else if (out.length < 2) out.push(w.slice(0, COLS)); else break; }
-    return [out[0] || "", out[1] || ""];
+      if (!cur) out[out.length - 1] = w.slice(0, width);
+      else if (cur.length + 1 + w.length <= width) out[out.length - 1] = cur + " " + w;
+      else if (out.length < n) out.push(w.slice(0, width)); else break; }
+    while (out.length < n) out.push("");
+    return out;
   }
   function messages() {
     const h = new Date().getHours(), greet = h < 5 ? "GOOD NIGHT" : h < 12 ? "GOOD MORNING" : h < 17 ? "GOOD AFTERNOON" : h < 22 ? "GOOD EVENING" : "GOOD NIGHT";
     const own = String(S.boardMsgs || "").split(/\n/).map(s => s.trim()).filter(Boolean);
     return own.length ? [greet, ...own] : [greet, "HAVE A GREAT DAY", "STAY CURIOUS"];
   }
-  function timeText(d) {
-    const k = S.clock24 + "|" + S.boardSeconds;
-    if (k !== fmtKey) { fmtKey = k; const o = { hour: "2-digit", minute: "2-digit", hourCycle: S.clock24 ? "h23" : "h12" }; if (S.boardSeconds) o.second = "2-digit"; fmtTime = new Intl.DateTimeFormat("en-GB", o); }
-    let t = fmtTime.formatToParts(d).filter(p => p.type !== "dayPeriod" && p.type !== "literal" || p.value.trim() === ":").map(p => p.type === "literal" ? ":" : p.value).join("");
-    if (!S.clock24 && t[0] === "0") t = " " + t.slice(1);
-    return t;
-  }
-  function dateText(d) {
-    return fmtDay.format(d) + " " + fmtMon.format(d) + " " + d.getDate();
-  }
-  function drawCell(c, st, textColor) {
-    const { x, y, w, h } = c, r = w * .09, mid = y + h / 2, font = `600 ${h * .74}px -apple-system,"SF Pro Display",system-ui,sans-serif`;
-    const half = (top, ch, sy = 1, shade = 0) => {
-      mctx.save(); mctx.beginPath(); if (top) mctx.rect(x, y, w, h / 2 - .5); else mctx.rect(x, mid + .5, w, h / 2); mctx.clip();
-      if (sy !== 1) { mctx.translate(0, mid); mctx.scale(1, sy); mctx.translate(0, -mid); }
-      const g = mctx.createLinearGradient(0, y, 0, y + h); g.addColorStop(0, st.flap[0]); g.addColorStop(1, st.flap[1]);
-      mctx.beginPath(); mctx.roundRect(x, y, w, h, r); mctx.fillStyle = g; mctx.fill();
-      mctx.fillStyle = textColor; mctx.font = font; mctx.textAlign = "center"; mctx.textBaseline = "middle"; mctx.fillText(ch, x + w / 2, mid + h * .035);
-      if (shade) { mctx.fillStyle = `rgba(0,0,0,${shade})`; mctx.fillRect(x, y, w, h); }
-      mctx.restore();
+  function compose(d) {
+    const out = Array.from({ length: rows * cols }, () => [" ", ""]);
+    const put = (r, c, ch, col) => { if (r >= 0 && r < rows && c >= 0 && c < cols) out[r * cols + c] = [ch, col]; };
+    const text = (r, str, align = "center", c0 = 0, c1 = cols) => {
+      const s2 = clean(str).slice(0, c1 - c0), w = c1 - c0;
+      const start = align === "left" ? c0 : align === "right" ? c1 - s2.length : c0 + Math.floor((w - s2.length) / 2);
+      for (let i = 0; i < s2.length; i++) put(r, start + i, s2[i], textCol(start + i));
     };
-    if (c.next === null) { half(true, c.ch); half(false, c.ch); }
-    else {
-      const p = c.p;
-      half(true, c.next); half(false, c.ch);                       // behind: new top, old bottom
-      if (p < .5) half(true, c.ch, Math.cos(p * Math.PI), p * .9); // old top folds down
-      else half(false, c.next, -Math.cos(p * Math.PI), (1 - p) * .9); // new bottom falls into place
-    }
-    mctx.fillStyle = "rgba(0,0,0,.65)"; mctx.fillRect(x, mid - .75, w, 1.5);
-    mctx.fillStyle = "rgba(255,255,255,.05)"; mctx.fillRect(x + w * .04, y + 1, w * .92, 1);
-  }
-  function frame(dt) {
-    const k = [W, H, DPR, S.boardSeconds].join("|");
-    if (k !== key) { key = k; layout(); }
-    const d = new Date(), tt = timeText(d), dd = dateText(d);
-    if (tt !== lastTime) { setRow(rows[0], tt, .05); lastTime = tt; }
-    if (dd !== lastDate) { setRow(rows[1], dd); lastDate = dd; }
-    msgT -= dt;
-    if (msgT <= 0) { const list = messages(); msgIdx = (msgIdx + 1) % list.length; const [a, b] = wrap2(list[msgIdx]); setRow(rows[2], a); setRow(rows[3], b, .035); msgT = 12; }
-    const flipT = .065 / (S.boardSpeed * mechSlow());
-    for (const row of rows) for (const c of row) {
-      if (c.delay > 0 && c.next === null) { c.delay -= dt; continue; }   // never freeze a flap mid-fold
-      if (c.next === null && c.ch !== c.target) {
-        const i = c.set.indexOf(c.ch);
-        c.next = c.set.indexOf(c.target) < 0 ? c.target : c.set[((i < 0 ? 0 : i) + 1) % c.set.length];   // unknown characters snap straight in
-        c.p = 0;
+    const block = (lines) => {    // vertically centre a list of lines; drop blank spacer lines if short of rows
+      let ls = lines.slice();
+      while (ls.length > rows && ls.includes(null)) ls.splice(ls.lastIndexOf(null), 1);
+      ls = ls.slice(0, rows);
+      const top = Math.floor((rows - ls.length) / 2);
+      ls.forEach((l, i) => { if (l) l(top + i); });
+    };
+    const L = S.boardLayout;
+    if (L === "clock" || L === "clockdate") {
+      const withDate = L === "clockdate";
+      const fits = (F, str) => str.split("").reduce((a, ch) => a + (ch === ":" ? 1 : F.w), 0) + (str.length - 1);
+      const draw = (F, str, r0) => {
+        let c = Math.floor((cols - fits(F, str)) / 2);
+        for (const ch of str) { const gl = F.g[ch]; const gw = ch === ":" ? 1 : F.w;
+          if (gl) gl.forEach((row, ry) => { for (let rx = 0; rx < gw; rx++) if (row[rx] === "#") put(r0 + ry, c + rx, TILE, tileCol(c + rx)); });
+          c += gw + 1; }
+      };
+      let t = timeText(d, S.boardSeconds);
+      const tryFonts = (str) => {
+        for (const margin of [2, 0]) for (const F of [F57, F35]) if (fits(F, str) <= cols - margin && F.h + (withDate ? 2 : 0) <= rows) {
+          const r0 = Math.floor((rows - F.h - (withDate ? 2 : 0)) / 2);
+          draw(F, str, r0); if (withDate) text(r0 + F.h + 1, dateText(d, cols)); return true;
+        }
+        return false;
+      };
+      if (tryFonts(t) || (S.boardSeconds && tryFonts(t = timeText(d, false)))) return out;
+      // narrow screens: hours above minutes
+      const [hh, mm] = t.split(":");
+      for (const F of [F57, F35]) {
+        const need = 2 * F.h + 1 + (withDate ? 2 : 0);
+        if (Math.max(fits(F, hh), fits(F, mm)) <= cols - 2 && need <= rows) {
+          const r0 = Math.floor((rows - need) / 2); draw(F, hh, r0); draw(F, mm, r0 + F.h + 1);
+          if (withDate) text(r0 + 2 * F.h + 2, dateText(d, cols)); return out;
+        }
       }
-      if (c.next !== null) { c.p += dt / flipT; dirty = true; if (c.p >= 1) { c.ch = c.next; c.next = null; c.p = 0; } }
+      block([r => text(r, t), withDate ? null : undefined, withDate ? (r => text(r, dateText(d, cols))) : undefined].filter(x => x !== undefined));
+      return out;
     }
-    // breathing and tilt move the finished board as a whole (cheap), so the cells only redraw when a flap moves
-    const tr = `translate(${(tilt.px * .6).toFixed(1)}px,${(tilt.py * .6).toFixed(1)}px) scale(${zoom.toFixed(4)})`;
-    if (mcv.style.transform !== tr) mcv.style.transform = tr;
-    const textColor0 = (STYLES[S.boardColor] || STYLES.classic).text || hsla(paletteColor(0), 1, 18);
-    const view = [S.boardColor, textColor0].join("|");
-    if (!dirty && view === lastView) return;          // nothing moved: leave the last frame on screen
-    dirty = false; lastView = view;
-    const st = STYLES[S.boardColor] || STYLES.classic, textColor = textColor0;
-    mctx.setTransform(DPR, 0, 0, DPR, 0, 0); mctx.clearRect(0, 0, W, H);
-    mctx.beginPath(); mctx.roundRect(housing.x, housing.y, housing.w, housing.h, housing.r); mctx.fillStyle = "#0c0c0e"; mctx.fill();
-    mctx.strokeStyle = "rgba(255,255,255,.07)"; mctx.lineWidth = 1; mctx.stroke();
-    for (const row of rows) for (const c of row) drawCell(c, st, textColor);
+    if (L === "departures") {
+      const list = DEPART_CITIES.filter(([id]) => (S.boardCities || []).includes(id));
+      const room = Math.max(1, rows - 2), pages = Math.max(1, Math.ceil(list.length / room)), per = Math.ceil(list.length / pages);
+      const pg = Math.max(0, pageIdx) % pages, page = list.slice(pg * per, pg * per + per);
+      const lines = [];
+      const now = timeText(d, S.boardSeconds);
+      lines.push(r => { if (cols >= now.length + 11) { text(r, "DEPARTURES", "left"); text(r, now, "right"); } else text(r, now); });
+      lines.push(null);
+      for (const [, name, zone] of page) lines.push(r => {
+        const tm = timeText(d, false, zone), day = cols >= 20 ? dayText(d, zone) + " " : "", right = day + tm;
+        text(r, name, "left", 0, Math.max(1, cols - right.length - 1)); text(r, right, "right");
+      });
+      if (!list.length) lines.push(r => text(r, "CHOOSE CITIES"));
+      block(lines);
+      return out;
+    }
+    // full board: time, date, then messages
+    const n = Math.max(1, Math.min(3, S.boardMsgRows | 0)), msg = wrapN(messages()[Math.max(0, msgIdx) % messages().length], cols, n);
+    const lines = [r => text(r, timeText(d, S.boardSeconds)), null, r => text(r, dateText(d, cols)), null];
+    msg.forEach(m => lines.push(r => text(r, m)));
+    block(lines);
+    return out;
   }
-  return { frame, invalidate, enter: () => { key = ""; dirty = true; }, leave: () => { mcv.style.transform = ""; } };
+
+  /* ----- per frame ----- */
+  function frame(dt) {
+    const k = [W, H, DPR, S.boardSize].join("|");
+    if (k !== key) { key = k; layout(); }
+    const sk = [S.boardColor, S.boardFont, cw.toFixed(2), chh.toFixed(2), DPR, S.palette, S.boardColor === "palette" && (S.palette === "time" || PALETTES[S.palette]?.cycle) ? Math.floor(Date.now() / 60000) : 0].join("|");
+    if (sk !== spriteKey) { spriteKey = sk; pal = null; clearSprites(); full = true; for (const c of cells) c.col = c.col && (c.ch === TILE ? tileCol(c.c) : textCol(c.c)); }
+    msgT -= dt; pageT -= dt;
+    if (msgT <= 0) { msgIdx++; msgT = S.boardMsgSecs; }
+    if (pageT <= 0) { pageIdx++; pageT = S.boardMsgSecs; }
+    const d = new Date();
+    const s2 = [Math.floor(d.getTime() / 1000), S.boardLayout, S.boardSeconds, S.boardMsgRows, S.boardMsgs, msgIdx, pageIdx, (S.boardCities || []).join(), S.clock24, cols, rows, spriteKey].join("|");
+    if (s2 !== sig) {
+      sig = s2;
+      const out = compose(d);
+      cells.forEach((cell, i) => {
+        const [ch, col] = out[i];
+        if (cell.target !== ch || cell.tcol !== col) {
+          const settled = cell.next === null && cell.ch === cell.target && cell.col === cell.tcol;
+          cell.target = ch; cell.tcol = col;
+          if (settled) cell.delay = Math.min(.6, ch === TILE || cell.ch === TILE ? (cell.c * .028 + cell.r * .045) : cell.c * .03 + cell.r * .02);
+        }
+      });
+    }
+    // advance the flips
+    const step = .075 / (S.boardSpeed * mechSlow());
+    const busy = [];
+    for (const cell of cells) {
+      if (cell.next === null) {
+        if (cell.ch === cell.target && cell.col === cell.tcol) continue;
+        if (cell.delay > 0) { cell.delay -= dt; continue; }
+        const direct = cell.target === TILE || cell.ch === TILE || cell.ch === cell.target || !SET.includes(cell.target);
+        cell.next = direct ? cell.target : SET[(SET.indexOf(cell.ch) + 1) % SET.length];
+        cell.ncol = cell.next === cell.target ? cell.tcol : (cell.next === " " ? "" : (cell.tcol || textCol(cell.c)));
+        cell.fin = cell.next === cell.target; cell.dur = cell.fin ? step * 2.6 : step; cell.p = 0;
+      }
+      cell.p += dt / cell.dur;
+      if (cell.p >= 1) { cell.ch = cell.next; cell.col = cell.ncol; cell.next = null; }
+      busy.push(cell);
+    }
+    // breathing and tilt move the whole wall (cheap); scaled a little so the edges never show
+    const tr = `translate(${(tilt.px * .5).toFixed(1)}px,${(tilt.py * .5).toFixed(1)}px) scale(${(zoom * (S.tilt ? 1.035 : 1)).toFixed(4)})`;
+    if (mcv.style.transform !== tr) mcv.style.transform = tr;
+    mctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    if (full) { full = false; drawAll(); return; }
+    for (const cell of busy) drawCell(cell);
+  }
+  return { frame, invalidate, enter: () => { key = ""; full = true; for (const c of cells) { c.ch = " "; c.col = ""; c.next = null; } }, leave: () => { mcv.style.transform = ""; clearSprites(); } };
 })();
 
 const Mech = {
   frame(sc, dt) { Board.frame(dt); },
-  enter(sc) { mcv.style.transform = ""; mctx.setTransform(1, 0, 0, 1, 0, 0); mctx.clearRect(0, 0, mcv.width, mcv.height); Board.enter(); },
-  leave(sc) { Board.leave(); },
-  resize() { mcv.width = Math.round(W * DPR); mcv.height = Math.round(H * DPR); Board.invalidate(); },
+  enter(sc) { mcv.width = Math.round(W * DPR); mcv.height = Math.round(H * DPR); mcv.style.transform = ""; mctx.setTransform(1, 0, 0, 1, 0, 0); mctx.clearRect(0, 0, mcv.width, mcv.height); Board.enter(); },
+  leave(sc) { Board.leave(); mcv.width = 1; mcv.height = 1; },
+  resize() { if (isMech(activeScene)) { mcv.width = Math.round(W * DPR); mcv.height = Math.round(H * DPR); } Board.invalidate(); },
 };
+
+
+/* ====================== FX SCENES: Bokeh and Gradient ======================
+   Their own WebGL2 canvas (#fx) and context, completely separate from the Silk and Ink renderer. */
+const FX_SCENES = ["bokeh", "mesh"];
+const isFx = sc => FX_SCENES.includes(sc);
+// darker, bolder colour sets for the Gradient scene
+const MESH_SETS = {
+  midnight:  { name: "Midnight",   c: [[222, 62, 20], [214, 70, 34], [205, 45, 50], [232, 40, 12], [198, 30, 62]] },
+  carbon:    { name: "Carbon",     c: [[220, 6, 16], [210, 8, 28], [24, 92, 50], [215, 6, 42], [0, 0, 7]] },
+  steel:     { name: "Steel",      c: [[210, 20, 30], [205, 24, 46], [215, 16, 62], [220, 28, 18], [195, 32, 40]] },
+  ocean:     { name: "Deep Ocean", c: [[202, 82, 20], [190, 76, 32], [178, 62, 40], [216, 72, 24], [172, 55, 52]] },
+  forest:    { name: "Forest",     c: [[150, 45, 17], [136, 36, 29], [95, 30, 34], [165, 52, 22], [80, 26, 44]] },
+  volcanic:  { name: "Volcanic",   c: [[8, 86, 34], [24, 95, 46], [0, 0, 9], [354, 76, 24], [36, 92, 54]] },
+  bronze:    { name: "Bronze",     c: [[30, 56, 30], [36, 66, 45], [24, 46, 19], [40, 52, 60], [18, 32, 13]] },
+  space:     { name: "Deep Space", c: [[250, 52, 12], [268, 46, 24], [228, 62, 30], [290, 42, 17], [208, 72, 46]] },
+  olive:     { name: "Olive",      c: [[74, 32, 24], [60, 26, 34], [90, 22, 17], [45, 36, 40], [100, 16, 44]] },
+  arctic:    { name: "Arctic",     c: [[200, 22, 78], [208, 42, 58], [195, 52, 44], [220, 32, 28], [190, 16, 90]] },
+};
+const FX = (() => {
+  const canvas = document.getElementById("fx");
+  let g = null, ok = false, P = {}, emptyVao = null, w = 0, h = 0;
+  const QUAD = new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]);
+
+  /* ---------- shaders ---------- */
+  const FULL_VS = `#version 300 es
+    out vec2 vUv;
+    void main(){ vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2)); vUv = p; gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0); }`;
+  const MESH_FS = `#version 300 es
+    precision highp float;
+    in vec2 vUv; out vec4 o;
+    uniform vec2 uRes, uPar; uniform float uT, uWarp, uGrain, uZoom, uSat, uLift, uGain; uniform vec3 uC[7];
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+    void main(){
+      float a = uRes.x / uRes.y;
+      vec2 p = vUv - 0.5; p.x *= a;
+      p = p / uZoom - uPar;
+      float t = uT;
+      vec2 q = p;
+      q += uWarp * 0.20 * vec2(sin(p.y * 2.3 + t * 0.61) + 0.5 * sin(p.y * 4.1 - t * 0.37), cos(p.x * 2.1 - t * 0.53) + 0.5 * cos(p.x * 4.6 + t * 0.29));
+      q += uWarp * 0.08 * vec2(sin(q.y * 5.3 + t * 0.83), cos(q.x * 4.9 - t * 0.71));
+      vec3 acc = vec3(0.0); float ws = 0.0;
+      for (int i = 0; i < 7; i++) {
+        float fi = float(i);
+        vec2 c = vec2(0.62 * a * sin(t * (0.13 + 0.021 * fi) + fi * 1.9), 0.46 * cos(t * (0.11 + 0.027 * fi) + fi * 2.7));
+        vec2 d = q - c;
+        float wgt = pow(dot(d, d) + 0.03, -1.8);
+        acc += uC[i] * wgt; ws += wgt;
+      }
+      vec3 col = acc / ws;                                   // linear light
+      // a soft sheen running along the folds, like light on silk fabric
+      float sheen = sin(q.x * 2.6 + q.y * 1.7 + t * 0.4) * 0.5 + 0.5;
+      col *= 0.82 + 0.36 * sheen * sheen;
+      float lum = dot(col, vec3(0.2126, 0.7152, 0.0722));
+      col = max(mix(vec3(lum), col, uSat), 0.0);
+      col = col * uGain + uLift;
+      float v = length((vUv - 0.5) * vec2(a, 1.0));
+      col *= mix(1.0, 0.72, smoothstep(0.35, 1.05, v));      // soft vignette for depth
+      col = pow(col, vec3(1.0 / 2.2));
+      col += (hash(gl_FragCoord.xy + fract(t * 7.0) * 61.0) - 0.5) * uGrain / 255.0;
+      o = vec4(col, 1.0);
+    }`;
+  const BOKEH_BG_FS = `#version 300 es
+    precision highp float;
+    in vec2 vUv; out vec4 o;
+    uniform vec3 uGlow; uniform float uT;
+    void main(){
+      vec3 top = vec3(0.012, 0.016, 0.04), bot = vec3(0.035, 0.025, 0.05);
+      vec3 c = mix(bot, top, vUv.y);
+      float z = (vUv.y - 0.26) * 3.2; float band = exp(-z * z);      // far-off city glow
+      c += uGlow * band * (0.10 + 0.015 * sin(uT * 0.3 + vUv.x * 3.0));
+      o = vec4(c, 1.0);
+    }`;
+  const LIGHT_VS = `#version 300 es
+    layout(location=0) in vec2 aCorner;
+    layout(location=1) in vec4 aPos;     // x, y (0..1), radius (px), depth (0 far .. 1 near)
+    layout(location=2) in vec4 aCol;     // rgb, intensity
+    uniform vec2 uRes, uPar; uniform float uZoom;
+    out vec2 vP; out vec4 vCol; out float vSoft;
+    void main(){
+      vec2 ctr = uRes * 0.5, c = aPos.xy * uRes;
+      c = ctr + (c - ctr) * uZoom + uPar * (0.2 + 0.8 * aPos.w);
+      vec2 pix = c + aCorner * aPos.z;
+      vP = aCorner; vCol = aCol; vSoft = mix(0.06, 0.55, aPos.w);
+      gl_Position = vec4(pix.x / uRes.x * 2.0 - 1.0, 1.0 - pix.y / uRes.y * 2.0, 0.0, 1.0);
+    }`;
+  const LIGHT_FS = `#version 300 es
+    precision highp float;
+    in vec2 vP; in vec4 vCol; in float vSoft; out vec4 o;
+    void main(){
+      float r = length(vP);
+      float edge = 1.0 - smoothstep(1.0 - vSoft, 1.0, r);
+      if (edge <= 0.0) discard;
+      float rim = 0.8 + 0.35 * smoothstep(0.55, 0.97, r);         // real bokeh discs are a little brighter at the rim
+      vec3 c = vCol.rgb * vCol.a * edge * rim;
+      o = vec4(c + c * c * 0.35, 1.0);                             // hot centres bloom toward white
+    }`;
+  const PRESENT_FS = `#version 300 es
+    precision highp float;
+    in vec2 vUv; out vec4 o; uniform sampler2D uTex;
+    void main(){ o = vec4(texture(uTex, vUv).rgb, 1.0); }`;
+  const DROP_VS = `#version 300 es
+    layout(location=0) in vec2 aCorner;
+    layout(location=1) in vec4 aDrop;    // x, y (px), radius (px), opacity
+    uniform vec2 uRes;
+    out vec2 vP; out vec2 vCenter; out float vRad; out float vA;
+    void main(){
+      vec2 pix = aDrop.xy + aCorner * aDrop.z * vec2(1.0, 1.08);
+      vP = aCorner; vCenter = vec2(aDrop.x / uRes.x, 1.0 - aDrop.y / uRes.y); vRad = aDrop.z; vA = aDrop.w;
+      gl_Position = vec4(pix.x / uRes.x * 2.0 - 1.0, 1.0 - pix.y / uRes.y * 2.0, 0.0, 1.0);
+    }`;
+  const DROP_FS = `#version 300 es
+    precision highp float;
+    in vec2 vP; in vec2 vCenter; in float vRad; in float vA; out vec4 o;
+    uniform sampler2D uTex; uniform vec2 uRes;
+    void main(){
+      float r = length(vP);
+      if (r > 1.0) discard;
+      float hgt = sqrt(1.0 - r * r);
+      // a droplet acts as a tiny lens: it shows the lights behind it upside down and magnified
+      vec2 uv = vCenter + vec2(-vP.x, vP.y) * (vRad * 3.2) / uRes;
+      vec3 c = texture(uTex, uv).rgb * (1.5 + 0.6 * hgt) + 0.02;
+      c *= mix(0.35, 1.0, 1.0 - smoothstep(0.72, 1.0, r));           // dark rim where the glass bends light away
+      float spec = (1.0 - smoothstep(0.0, 0.32, length(vP - vec2(-0.32, -0.38)))) * 0.55;
+      c += vec3(spec);
+      float aa = 1.0 - smoothstep(0.86, 1.0, r);
+      o = vec4(c, aa * vA);
+    }`;
+  function compile(vs, fs) {
+    const mk = (t, src) => { const sh = g.createShader(t); g.shaderSource(sh, src); g.compileShader(sh);
+      if (!g.getShaderParameter(sh, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(sh)); return sh; };
+    const p = g.createProgram(); g.attachShader(p, mk(g.VERTEX_SHADER, vs)); g.attachShader(p, mk(g.FRAGMENT_SHADER, fs)); g.linkProgram(p);
+    if (!g.getProgramParameter(p, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(p));
+    const u = {}; const n = g.getProgramParameter(p, g.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const nm = g.getActiveUniform(p, i).name.replace(/\[0\]$/, ""); u[nm] = g.getUniformLocation(p, g.getActiveUniform(p, i).name); }
+    return { p, u };
+  }
+  function init() {
+    ok = false;
+    try {
+      g = canvas.getContext("webgl2", { alpha: false, antialias: false, depth: false, stencil: false, premultipliedAlpha: false, powerPreference: "high-performance" });
+      if (!g) return false;
+      P.mesh = compile(FULL_VS, MESH_FS); P.bg = compile(FULL_VS, BOKEH_BG_FS); P.light = compile(LIGHT_VS, LIGHT_FS);
+      P.present = compile(FULL_VS, PRESENT_FS); P.drop = compile(DROP_VS, DROP_FS);
+      emptyVao = g.createVertexArray();
+      Bokeh.init();
+      ok = true;
+    } catch (e) { console.warn("Effects unavailable:", e); ok = false; }
+    return ok;
+  }
+  function full() { g.bindVertexArray(emptyVao); g.drawArrays(g.TRIANGLES, 0, 3); }
+  function viewport() { g.bindFramebuffer(g.FRAMEBUFFER, null); g.viewport(0, 0, canvas.width, canvas.height); }
+  function quadBuffer() { const b = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, b); g.bufferData(g.ARRAY_BUFFER, QUAD, g.STATIC_DRAW); return b; }
+  const lin = c => { const [r, gg, b] = hslToRgb(c[0], c[1], c[2]); return [r, gg, b].map(v => Math.pow(v, 2.2)); };
+  const rgb = c => hslToRgb(c[0], c[1], c[2]);
+
+  /* ---------- Gradient: big soft blobs of colour morphing into each other ---------- */
+  const Mesh = (() => {
+    let t = rand(0, 400), cur = null, tgtT = -1, tg = null, tgKey = ""; const cbuf = new Float32Array(21);
+    const TONES = { vivid: [1.25, 0, 1.05], deep: [1.3, 0, .55], pastel: [.6, .06, 1.0] };
+    function targets() {
+      const p = PALETTES[S.palette] || PALETTES.silk;
+      let base;
+      if (MESH_SETS[S.meshColors]) base = MESH_SETS[S.meshColors].c;
+      else if (p.any || p.cycle) {
+        // the rainbow palettes would turn muddy here, so use a harmonious set that slowly travels round the colour wheel
+        const h = (t * 2.2) % 360;
+        base = [[h, 80, 56], [h + 28, 85, 60], [h + 62, 75, 58], [h + 165, 60, 55], [h - 24, 80, 48]];
+      } else base = [0, 1, 2, 3, 4].map(i => paletteColor(i));
+      const cols = base.map(c => lin([c[0], Math.min(100, c[1] * 1.1), c[2]]));
+      // two deep shades for depth, like the dark folds in Apple's wallpapers
+      cols.push(lin([base[0][0], Math.min(95, base[0][1]), Math.max(7, base[0][2] * .3)]));
+      cols.push(lin([base[3][0], Math.min(95, base[3][1]), Math.max(6, base[3][2] * .25)]));
+      return cols;
+    }
+    function frame(dt) {
+      t += dt * .55 * S.meshSpeed * mechSlow();
+      if (!tg || Math.abs(t - tgtT) > .5 || tgKey !== S.meshColors + S.palette) { tg = targets(); tgtT = t; tgKey = S.meshColors + S.palette; }   // refreshed a few times a second
+      if (!cur) cur = tg.map(c => c.slice());
+      const k = Math.min(1, dt * 1.1);                        // colour changes blend in smoothly
+      cur.forEach((c, i) => { for (let j = 0; j < 3; j++) c[j] += (tg[i][j] - c[j]) * k; });
+      viewport(); g.disable(g.BLEND); g.useProgram(P.mesh.p);
+      const u = P.mesh.u, tone = TONES[S.meshTone] || TONES.vivid;
+      g.uniform2f(u.uRes, canvas.width, canvas.height); g.uniform1f(u.uT, t); g.uniform1f(u.uWarp, S.meshWarp);
+      g.uniform1f(u.uGrain, S.meshGrain ? 3.2 : 1.0); g.uniform1f(u.uZoom, zoom * (S.tilt ? 1.04 : 1));
+      g.uniform2f(u.uPar, tilt.px / H * .5, -tilt.py / H * .5);
+      g.uniform1f(u.uSat, tone[0]); g.uniform1f(u.uLift, tone[1]); g.uniform1f(u.uGain, tone[2]);
+      for (let i = 0; i < 7; i++) for (let j = 0; j < 3; j++) cbuf[i * 3 + j] = cur[i][j];
+      g.uniform3fv(u.uC, cbuf);
+      full();
+    }
+    return { frame, reset() { cur = null; tg = null; } };
+  })();
+
+  /* ---------- Bokeh: out-of-focus city lights through a rainy window ---------- */
+  const Bokeh = (() => {
+    const CITY = [[42, 35, 88], [36, 95, 62], [26, 95, 58], [2, 85, 56], [356, 80, 60], [176, 65, 55], [205, 80, 66], [48, 90, 70], [140, 55, 55]];
+    let quad, lightBuf, lightVao, dropBuf, dropVao, fbo = null, tex = null, fw = 0, fh = 0;
+    let lights = [], drops = [], lightData = new Float32Array(0), dropData = new Float32Array(0), t = 0, glow = [.7, .42, .24];
+    function init() {
+      quad = quadBuffer();
+      lightBuf = g.createBuffer(); lightVao = g.createVertexArray(); g.bindVertexArray(lightVao);
+      g.bindBuffer(g.ARRAY_BUFFER, quad); g.enableVertexAttribArray(0); g.vertexAttribPointer(0, 2, g.FLOAT, false, 0, 0);
+      g.bindBuffer(g.ARRAY_BUFFER, lightBuf);
+      g.enableVertexAttribArray(1); g.vertexAttribPointer(1, 4, g.FLOAT, false, 32, 0); g.vertexAttribDivisor(1, 1);
+      g.enableVertexAttribArray(2); g.vertexAttribPointer(2, 4, g.FLOAT, false, 32, 16); g.vertexAttribDivisor(2, 1);
+      dropBuf = g.createBuffer(); dropVao = g.createVertexArray(); g.bindVertexArray(dropVao);
+      g.bindBuffer(g.ARRAY_BUFFER, quad); g.enableVertexAttribArray(0); g.vertexAttribPointer(0, 2, g.FLOAT, false, 0, 0);
+      g.bindBuffer(g.ARRAY_BUFFER, dropBuf); g.enableVertexAttribArray(1); g.vertexAttribPointer(1, 4, g.FLOAT, false, 16, 0); g.vertexAttribDivisor(1, 1);
+      g.bindVertexArray(null); fbo = null; lights = []; drops = [];
+    }
+    function target() {                                       // the lights render at half resolution (they're blurry anyway)
+      const nw = Math.max(1, Math.round(canvas.width / 2)), nh = Math.max(1, Math.round(canvas.height / 2));
+      if (fbo && nw === fw && nh === fh) return;
+      if (tex) g.deleteTexture(tex); if (fbo) g.deleteFramebuffer(fbo);
+      fw = nw; fh = nh; tex = g.createTexture(); g.bindTexture(g.TEXTURE_2D, tex);
+      g.texImage2D(g.TEXTURE_2D, 0, g.RGBA8, fw, fh, 0, g.RGBA, g.UNSIGNED_BYTE, null);
+      for (const [k, v] of [[g.TEXTURE_MIN_FILTER, g.LINEAR], [g.TEXTURE_MAG_FILTER, g.LINEAR], [g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE], [g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE]]) g.texParameteri(g.TEXTURE_2D, k, v);
+      fbo = g.createFramebuffer(); g.bindFramebuffer(g.FRAMEBUFFER, fbo); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, tex, 0);
+    }
+    // every light carries both a city colour and a palette slot, so switching between them can crossfade
+    let sizeNow = 1, mixNow = 0, primed = false;
+    function cityColor() { const c = CITY[Math.floor(Math.random() * CITY.length)]; return rgb([c[0] + rand(-6, 6), c[1], c[2]]); }
+    function newLight(fresh, faded) {
+      const depth = Math.pow(Math.random(), .65);
+      return { x: Math.random(), y: fresh ? Math.random() : 1.15, r0: .014 + .17 * Math.pow(depth, 1.8), d: depth,
+        city: cityColor(), pi: Math.floor(rand(0, 5)), cur: null, fade: faded ? 1 : 0, dying: false,
+        vx: rand(-.006, .006) * (.4 + depth), vy: rand(-.01, -.002) * (.4 + depth), ph: rand(0, TAU), fr: rand(.15, .7),
+        base: rand(.55, 1.0) * (1.25 - .6 * depth), blink: Math.random() < .1 };
+    }
+    function newDrop(top) {
+      const r = Math.pow(Math.random(), 1.6) * 14 + 3;
+      return { x: rand(0, W), y: top ? rand(-H * .2, 0) : rand(0, H), r, a: rand(.55, .95), vy: 0, slide: false, wob: rand(0, TAU) };
+    }
+    function sync() {
+      const want = Math.round(14 + 70 * S.bokehAmount);
+      let alive = lights.reduce((n, L) => n + (L.dying ? 0 : 1), 0);
+      for (const L of lights) if (alive < want && L.dying) { L.dying = false; alive++; }     // bring back fading lights first
+      while (alive < want) { lights.push(newLight(true, !primed)); alive++; }                 // new lights fade in
+      for (let i = lights.length - 1; i >= 0 && alive > want; i--) if (!lights[i].dying) { lights[i].dying = true; alive--; }   // extra lights fade out
+      primed = true;
+      if (!S.bokehRain) drops.length = 0;
+      else { const wd = Math.round(70 * Math.max(.5, W * H / (1180 * 820))); while (drops.length < wd) drops.push(newDrop(false)); if (drops.length > wd) drops.length = wd; }
+    }
+    function step(dt) {
+      t += dt;
+      for (let i = 0; i < lights.length; i++) {
+        const L = lights[i];
+        L.x += L.vx * dt * S.bokehSpeed; L.y += L.vy * dt * S.bokehSpeed;
+        L.fade = Math.max(0, Math.min(1, L.fade + dt * (L.dying ? -.9 : .7)));
+        if (L.y < -.2 || L.y > 1.2 || L.x < -.2 || L.x > 1.2) { const n = newLight(false); n.dying = L.dying; lights[i] = n; }
+      }
+      lights = lights.filter(L => !(L.dying && L.fade <= 0));
+      for (const D of drops) {
+        if (!D.slide && D.r > 10 && Math.random() < dt * .03) D.slide = true;   // heavier drops sometimes run down the glass
+        if (D.slide) { D.vy = Math.min(140, D.vy + 90 * dt); D.y += D.vy * dt; D.x += Math.sin(t * 3 + D.wob) * 6 * dt; D.r = Math.max(2.5, D.r - dt * .5); }
+      }
+      for (let i = 0; i < drops.length; i++) if (drops[i].y - drops[i].r > H) drops[i] = newDrop(true);
+      if (Math.random() < dt * 3 && drops.length) { const i = Math.floor(Math.random() * drops.length); if (!drops[i].slide) drops[i] = newDrop(false); }   // fresh rain lands
+    }
+    function frame(dt) {
+      sync(); step(dt * mechSlow());
+      target();
+      // size and colour mode ease toward the settings, so every change is visible as it happens
+      sizeNow += (S.bokehSize - sizeNow) * Math.min(1, dt * 3.5);
+      mixNow += ((S.bokehColors === "palette" ? 1 : 0) - mixNow) * Math.min(1, dt * 1.8);
+      const pc = [0, 1, 2, 3, 4].map(i => rgb(paletteColor(i))), mn = Math.min(W, H);
+      // glow colour for the far-off city haze, following the lights
+      const city = [.7, .42, .24], gc = [0, 1, 2].map(j => city[j] + (pc[0][j] - city[j]) * mixNow);
+      for (let j = 0; j < 3; j++) glow[j] += (gc[j] - glow[j]) * Math.min(1, dt);
+      g.bindFramebuffer(g.FRAMEBUFFER, fbo); g.viewport(0, 0, fw, fh); g.disable(g.BLEND);
+      g.useProgram(P.bg.p); g.uniform3f(P.bg.u.uGlow, glow[0], glow[1], glow[2]); g.uniform1f(P.bg.u.uT, t); full();
+      // lights: far ones first; additive
+      lights.sort((a, b) => a.d - b.d);
+      if (lightData.length < lights.length * 8) lightData = new Float32Array(lights.length * 8);
+      lights.forEach((L, i) => {
+        const pulse = .72 + .28 * Math.sin(t * L.fr * TAU * .25 + L.ph);
+        const blink = L.blink ? (Math.sin(t * .9 + L.ph * 3) > .55 ? .15 : 1) : 1;
+        const tgt = pc[L.pi], k = i * 8;
+        if (!L.cur) L.cur = [0, 1, 2].map(j => L.city[j] + (tgt[j] - L.city[j]) * mixNow);
+        for (let j = 0; j < 3; j++) { const want = L.city[j] + (tgt[j] - L.city[j]) * mixNow; L.cur[j] += (want - L.cur[j]) * Math.min(1, dt * 2.5); }
+        const f = L.fade * L.fade * (3 - 2 * L.fade);
+        lightData[k] = L.x; lightData[k + 1] = L.y; lightData[k + 2] = L.r0 * mn * sizeNow; lightData[k + 3] = L.d;
+        lightData[k + 4] = L.cur[0]; lightData[k + 5] = L.cur[1]; lightData[k + 6] = L.cur[2]; lightData[k + 7] = L.base * pulse * blink * S.bokehGlow * f;
+      });
+      g.enable(g.BLEND); g.blendEquation(g.FUNC_ADD); g.blendFunc(g.ONE, g.ONE);
+      g.useProgram(P.light.p); const u = P.light.u;
+      g.uniform2f(u.uRes, W, H); g.uniform1f(u.uZoom, zoom * (S.tilt ? 1.04 : 1)); g.uniform2f(u.uPar, tilt.px, tilt.py);
+      g.bindVertexArray(lightVao); g.bindBuffer(g.ARRAY_BUFFER, lightBuf); g.bufferData(g.ARRAY_BUFFER, lightData.subarray(0, lights.length * 8), g.DYNAMIC_DRAW);
+      g.drawArraysInstanced(g.TRIANGLES, 0, 6, lights.length);
+      // to the screen
+      viewport(); g.disable(g.BLEND); g.useProgram(P.present.p);
+      g.activeTexture(g.TEXTURE0); g.bindTexture(g.TEXTURE_2D, tex); g.uniform1i(P.present.u.uTex, 0); full();
+      // raindrops on the glass, refracting the lights
+      if (drops.length) {
+        if (dropData.length < drops.length * 4) dropData = new Float32Array(drops.length * 4);
+        drops.forEach((D, i) => { const k = i * 4; dropData[k] = D.x; dropData[k + 1] = D.y; dropData[k + 2] = D.r; dropData[k + 3] = D.a; });
+        g.enable(g.BLEND); g.blendFunc(g.SRC_ALPHA, g.ONE_MINUS_SRC_ALPHA);
+        g.useProgram(P.drop.p); g.uniform2f(P.drop.u.uRes, W, H); g.uniform1i(P.drop.u.uTex, 0);
+        g.bindVertexArray(dropVao); g.bindBuffer(g.ARRAY_BUFFER, dropBuf); g.bufferData(g.ARRAY_BUFFER, dropData.subarray(0, drops.length * 4), g.DYNAMIC_DRAW);
+        g.drawArraysInstanced(g.TRIANGLES, 0, 6, drops.length);
+        g.disable(g.BLEND);
+      }
+      g.bindVertexArray(null);
+    }
+    return { init, frame, reset() { lights = []; drops = []; primed = false; }, resized() { drops = []; },
+      free() { if (tex) g.deleteTexture(tex); if (fbo) g.deleteFramebuffer(fbo); tex = null; fbo = null; fw = fh = 0; } };
+  })();
+
+  let active = false, failed = false, downT = 0;
+  canvas.addEventListener("webglcontextlost", e => { e.preventDefault(); ok = false; });
+  canvas.addEventListener("webglcontextrestored", () => { if (init() && active) size(); });
+  function size() { canvas.width = Math.max(1, Math.round(W * DPR)); canvas.height = Math.max(1, Math.round(H * DPR)); Bokeh.resized(); }
+  return {
+    get ok() { return ok; },
+    // the effects need WebGL2; if Silk's GPU renderer works, these will too
+    available: () => !failed && !!gl && typeof WebGL2RenderingContext !== "undefined",
+    resize() { if (active && ok) size(); },
+    enter(sc) {
+      if (!g || !ok) init();
+      if (!ok) { failed = true; return false; }
+      active = true; downT = 0; size();
+      if (sc === "mesh") Mesh.reset();
+      return true;
+    },
+    leave() { active = false; Bokeh.free(); canvas.width = 1; canvas.height = 1; },   // give the memory back while another scene shows
+    frame(sc, dt) {
+      if (!ok) {                       // the GPU was reset: try to come back, else return to Silk
+        downT += dt;
+        if (downT > 2) { downT = -8; if (init()) size(); else { failed = true; S.scene === sc && (S.scene = "silk"); requestScene("silk"); renderUI(); } }
+        return;
+      }
+      if (sc === "mesh") Mesh.frame(dt); else Bokeh.frame(dt);
+    },
+  };
+})();
+
+const fxcv = document.getElementById("fx");
 
 /* ---------- clock overlay ---------- */
 const clockEl = document.getElementById("clock"), clockT = document.getElementById("clockT"), clockD = document.getElementById("clockD");
@@ -1469,7 +2156,7 @@ function clockColor(a) {
   return `rgba(255,255,255,${a})`;
 }
 function tickClock() {
-  clockEl.hidden = !S.clockOn || activeScene === "board";
+  clockEl.hidden = !S.clockOn || activeScene === "board";   // the board already shows the time
   if (clockEl.hidden) return;
   clockEl.dataset.pos = S.clockPos;
   clockEl.classList.toggle("glow", !!S.clockGlow);
@@ -1517,7 +2204,7 @@ let panelTimer = 0;
 const armPanelTimer = () => { clearTimeout(panelTimer); panelTimer = setTimeout(() => panel.classList.remove("open"), 45000); };
 const openPanel = () => { panel.classList.add("open"); fab.classList.remove("show"); armPanelTimer(); hideHint(); };
 ["pointerdown","input","scroll"].forEach(ev => panel.addEventListener(ev, () => { if (panel.classList.contains("open")) armPanelTimer(); }, { passive:true }));
-const closePanel = () => panel.classList.remove("open");
+const closePanel = () => { panel.classList.remove("open"); if (typeof showPage === "function" && pageStack.length) { pageStack = []; showPage(); } };
 fab.addEventListener("click", openPanel);
 document.getElementById("closePanel").addEventListener("click", closePanel);
 
@@ -1541,7 +2228,7 @@ cv.addEventListener("pointermove", e => {
   if (!down.drawing && Math.hypot(e.clientX - down.x, e.clientY - down.y) > 8) {
     down.drawing = true; closePanel();
     down.ink = activeScene === "ink" && inkAvailable();
-    down.mech = isMech(activeScene);
+    down.mech = isMech(activeScene) || isFx(activeScene);
     if (down.ink) { ink.handColor = inkColor(1); ink.last = [down.x, down.y]; }
     else if (down.mech) { /* the mechanical scenes run themselves */ }
     else {
@@ -1585,14 +2272,88 @@ const fmt = {
   inkFlow: v => v.toFixed(1) + "×",
   inkFade: v => v < .2 ? "Brief" : v < .5 ? "Short" : v < .8 ? "Long" : "Very long",
   boardSpeed: v => v.toFixed(2).replace(/0$/, "") + "×",
+  boardSize: v => v < .8 ? "Small" : v < 1.15 ? "Medium" : v < 1.4 ? "Large" : "Extra Large",
+  boardMsgSecs: v => Math.round(v) + " s",
+  bokehAmount: v => Math.round(v * 100) + "%",
+  bokehSize: v => Math.round(v * 100) + "%",
+  bokehSpeed: v => v < .02 ? "Still" : v.toFixed(1) + "×",
+  bokehGlow: v => Math.round(v * 100) + "%",
+  meshSpeed: v => v.toFixed(1) + "×",
+  meshWarp: v => v < .02 ? "Still" : Math.round(v * 100) + "%",
+
   clockWeight: v => ({100:"Ultralight",200:"Thin",300:"Light",400:"Regular",500:"Medium",600:"Semibold",700:"Bold",800:"Heavy"})[v] || v,
   clockSize: v => Math.round(v*100) + "%",
   clockOpacity: v => Math.round(v*100) + "%",
 };
 if (!gl) ["vortexCtl","vortexRevCtl","vortexNote","bloomCtl","finishCtl"].forEach(id => { const el = document.getElementById(id); el.hidden = true; el.dataset.off = "1"; });
-if (!inkAvailable()) { for (const id of ["sceneInkBtn", "rotInkRow"]) { const el = document.getElementById(id); el.hidden = true; el.dataset.off = "1"; } }
+// scenes this device can't run are shown greyed out with the reason, never as a button that silently does nothing
+function inkReason() {
+  if (!gl) return "This browser doesn't offer WebGL 2, which the water needs.";
+  if (!gl.getExtension("EXT_color_buffer_float")) return "This browser can't do the half-float rendering the water needs.";
+  return "The graphics chip couldn't set up the water simulation.";
+}
+function retryInk() {     // give Ink another chance to start (for example after the graphics chip was busy or reset)
+  if (!gl || inkAvailable()) return inkAvailable();
+  try { InkR.init(gl); InkR.resize(); } catch (e) {}
+  return inkAvailable();
+}
+document.querySelectorAll("[data-pick]").forEach(b => b.addEventListener("click", () => {
+  if (b.dataset.pick === "ink") retryInk();
+  S.scene = b.dataset.pick; save(); lastSceneSwap = clock; requestScene(sceneWanted()); renderUI();
+}));
+// Rotate: next-scene button and a live countdown
+function rotNext() { const l = rotList(); const cur = pendingScene || activeScene; return l[(l.indexOf(cur) + 1) % l.length]; }
+document.getElementById("btnRotNext").addEventListener("click", () => {
+  const l = rotList(); if (l.length < 2) return;
+  lastSceneSwap = clock; requestScene(rotNext()); setTimeout(rotCountdown, 50);
+});
+function rotCountdown() {
+  const el = document.getElementById("rotNote"); if (!el) return;
+  if (S.scene !== "rotate") return;
+  const l = rotList();
+  if (l.length < 2) { el.textContent = "Turn on at least two scenes so they can take turns."; return; }
+  const left = Math.max(0, Math.ceil((S.rotEvery || 1) * 60 - (clock - lastSceneSwap)));
+  const names = { silk: "Silk", ink: "Ink", board: "Board", bokeh: "Bokeh Lights", mesh: "Gradient" };
+  el.textContent = `Now showing ${names[pendingScene || activeScene] || "Silk"}. Next: ${names[rotNext()]} in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}.`;
+}
+setInterval(() => { if (panel.classList.contains("open")) rotCountdown(); }, 1000);
+// drill-down pages inside the settings sheet, like the Settings app
+const SCENE_NAMES = { silk: "Silk", ink: "Ink", board: "Board", bokeh: "Bokeh Lights", mesh: "Gradient", cities: "Cities" };
+let pageStack = [];
+const navBack = document.getElementById("navBack"), subTitle = document.getElementById("subTitle");
+function showPage() {
+  const id = pageStack[pageStack.length - 1];
+  panel.classList.toggle("in-sub", !!id);
+  navBack.hidden = !id; navBack.querySelector("span").textContent = pageStack.length > 1 ? SCENE_NAMES[pageStack[pageStack.length - 2]] : "Silkfall";
+  subTitle.hidden = !id; subTitle.textContent = id ? SCENE_NAMES[id] : "";
+  document.querySelectorAll("#panel > .box").forEach(b => b.classList.toggle("active", b.dataset.box === id));
+  panel.scrollTop = 0; renderUI();
+  (id ? navBack : document.querySelector(".large-title")).focus?.({ preventScroll: true });
+}
+document.querySelectorAll("[data-open]").forEach(b => b.addEventListener("click", () => { pageStack.push(b.dataset.open); showPage(); }));
+navBack.addEventListener("click", () => { pageStack.pop(); showPage(); });
+// cities for the Departures board
+const cityList = document.getElementById("cityList");
+for (const [id, name] of DEPART_CITIES) {
+  const row = document.createElement("div"); row.className = "cell";
+  row.innerHTML = `<label for="city-${id}">${name}</label><button class="switch" role="switch" id="city-${id}" data-city="${id}"></button>`;
+  row.querySelector("button").addEventListener("click", () => {
+    const on = new Set(S.boardCities || []); on.has(id) ? on.delete(id) : on.add(id);
+    S.boardCities = DEPART_CITIES.map(c => c[0]).filter(c => on.has(c)); save(); renderUI();
+  });
+  cityList.appendChild(row);
+}
 const boardMsgs = document.getElementById("boardMsgs");
 boardMsgs.addEventListener("input", () => { S.boardMsgs = boardMsgs.value; save(); });
+// Gradient colour sets: "Your Palette" follows the main Colour setting; the rest are darker, bolder sets just for Gradient
+const meshWrap = document.getElementById("meshSets");
+for (const [k, set] of [["palette", { name: "Your Palette" }], ...Object.entries(MESH_SETS)]) {
+  const b = document.createElement("button"); b.className = "pal"; b.dataset.mesh = k;
+  const bg = set.c ? "linear-gradient(120deg," + set.c.map(([h, s2, l]) => `hsl(${h} ${s2}% ${l}%)`).join(",") + ")" : "conic-gradient(from 200deg,#ff375f,#ff9f0a,#30d158,#0a84ff,#bf5af2,#ff375f)";
+  b.innerHTML = `<i style="background:${bg}"></i>${set.name}`;
+  b.addEventListener("click", () => { S.meshColors = k; save(); renderUI(); });
+  meshWrap.appendChild(b);
+}
 const palWrap = document.getElementById("palettes");
 for (const [k, p] of Object.entries(PALETTES)) {
   const b = document.createElement("button"); b.className = "pal"; b.dataset.pal = k;
@@ -1640,7 +2401,7 @@ if (!hinted) { setTimeout(() => hintEl.classList.add("show"), 2500); setTimeout(
 const btnFull = document.getElementById("btnFull");
 const isStandalone = NATIVE || window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
 if (isStandalone) btnFull.textContent = "Hide Settings";
-if (NATIVE) document.getElementById("ver").textContent = "Silkfall 1.3 · iPad App";
+if (NATIVE) document.getElementById("ver").textContent = "Silkfall 1.6 · iPad App";
 btnFull.addEventListener("click", async () => {
   closePanel();
   if (isStandalone) return;
@@ -1655,7 +2416,7 @@ function renderUI() {
   document.querySelectorAll("input[type=range][data-key]").forEach(el => {
     const k = el.dataset.key; el.value = S[k];
     el.style.setProperty("--p", ((S[k] - el.min) / (el.max - el.min) * 100) + "%");
-    const out = document.querySelector(`output[data-for="${k}"]`); if (out) out.textContent = fmt[k] ? fmt[k](S[k]) : S[k];
+    const out = el.closest(".cell")?.querySelector("output"); if (out) out.textContent = fmt[k] ? fmt[k](S[k]) : S[k];
   });
   document.querySelectorAll(".switch[data-key]").forEach(el => el.setAttribute("aria-checked", String(!!S[el.dataset.key])));
   document.querySelectorAll(".seg[data-key]").forEach(seg => seg.querySelectorAll("button").forEach(b =>
@@ -1670,20 +2431,44 @@ function renderUI() {
   const hm = t => { const m = toMin(t), d = new Date(); d.setHours(Math.floor(m / 60), m % 60, 0, 0); return tf.format(d); };
   nn.textContent = !S.night ? "Off." : isNight() ? `Night mode is on now, until ${hm(S.nightTo)}.` : `Starts at ${hm(S.nightFrom)}. Changes fade in over about a minute.`;
   // show only the sections that apply to the chosen scene, and hide clock/night details while they're off
+  // which scene's settings show: the open page, else the chosen scene (Rotate shows its own list instead)
   const sc = S.scene === "rotate" ? "rotate" : sceneWanted();
-  const shown = sc === "rotate" ? rotList() : [sc];
+  const page = typeof pageStack !== "undefined" ? pageStack[pageStack.length - 1] : undefined;
+  const shown = page ? [page] : sc === "rotate" ? [] : [sc];
+  document.querySelectorAll("[data-box]").forEach(el => { el.hidden = !shown.includes(el.dataset.box); });
   document.querySelectorAll("[data-scene]").forEach(el => { el.hidden = el.dataset.off === "1" || !shown.includes(el.dataset.scene); });
   document.querySelectorAll("[data-when-rotate]").forEach(el => { el.hidden = sc !== "rotate"; });
   document.querySelectorAll("[data-show]").forEach(el => { el.hidden = !S[el.dataset.show]; });
+  document.querySelectorAll("[data-if]").forEach(el => { const [k, v] = el.dataset.if.split(":"); el.hidden = !v.split(",").includes(String(S[k])); });
+  document.querySelectorAll("[data-pick]").forEach(b => b.setAttribute("aria-checked", String(b.dataset.pick === (S.scene === "rotate" ? "rotate" : sc))));
+  document.querySelectorAll("[data-needs]").forEach(el => {
+    const okay = el.dataset.needs === "ink" ? inkAvailable() : FX.available();
+    el.classList.toggle("unavail", !okay);
+    const sw = el.querySelector(".switch"); if (sw) sw.disabled = !okay;
+  });
+  document.querySelectorAll("[data-rotval]").forEach(v => { v.textContent = S[ROT_KEY[v.dataset.rotval]] ? "On" : "Off"; });
+  document.querySelectorAll("[data-city]").forEach(b => b.setAttribute("aria-checked", String((S.boardCities || []).includes(b.dataset.city))));
+  document.getElementById("cityCount").textContent = String((S.boardCities || []).length);
+  document.getElementById("boardNote").textContent = ({
+    clock: "A big clock drawn with colour flaps.", clockdate: "A big clock drawn with colour flaps, with the date below.",
+    full: "The time, the date and your messages.", departures: "An airport board with the time in cities around the world.",
+  })[S.boardLayout] || "";
   if (document.activeElement !== boardMsgs) boardMsgs.value = S.boardMsgs || "";
-  const mins = Math.max(S.shuffle || 5, 3);
-  document.getElementById("rotNote").textContent = `Turned-on scenes take turns, switching every ${mins} minutes. Set Shuffle Style Every to change how often.`;
+  rotCountdown();
   document.getElementById("sceneNote").textContent = {
-    silk: "Automatic mode keeps weaving new silk on its own.",
-    ink: "Automatic mode keeps dropping new ink into the water on its own.",
-    board: "A split-flap board with the time, date and your messages.",
-    rotate: "Your chosen scenes take turns on the screen.",
+    silk: "Glowing threads woven into symmetric patterns.",
+    ink: "Drops of colour blooming and swirling in water.",
+    board: "A full-screen wall of split flaps.",
+    bokeh: "Soft city lights through a rainy window.",
+    mesh: "Soft blobs of colour slowly morphing, like Apple's wallpapers.",
+    rotate: "Your chosen scenes take turns. Set each one up under Scene Settings.",
   }[sc];
+  if (S.scene === "ink" && !inkAvailable()) document.getElementById("sceneNote").textContent = "Ink can't run here: " + inkReason() + " Showing Silk instead.";
+  else if (isFx(S.scene) && !FX.available()) document.getElementById("sceneNote").textContent = "This scene can't run on this device's graphics. Showing Silk instead.";
+  document.querySelectorAll("[data-mesh]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mesh === S.meshColors)));
+  document.getElementById("meshSetNote").textContent = S.meshColors === "palette"
+    ? "Uses the palette from the Colour section below. Pick a set here for darker, bolder gradients."
+    : "Gradient uses this set and ignores the Colour section below. Pick Your Palette to follow it again.";
   lastOpacity = ""; noteTilt();
   syncPainters(); tickClock(); noteWake();
 }
@@ -1693,6 +2478,7 @@ resize(); nightTarget = isNight() ? 1 : 0; nightF = nightTarget;
 if (S.scene === "ink" && !inkAvailable()) S.scene = "silk";
 activeScene = sceneWanted();
 if (isMech(activeScene)) Mech.enter(activeScene);
+else if (isFx(activeScene) && !FX.enter(activeScene)) activeScene = "silk";
 renderUI(); applyWake(); enableTilt(false);
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 

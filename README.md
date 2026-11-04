@@ -1,22 +1,36 @@
 # Silkfall
 
-Generative art for an iPad desk display. Three scenes that run on their own:
+Generative art for an iPad desk display. Five scenes that run on their own:
 
 - **Silk**: glowing, symmetric threads.
 - **Ink**: colour dropped into water, blooming and swirling.
-- **Board**: a split-flap board with the time, date and your messages.
+- **Board**: a full-screen split-flap wall with a big flap clock, messages or a world-clock departures board.
+- **Bokeh Lights**: soft city lights through a rainy window.
+- **Gradient**: soft blobs of colour slowly morphing, with ten darker colour sets of its own.
 
 Pick one, or let them take turns with **Rotate**. Palettes, a customizable clock, breathing, tilt parallax and a night mode work across all of them.
 
-This repository holds two versions of the same app:
+![Silk](docs/silk.jpg)
 
-- **Web app**: the files at the top level (`index.html` and friends). GitHub Pages serves it at `https://YOURNAME.github.io/silkfall/`.
+| Ink | Board |
+| --- | --- |
+| ![Ink](docs/ink.jpg) | ![Board](docs/board.jpg) |
+| **Bokeh Lights** | **Gradient** |
+| ![Bokeh Lights](docs/bokeh.jpg) | ![Gradient](docs/mesh.jpg) |
+
+Settings live in an iPadOS-style sheet: tap the screen to open it.
+
+![Settings](docs/settings.jpg)
+
+## Two versions in one repository
+
+- **Web app**: the files at the top level (`index.html` and friends). If GitHub Pages is turned on, it's served at `https://atharva309.github.io/SILKFALL/`.
 - **iPad app**: the `ios` folder. GitHub builds it in the cloud every time you upload changes and publishes **Silkfall.ipa** on this repository's **latest** release. You install it with AltStore (or SideStore).
 
 ## Download link for the iPad app
 
 ```
-https://github.com/YOURNAME/silkfall/releases/latest/download/Silkfall.ipa
+https://github.com/Atharva309/SILKFALL/releases/latest/download/Silkfall.ipa
 ```
 
 ## Updating
