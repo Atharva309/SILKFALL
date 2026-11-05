@@ -11,7 +11,7 @@ Generative art for an iPad desk display. Six scenes that run on their own:
 
 Pick one, or let them take turns with **Rotate**. Palettes, a customizable clock, breathing, tilt parallax and a night mode work across all of them.
 
-![Neon City](docs/city.jpg)
+![Neon City](docs/city2.jpg)
 
 ![Silk](docs/silk.jpg)
 
