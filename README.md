@@ -1,14 +1,17 @@
 # Silkfall
 
-Generative art for an iPad desk display. Five scenes that run on their own:
+Generative art for an iPad desk display. Six scenes that run on their own:
 
 - **Silk**: glowing, symmetric threads.
 - **Ink**: colour dropped into water, blooming and swirling.
 - **Board**: a full-screen split-flap wall with a big flap clock, messages or a world-clock departures board.
 - **Bokeh Lights**: soft city lights through a rainy window.
 - **Gradient**: soft blobs of colour slowly morphing, with ten darker colour sets of its own.
+- **Neon City**: a drone flying over an endless cyberpunk city at night: flying cars, an elevated metro, billboards, rivers with Brooklyn-style bridges and boats, harbour yards with cranes, and now and then a floodlit stadium, a megatower or a neon square. Drag to look around.
 
 Pick one, or let them take turns with **Rotate**. Palettes, a customizable clock, breathing, tilt parallax and a night mode work across all of them.
+
+![Neon City](docs/city.jpg)
 
 ![Silk](docs/silk.jpg)
 

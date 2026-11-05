@@ -182,6 +182,8 @@ input[type=range]::-moz-range-thumb{width:28px;height:28px;border:0;border-radiu
 [hidden]{display:none!important}
 #clock .box{transition:color 4s ease}
 button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+/* Neon City's canvas */
+#city{position:fixed;inset:0;width:100%;height:100%;display:block;pointer-events:none;opacity:0}
 @media (prefers-reduced-motion:reduce){#panel,#fab,#clock,.switch::after{transition:none}}
 </style>
 
@@ -190,6 +192,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
 <canvas id="silk" aria-label="Generative silk and ink animation"></canvas>
 <canvas id="mech" width="1" height="1" aria-label="Split-flap board"></canvas>
 <canvas id="fx" width="1" height="1" aria-label="Bokeh lights and gradient"></canvas>
+<canvas id="city" width="1" height="1" aria-label="Neon city seen from a drone"></canvas>
 <div id="hint">Tap anywhere for settings</div>
 <div id="clock" hidden data-pos="mc"><div class="box"><div class="t" id="clockT"></div><div class="d" id="clockD"></div></div></div>
 
@@ -215,6 +218,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
     <button class="cell pick" role="radio" data-pick="board"><span class="ico" style="background:linear-gradient(135deg,#8e8e93,#48484a)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.4" height="14" rx="1.6"/><rect x="13.1" y="5" width="7.4" height="14" rx="1.6"/><path d="M3.5 12h17"/></svg></span><span class="lbl">Board</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
     <button class="cell pick" role="radio" data-pick="bokeh" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#ff9f0a,#ff375f)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="5" fill="#fff" fill-opacity=".55"/><circle cx="16" cy="15.5" r="4" fill="#fff" fill-opacity=".8"/><circle cx="16.8" cy="6.5" r="2.1" fill="#fff"/></svg></span><span class="lbl">Bokeh Lights</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
     <button class="cell pick" role="radio" data-pick="mesh" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#30d158,#0a84ff 55%,#bf5af2)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path fill="#fff" fill-opacity=".85" stroke="none" d="M5.2 15.6C3.8 10.4 7.4 4.8 12.6 4.8s7.9 3.6 6.9 7.9-4.8 6.9-9 6.9c-2.4 0-4.4-1-5.3-4z"/></svg></span><span class="lbl">Gradient</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
+    <button class="cell pick" role="radio" data-pick="city" data-needs="city"><span class="ico" style="background:linear-gradient(135deg,#5e5ce6,#ff2d92)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5h17M5 20.5V11h3.6v9.5M8.6 20.5V5.5h4.6v15M13.2 20.5V9h3.4v11.5M16.6 20.5v-6.5H19v6.5"/></svg></span><span class="lbl">Neon City</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
   </div>
   <div class="group icons" style="margin-top:14px">
     <button class="cell pick" role="radio" data-pick="rotate"><span class="ico" style="background:linear-gradient(135deg,#34c759,#248a3d)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19.5 12a7.5 7.5 0 0 1-13.1 5M4.5 12a7.5 7.5 0 0 1 13.1-5"/><path d="M17.8 3.5V7h-3.5M6.2 20.5V17h3.5"/></svg></span><span class="lbl">Rotate</span><svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7"/></svg></button>
@@ -229,10 +233,11 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
     <div class="cell"><span class="ico" style="background:linear-gradient(135deg,#8e8e93,#48484a)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.4" height="14" rx="1.6"/><rect x="13.1" y="5" width="7.4" height="14" rx="1.6"/><path d="M3.5 12h17"/></svg></span><label class="lbl" for="sw-rotBoard">Board</label><button class="switch" role="switch" id="sw-rotBoard" data-key="rotBoard"></button></div>
     <div class="cell" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#ff9f0a,#ff375f)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="5" fill="#fff" fill-opacity=".55"/><circle cx="16" cy="15.5" r="4" fill="#fff" fill-opacity=".8"/><circle cx="16.8" cy="6.5" r="2.1" fill="#fff"/></svg></span><label class="lbl" for="sw-rotBokeh">Bokeh Lights</label><button class="switch" role="switch" id="sw-rotBokeh" data-key="rotBokeh"></button></div>
     <div class="cell" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#30d158,#0a84ff 55%,#bf5af2)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path fill="#fff" fill-opacity=".85" stroke="none" d="M5.2 15.6C3.8 10.4 7.4 4.8 12.6 4.8s7.9 3.6 6.9 7.9-4.8 6.9-9 6.9c-2.4 0-4.4-1-5.3-4z"/></svg></span><label class="lbl" for="sw-rotMesh">Gradient</label><button class="switch" role="switch" id="sw-rotMesh" data-key="rotMesh"></button></div>
+    <div class="cell" data-needs="city"><span class="ico" style="background:linear-gradient(135deg,#5e5ce6,#ff2d92)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5h17M5 20.5V11h3.6v9.5M8.6 20.5V5.5h4.6v15M13.2 20.5V9h3.4v11.5M16.6 20.5v-6.5H19v6.5"/></svg></span><label class="lbl" for="sw-rotCity">Neon City</label><button class="switch" role="switch" id="sw-rotCity" data-key="rotCity"></button></div>
   </div>
   <div class="group" data-when-rotate style="margin-top:14px">
     <div class="cell stack"><div class="row"><span>Switch Every</span></div>
-      <div class="seg" data-key="rotEvery"><button data-v="0.5">30 sec</button><button data-v="1">1 min</button><button data-v="2">2 min</button><button data-v="5">5 min</button><button data-v="10">10 min</button></div></div>
+      <div class="seg" data-key="rotEvery"><button data-v="0.5">30s</button><button data-v="1">1m</button><button data-v="2">2m</button><button data-v="5">5m</button><button data-v="10">10m</button><button data-v="30">30m</button></div></div>
     <button class="cell btn" id="btnRotNext">Show Next Scene Now</button>
   </div>
   <p class="gfoot" data-when-rotate id="rotNote"></p>
@@ -244,6 +249,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
     <button class="cell drill" data-open="board"><span class="ico" style="background:linear-gradient(135deg,#8e8e93,#48484a)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="7.4" height="14" rx="1.6"/><rect x="13.1" y="5" width="7.4" height="14" rx="1.6"/><path d="M3.5 12h17"/></svg></span><span class="lbl">Board</span><span class="val" data-rotval="board"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button class="cell drill" data-open="bokeh" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#ff9f0a,#ff375f)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="10" r="5" fill="#fff" fill-opacity=".55"/><circle cx="16" cy="15.5" r="4" fill="#fff" fill-opacity=".8"/><circle cx="16.8" cy="6.5" r="2.1" fill="#fff"/></svg></span><span class="lbl">Bokeh Lights</span><span class="val" data-rotval="bokeh"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button class="cell drill" data-open="mesh" data-needs="fx"><span class="ico" style="background:linear-gradient(135deg,#30d158,#0a84ff 55%,#bf5af2)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path fill="#fff" fill-opacity=".85" stroke="none" d="M5.2 15.6C3.8 10.4 7.4 4.8 12.6 4.8s7.9 3.6 6.9 7.9-4.8 6.9-9 6.9c-2.4 0-4.4-1-5.3-4z"/></svg></span><span class="lbl">Gradient</span><span class="val" data-rotval="mesh"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+    <button class="cell drill" data-open="city" data-needs="city"><span class="ico" style="background:linear-gradient(135deg,#5e5ce6,#ff2d92)" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 20.5h17M5 20.5V11h3.6v9.5M8.6 20.5V5.5h4.6v15M13.2 20.5V9h3.4v11.5M16.6 20.5v-6.5H19v6.5"/></svg></span><span class="lbl">Neon City</span><span class="val" data-rotval="city"></span><svg class="chev" viewBox="0 0 10 16" aria-hidden="true"><path d="M2.2 2l5.6 6-5.6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   </div>
 
   <!-- SILK -->
@@ -395,6 +401,47 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
   <p class="gfoot" id="meshSetNote"></p>
   </div>
 
+  <!-- NEON CITY -->
+  <div class="box" data-box="city">
+  <h2 class="ghead">Flight</h2>
+  <div class="group">
+    <div class="cell stack"><div class="row"><label for="r-citySpeed">Speed</label><output data-for="citySpeed"></output></div>
+      <input type="range" id="r-citySpeed" data-key="citySpeed" min="0.25" max="3" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-cityAlt">Altitude</label><output data-for="cityAlt"></output></div>
+      <input type="range" id="r-cityAlt" data-key="cityAlt" min="0" max="2" step="0.01"></div>
+    <div class="cell stack"><div class="row"><span>Camera</span></div>
+      <div class="seg" data-key="cityView"><button data-v="down">Straight Down</button><button data-v="tilted">Tilted</button></div></div>
+    <div class="cell"><label for="sw-cityWander">Wander</label><button class="switch" role="switch" id="sw-cityWander" data-key="cityWander"></button></div>
+  </div>
+  <p class="gfoot">Wander lets the drone curve slowly across the city; off, it flies straight on. Fly lower to skim the tallest towers.</p>
+
+  <h2 class="ghead">City</h2>
+  <div class="group">
+    <div class="cell stack"><div class="row"><label for="r-cityTraffic">Traffic</label><output data-for="cityTraffic"></output></div>
+      <input type="range" id="r-cityTraffic" data-key="cityTraffic" min="0" max="1" step="0.01"></div>
+    <div class="cell stack"><div class="row"><label for="r-cityWinAmt">Building Lights</label><output data-for="cityWinAmt"></output></div>
+      <input type="range" id="r-cityWinAmt" data-key="cityWinAmt" min="0" max="1" step="0.01"></div>
+    <div class="cell stack"><div class="row"><label for="r-cityLightK">Light Brightness</label><output data-for="cityLightK"></output></div>
+      <input type="range" id="r-cityLightK" data-key="cityLightK" min="0.3" max="2" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-cityEdgeAmt">Neon Edges</label><output data-for="cityEdgeAmt"></output></div>
+      <input type="range" id="r-cityEdgeAmt" data-key="cityEdgeAmt" min="0" max="1" step="0.01"></div>
+    <div class="cell stack"><div class="row"><label for="r-cityHaze">Haze</label><output data-for="cityHaze"></output></div>
+      <input type="range" id="r-cityHaze" data-key="cityHaze" min="0" max="3" step="0.05"></div>
+    <div class="cell stack"><div class="row"><label for="r-cityGlow">Neon Glow</label><output data-for="cityGlow"></output></div>
+      <input type="range" id="r-cityGlow" data-key="cityGlow" min="0" max="1.8" step="0.05"></div>
+    <div class="cell"><label for="sw-cityFlyers">Flying Cars</label><button class="switch" role="switch" id="sw-cityFlyers" data-key="cityFlyers"></button></div>
+    <div class="cell stack"><div class="row"><label for="r-cityRainAmt">Rain</label><output data-for="cityRainAmt"></output></div>
+      <input type="range" id="r-cityRainAmt" data-key="cityRainAmt" min="0" max="1" step="0.01"></div>
+
+  </div>
+
+  <h2 class="ghead">City Colours</h2>
+  <div class="group">
+    <div class="palettes" id="cityLooks"></div>
+  </div>
+  <p class="gfoot">Building Lights is how many windows are lit; Light Brightness is how bright the windows, signs and lamps are; Neon Glow is how much they bloom. City Lights looks like a real city at night: mostly white and yellow. Natural gives every light its own colour. Rain goes from a light drizzle to a downpour; slide it all the way up for snow. Haze drifts patches of mist across the city: the drone flies through thick ones and thin ones. Neon Edges sets how many buildings are outlined in neon. The time uses the Clock settings below. Tilt the iPad to look around the towers.</p>
+  </div>
+
   <h2 class="ghead">Colour</h2>
   <div class="group">
     <div class="palettes" id="palettes"></div>
@@ -472,7 +519,7 @@ button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-o
   <div class="group" style="margin-top:30px">
     <button class="cell btn red" id="btnReset">Reset All Settings</button>
   </div>
-  <p class="ver" id="ver">Silkfall 1.6</p>
+  <p class="ver" id="ver">Silkfall 1.7</p>
 </aside>
 
 <script>
@@ -485,6 +532,7 @@ const DEFAULTS = { auto:true, symmetry:6, mirror:true, spin:0.25, palette:"silk"
   scene:"silk", rotSilk:true, rotInk:true, rotBoard:true, rotBokeh:true, rotMesh:true, rotEvery:1,
   bokehAmount:0.5, bokehSize:1, bokehSpeed:1, bokehGlow:1, bokehRain:true, bokehColors:"city",
   meshSpeed:1, meshWarp:0.6, meshGrain:true, meshTone:"vivid", meshColors:"palette",
+  rotCity:true, citySpeed:1, cityAlt:0.35, cityView:"tilted", cityWander:true, cityTraffic:0.75, cityGlow:1, cityFlyers:true, cityRainAmt:0, cityLook:"neon", cityWinAmt:0.5, cityLightK:1, cityHaze:1, cityEdgeAmt:0.5,
   boardColor:"classic", boardSpeed:1, boardSeconds:false, boardMsgs:"",
   boardLayout:"clockdate", boardFont:"system", boardSize:1, boardMsgRows:2, boardMsgSecs:12,
   boardCities:["london","newyork","mumbai","dubai","tokyo","singapore","sydney","paris"],
@@ -503,6 +551,10 @@ try {
     delete S.clock;
     // "Both" (Silk + Ink) became Rotate, keeping the same two scenes
     if (saved.scene === "both") { S.scene = "rotate"; S.rotSilk = true; S.rotInk = true; S.rotBoard = false; S.rotBokeh = false; S.rotMesh = false; }
+    if (saved.cityMist === false && saved.cityHaze === undefined) S.cityHaze = 0;
+    if (saved.cityEdges === false && saved.cityEdgeAmt === undefined) S.cityEdgeAmt = 0;
+    if (saved.cityRain === true && saved.cityRainAmt === undefined) S.cityRainAmt = .5;
+    delete S.cityMist; delete S.cityEdges; delete S.cityRain;
     // Particle Clock was removed in 1.5
     if (saved.scene === "particles") S.scene = "silk";
     // Watch and Marbles were removed in 1.3
@@ -977,6 +1029,7 @@ function resize() {
   CX = W / 2; CY = H / 2; R = Math.min(W, H) * 0.5;
   if (typeof Mech !== "undefined") Mech.resize();
   if (typeof FX !== "undefined") FX.resize();
+  if (typeof City !== "undefined") City.resize();
   if (gl) { GLR.resize(cv.width, cv.height); InkR.resize(); return; }
   ctx.setTransform(1,0,0,1,0,0); ctx.globalCompositeOperation = "source-over";
   ctx.fillStyle = "#000"; ctx.fillRect(0, 0, cv.width, cv.height);
@@ -1238,9 +1291,9 @@ let nightF = 0, breatheF = 0, zoom = 1, bloomMul = 1, lastOpacity = "";
 // scenes: "silk" or "ink"; S.scene can also be "both", which alternates between them
 let activeScene = "silk", pendingScene = null, sceneF = 1, lastSceneSwap = 0;
 const inkAvailable = () => !!gl && InkR.ok;
-const ALL_SCENES = ["silk", "ink", "board", "bokeh", "mesh"];
-const ROT_KEY = { silk: "rotSilk", ink: "rotInk", board: "rotBoard", bokeh: "rotBokeh", mesh: "rotMesh" };
-const sceneAvailable = sc => sc === "ink" ? inkAvailable() : isFx(sc) ? FX.available() : true;
+const ALL_SCENES = ["silk", "ink", "board", "bokeh", "mesh", "city"];
+const ROT_KEY = { silk: "rotSilk", ink: "rotInk", board: "rotBoard", bokeh: "rotBokeh", mesh: "rotMesh", city: "rotCity" };
+const sceneAvailable = sc => sc === "ink" ? inkAvailable() : isFx(sc) ? FX.available() : sc === "city" ? City.available() : true;
 function rotList() {
   const l = ALL_SCENES.filter(sc => S[ROT_KEY[sc]] && sceneAvailable(sc));
   return l.length ? l : ["silk"];
@@ -1271,17 +1324,20 @@ function updateAmbient(dt) {
   if (pendingScene && sceneF < .03) {                     // swap while the screen is dark
     if (isMech(activeScene)) Mech.leave(activeScene);     // free the old scene's big canvases
     if (isFx(activeScene) && !isFx(pendingScene)) FX.leave();
+    if (activeScene === "city" && pendingScene !== "city") City.leave();
     activeScene = pendingScene; pendingScene = null;
     if (activeScene === "silk" && gl) GLR.clearAll(); else if (activeScene === "ink") { InkR.clear(); ink.timer = .2; ink.pours = []; }
     else if (isMech(activeScene)) Mech.enter(activeScene);
     else if (isFx(activeScene) && !FX.enter(activeScene)) { activeScene = "silk"; if (gl) GLR.clearAll(); }
+    else if (activeScene === "city" && !City.enter()) { activeScene = "silk"; if (gl) GLR.clearAll(); }
     tickClock();
   }
   const op = S.dim * (1 - (1 - S.nightDim) * nightF) * (1 - breatheF * .06 * (.5 - .5 * ph)) * sceneF;
-  const layer = isMech(activeScene) ? "m" : isFx(activeScene) ? "f" : "g", opKey = layer + op.toFixed(3);
+  const layer = isMech(activeScene) ? "m" : isFx(activeScene) ? "f" : activeScene === "city" ? "c" : "g", opKey = layer + op.toFixed(3);
   if (opKey !== lastOpacity) {
     const o = op.toFixed(3);
     cv.style.opacity = layer === "g" ? o : "0"; mcv.style.opacity = layer === "m" ? o : "0"; fxcv.style.opacity = layer === "f" ? o : "0";
+    citycv.style.opacity = layer === "c" ? o : "0";
     lastOpacity = opKey;
   }
   // tilt: slow baseline so the resting angle on the desk always reads as centred
@@ -1295,7 +1351,7 @@ function updateAmbient(dt) {
   if (S.clockOn) {
     const tr = `${(tilt.px * .5).toFixed(1)}px ${(tilt.py * .5).toFixed(1)}px`;
     if (clockEl.style.translate !== tr) clockEl.style.translate = tr;
-    const dimNow = (S.dim * (1 - (1 - S.nightDim) * nightF)).toFixed(2);
+    const dimNow = (1 - (1 - S.nightDim) * nightF).toFixed(2);   // Brightness is for the scene; the clock only dims at night
     if (clockEl.dataset.dim !== dimNow) { clockEl.dataset.dim = dimNow; clockEl.style.opacity = dimNow; }
   }
 }
@@ -1343,6 +1399,12 @@ function frame(now) {
   if (S.scene === "rotate" && !pendingScene && clock - lastSceneSwap > (S.rotEvery || 1) * 60) {
     const l = rotList(); lastSceneSwap = clock;
     if (l.length > 1) requestScene(l[(l.indexOf(activeScene) + 1) % l.length]);
+  }
+  if (activeScene === "city") {
+    clock += dt;
+    City.frame(dt);
+    if (S.auto && S.shuffle > 0 && clock - lastShuffle > S.shuffle * 60) { lastShuffle = clock; shuffleStyle(false); }
+    return;
   }
   if (isFx(activeScene)) {
     clock += dt;
@@ -2122,6 +2184,1920 @@ const FX = (() => {
 
 const fxcv = document.getElementById("fx");
 
+/* ====================== NEON CITY: a drone flight over a cyberpunk city at night ======================
+   Looking down from a drone as it drifts over an endless city. Its own WebGL2 canvas (#city) and
+   context, completely separate from every other scene. Units are metres. */
+const CITY_LOOKS = {
+  neon:    { name: "Neon",    a: [1.00, 0.16, 0.62], b: [0.10, 0.78, 1.00], c: [0.60, 0.26, 1.00], fog: [0.045, 0.018, 0.10], win: [1.00, 0.78, 0.55] },
+  blade:   { name: "Blade",   a: [1.00, 0.42, 0.06], b: [0.06, 0.74, 0.80], c: [1.00, 0.18, 0.10], fog: [0.07, 0.03, 0.014], win: [1.00, 0.70, 0.40] },
+  toxic:   { name: "Toxic",   a: [0.38, 1.00, 0.28], b: [1.00, 0.16, 0.70], c: [0.08, 0.92, 0.72], fog: [0.012, 0.045, 0.036], win: [0.82, 1.00, 0.68] },
+  ice:     { name: "Ice",     a: [0.28, 0.76, 1.00], b: [0.86, 0.93, 1.00], c: [0.30, 0.38, 1.00], fog: [0.014, 0.03, 0.07], win: [0.80, 0.90, 1.00] },
+  crimson: { name: "Crimson", a: [1.00, 0.08, 0.20], b: [0.76, 0.20, 1.00], c: [1.00, 0.48, 0.26], fog: [0.065, 0.012, 0.03], win: [1.00, 0.68, 0.58] },
+  noir:    { name: "Noir",       a: [1.00, 0.60, 0.20], b: [0.45, 0.56, 0.68], c: [0.85, 0.18, 0.12], fog: [0.032, 0.038, 0.028], win: [1.00, 0.70, 0.40] },
+  cyber:   { name: "Cyberpunk",  a: [0.99, 0.92, 0.05], b: [0.00, 0.95, 0.95], c: [1.00, 0.10, 0.35], fog: [0.055, 0.010, 0.045], win: [1.00, 0.85, 0.50] },
+  sodium:  { name: "Sodium",     a: [1.00, 0.55, 0.15], b: [1.00, 0.72, 0.36], c: [0.90, 0.85, 0.75], fog: [0.050, 0.030, 0.015], win: [1.00, 0.75, 0.45] },
+  led:     { name: "LED City",   a: [0.85, 0.92, 1.00], b: [1.00, 0.95, 0.86], c: [0.60, 0.75, 1.00], fog: [0.020, 0.026, 0.036], win: [0.95, 0.95, 1.00] },
+  real:    { name: "City Lights", a: [1.00, 0.86, 0.66], b: [1.00, 0.68, 0.28], c: [0.82, 0.90, 1.00], fog: [0.03, 0.028, 0.032], win: [1.00, 0.82, 0.60], real: true },
+  natural: { name: "Natural", a: [1.00, 0.55, 0.25], b: [0.35, 0.70, 1.00], c: [1.00, 0.85, 0.60], fog: [0.022, 0.026, 0.042], win: [1.00, 0.80, 0.58], nat: true },
+};
+const City = (() => {
+  const canvas = document.getElementById("city");
+  let g = null, ok = false, failed = false, active = false, downT = 0;
+  const P = {};
+  const PITCH = 96, CHUNK = 4, CHUNK_M = PITCH * CHUNK, MAXH = 330;
+
+  /* ---------- hashing and noise (the ground shader uses the same integer hash, so parks line up) ---------- */
+  const posmod = (a, n) => ((a % n) + n) % n;
+  const roadW = i => posmod(i, 5) === 0 ? 30 : 16;
+  const hu = x => { x = Math.imul(x ^ (x >>> 16), 0x7feb352d); x = Math.imul(x ^ (x >>> 15), 0x846ca68b); return (x ^ (x >>> 16)) >>> 0; };
+  const bh = (bx, bz, s) => hu((Math.imul(bx, 73856093) ^ Math.imul(bz, 19349663) ^ s) >>> 0);
+  const isPark = (bx, bz) => bh(bx, bz, 7) % 100 < 5;
+  function rngFrom(seed) { let a = seed >>> 0; return () => { a = (a + 0x6D2B79F5) >>> 0; let t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+  function vnoise(x, z, s) {
+    const xi = Math.floor(x), zi = Math.floor(z), xf = x - xi, zf = z - zi, u = xf * xf * (3 - 2 * xf), v = zf * zf * (3 - 2 * zf);
+    const r = (i, j) => bh(i, j, s) / 4294967296;
+    return (r(xi, zi) * (1 - u) + r(xi + 1, zi) * u) * (1 - v) + (r(xi, zi + 1) * (1 - u) + r(xi + 1, zi + 1) * u) * v;
+  }
+  const h3 = (a, b, c) => hu((Math.imul(Math.floor(a), 1597334677) ^ Math.imul(Math.floor(b), 3812015801 | 0) ^ Math.imul(Math.floor(c), 2798796415 | 0)) >>> 0) / 4294967295;
+  const vn = (x, z) => { const i = Math.floor(x), j = Math.floor(z); let f = x - i, k = z - j; f = f * f * (3 - 2 * f); k = k * k * (3 - 2 * k);
+    const m = (a, b, t) => a + (b - a) * t; return m(m(h3(i, j, 1), h3(i + 1, j, 1), f), m(h3(i, j + 1, 1), h3(i + 1, j + 1, 1), f), k); };
+  const mistAt = (x, z) => { const v = vn(x / 1400 + 3.7, z / 1400 + 3.7), t = Math.min(1, Math.max(0, (v - .38) / .34)); return .5 + .5 * t * t * (3 - 2 * t); };
+  let mistNow = 0;
+  const downtown = (x, z) => Math.min(1, Math.max(0, (vnoise(x / 900, z / 900, 11) * .7 + vnoise(x / 320, z / 320, 12) * .3 - .3) / .32));
+  // scenery: rivers through the city (with bridges), harbour yards on their banks, and now and then a stadium.
+  // The ground and traffic shaders use the same rules, so everything lines up.
+  const RIVER_Z = 26, RIVER_X = 37;
+  const riverRowZ = bz => posmod(bz, RIVER_Z) < 2, riverColX = bx => posmod(bx, RIVER_X) < 2;
+  const isWater = (bx, bz) => riverRowZ(bz) || riverColX(bx);
+  // harbours come in districts: each 6-block stretch of riverbank is a port about one time in four
+  const isDock = (bx, bz) => { const mz = posmod(bz, RIVER_Z), mx = posmod(bx, RIVER_X);
+    if (mz === 2 || mz === RIVER_Z - 1) return bh(Math.floor(bx / 6), Math.floor(bz / RIVER_Z) * 2 + (mz === 2 ? 0 : 1), 17) % 100 < 24;
+    if (mx === 2 || mx === RIVER_X - 1) return bh(Math.floor(bz / 6), Math.floor(bx / RIVER_X) * 2 + (mx === 2 ? 0 : 1), 19) % 100 < 24;
+    return false; };
+  // metro lines run above some roads: x-lines (tracks along z) and z-lines (tracks along x), at different heights
+  const metroX = i => posmod(i, 55) === 7, metroZ = j => posmod(j, 61) === 11;
+  const TRACK_X = 21, TRACK_Z = 31;                       // height of the rail deck
+  // rare chunks: 1 stadium, 2 megatower. The chunk grid is cut into 7x7 cells; a cell holds at most one, kept away
+  // from the cell's edges, so two landmarks are always well apart (4x4 cells)
+  function special(cx, cz) {
+    const gx = Math.floor(cx / 4), gz = Math.floor(cz / 4), hc = bh(gx, gz, 31);
+    if (cx - gx * 4 !== 1 + hc % 2 || cz - gz * 4 !== 1 + Math.floor(hc / 2) % 2) return 0;
+    for (let k = -1; k <= 4; k++) if (posmod(cz * 4 + k, RIVER_Z) < 2 || posmod(cx * 4 + k, RIVER_X) < 2) return 0;
+    for (let k = 1; k <= 3; k++) if (metroX(cx * 4 + k) || metroZ(cz * 4 + k)) return 0;
+    // neighbouring cells alternate, so two of the same kind are never side by side
+    return Math.floor(hc / 4) % 100 < 90 ? (posmod(gx + gz, 2) === 0 ? 1 : 2) : 0;
+  }
+  const isStadium = (cx, cz) => special(cx, cz) === 1;
+  const STAD_R = 168;                                   // the stadium's plaza is a circle this big
+
+  /* ---------- the city, generated block by block ---------- */
+  // building shapes: round (smooth, and oval when the lot is long), octagonal, and domes; patches lie flat on the ground
+  const ROUND = 1048576, OCT = 2097152, DOME = 4194304, PATCH = 8388608;
+  // per box: centre x, centre z, half x, half z | bottom, top, seed, flags
+  // flags: bits 0-1 kind (0 building, 1 plain metal, 2 mast, 3 billboard), 2-3 accent colour, 4 roof neon edge, 5 roof screen,
+  //        6 helipad, 7 facade sign, 8 corner neon, 9 ribbon windows, 10 crown band, 11 vehicle, 12 bridge deck,
+  //        13 bridge tower, 14 shipping containers
+  // static lights: head xyz, tail xyz, width, colour (0-2 accent, 3 warm, 4 white, 5 red), strength, even (1 = no fade)
+  function genBlock(bx, bz, out, beacons, lights) {
+    if (isWater(bx, bz)) { genBridges(bx, bz, out, beacons, lights); return; }
+    const sp = special(Math.floor(bx / CHUNK), Math.floor(bz / CHUNK));
+    const inMid = posmod(bx, CHUNK) >= 1 && posmod(bx, CHUNK) <= 2 && posmod(bz, CHUNK) >= 1 && posmod(bz, CHUNK) <= 2;
+    const x0 = bx * PITCH + roadW(bx) / 2 + 4, x1 = (bx + 1) * PITCH - roadW(bx + 1) / 2 - 4;
+    const z0 = bz * PITCH + roadW(bz) / 2 + 4, z1 = (bz + 1) * PITCH - roadW(bz + 1) / 2 - 4;
+    if (sp === 2 && inMid) return;
+    // the stadium only clears a tight circle; the rest of its blocks are ordinary city
+    const scx = (Math.floor(bx / CHUNK) * CHUNK + 2) * PITCH, scz = (Math.floor(bz / CHUNK) * CHUNK + 2) * PITCH;
+    const inStad = (a, b, c, d, m) => sp === 1 && Math.hypot(Math.max(a, Math.min(scx, c)) - scx, Math.max(b, Math.min(scz, d)) - scz) < STAD_R + m;
+    if (sp === 1 && Math.hypot(Math.max(Math.abs((x0 + x1) / 2 - scx), 0), Math.abs((z0 + z1) / 2 - scz)) < STAD_R - 60) return;
+    if (isPark(bx, bz) && !inStad(x0, z0, x1, z1, 0)) { genPark(bx, bz, x0, z0, x1, z1, out, lights); return; }
+    if (isPark(bx, bz)) return;
+    if (isDock(bx, bz)) { genDock(bx, bz, x0, z0, x1, z1, out, beacons, lights); return; }
+    const rng = rngFrom(bh(bx, bz, 1)), brng = rngFrom(bh(bx, bz, 9));
+    const dt = downtown((x0 + x1) / 2, (z0 + z1) / 2);
+    const minL = dt > .55 ? 18 : 12, lots = [];
+    (function split(a, b, c, d, n) {
+      const w = c - a, h = d - b;
+      if (n <= 0 || (w < minL * 2 && h < minL * 2) || (n < 3 && rng() < .22)) { lots.push([a, b, c, d]); return; }
+      if ((w >= h && w >= minL * 2) || h < minL * 2) { const m = a + w * (.34 + rng() * .32); split(a, b, m, d, n - 1); split(m, b, c, d, n - 1); }
+      else { const m = b + h * (.34 + rng() * .32); split(a, b, c, m, n - 1); split(a, m, c, d, n - 1); }
+    })(x0, z0, x1, z1, dt > .6 ? 2 : 3);
+    if (sp === 1) {                                                      // around a stadium: a fine grid of small plots
+      lots.length = 0;
+      const nx = Math.max(2, Math.round((x1 - x0) / 20)), nz = Math.max(2, Math.round((z1 - z0) / 20));
+      for (let i = 0; i < nx; i++) for (let j = 0; j < nz; j++)
+        lots.push([x0 + (x1 - x0) * i / nx, z0 + (z1 - z0) * j / nz, x0 + (x1 - x0) * (i + 1) / nx, z0 + (z1 - z0) * (j + 1) / nz]);
+    }
+    const push = (cx, cz, hx, hz, y0, y1, seed, fl) => out.push(cx, cz, hx, hz, y0, y1, seed, fl);
+    const accent = () => { const r = rng(); return r < .45 ? 0 : r < .85 ? 1 : 2; };
+    const srng = rngFrom(bh(bx, bz, 13));
+    for (const [a, b, c, d] of lots) {
+      if (inStad(a, b, c, d, 4)) continue;
+      // now and then a lot is a pocket park, a pond or a little plaza instead of a building
+      const pr = srng();
+      if (pr < (sp === 1 ? .04 : .1) && (c - a) > 10 && (d - b) > 10) { genPatch(a + 1, b + 1, c - 1, d - 1, srng, out); continue; }
+      const gap = .7 + rng() * 1.5;
+      const lx0 = a + gap, lz0 = b + gap, lx1 = c - gap, lz1 = d - gap, w = lx1 - lx0, dp = lz1 - lz0;
+      if (w < 6 || dp < 6 || rng() < .035) continue;                   // a small plaza
+      const big = Math.min(w, dp);
+      let h = 14 + rng() * rng() * 75 + dt * Math.pow(rng(), 1.15) * 320 * Math.min(1, big / 17);
+      if (rng() < .02 && big > 14) h = 170 + rng() * 140;               // a lone tower away from the centre
+      h = Math.min(h, sp === 3 ? 150 : MAXH);
+      if (sp === 1) h = 9 + rng() * 34;                                  // low and mid-rise around the stadium
+      const acc = accent(), seed = Math.floor(rng() * 100000) / 7;
+      let fl = acc << 2;
+      if (rng() < .06 + dt * .06) fl |= 16;
+      if (rng() < .3) fl |= 128;
+      if (rng() < .04 + dt * .04) fl |= 256;
+      if (rng() < .22) fl |= 512;
+      let cx = (lx0 + lx1) / 2, cz = (lz0 + lz1) / 2, hx = w / 2, hz = dp / 2, base = 0;
+      // its shape: mostly boxes, but round and oval towers, octagons, stepped towers and L-shapes too
+      const shp = srng(), SH = big < 9 ? 0 : shp < .17 ? ROUND : shp < .27 ? OCT : 0;
+      const stepped = !SH && shp > .27 && shp < .37 && h > 40, lshape = !SH && shp >= .37 && shp < .45 && h <= 60 && big > 14;
+      if (h > 60 && big > 15) {                                          // a podium, a tower, maybe a crown
+        const pod = 7 + rng() * 16;
+        push(cx, cz, hx, hz, 0, pod, seed + .5, (accent() << 2) | (rng() < .1 ? 16 : 0) | (rng() < .4 ? 128 : 0));
+        const s1 = .52 + rng() * .3, tx = hx * s1, tz = hz * s1;
+        cx += (rng() - .5) * (hx - tx); cz += (rng() - .5) * (hz - tz); hx = tx; hz = tz; base = pod;
+        if (h > 135 && rng() < .75) {
+          const mid = h * (.66 + rng() * .16);
+          push(cx, cz, hx, hz, base, mid, seed, fl | SH | (rng() < .15 ? 1024 : 0));
+          const s2 = .5 + rng() * .32; hx *= s2; hz *= s2; base = mid; fl = (fl & ~512) | (rng() < .3 ? 1024 | 16 : 0);
+        }
+      }
+      // what sits on the roof
+      const r = rng();
+      if (h > 150 && r < .3 && Math.min(hx, hz) > 9) fl |= 64;
+      else if (h < 200 && r < .13 && Math.min(hx, hz) > 6) fl |= 32;
+      if (SH) fl = (fl & ~(32 | 256)) | SH;                              // round roofs get no square screen, round walls no corner strip
+      if (stepped) {                                                     // a stepped, wedding-cake tower
+        const n = 3 + Math.floor(srng() * 2); let y = base;
+        for (let k = 0; k < n; k++) {
+          const top = k === n - 1 ? h : base + (h - base) * (k + 1) / n * (.9 + srng() * .15);
+          push(cx, cz, hx, hz, y, top, seed + k * .3, k === n - 1 ? fl : (fl & ~(32 | 64)) | 1024 * (srng() < .5 ? 1 : 0));
+          y = top; hx *= .78; hz *= .78;
+        }
+        hx /= .78; hz /= .78;
+      } else if (lshape) {                                               // an L-shaped block
+        const sx = srng() < .5 ? -1 : 1, sz = srng() < .5 ? -1 : 1, h2 = h * (.7 + srng() * .5);
+        push(cx, cz + sz * hz * .45, hx, hz * .55, base, h, seed + 1.7, fl);
+        push(cx + sx * hx * .45, cz - sz * hz * .45, hx * .55, hz * .45, base, h2, seed + 2.9, fl & ~(32 | 64));
+      } else push(cx, cz, hx, hz, base, h, seed + 1.7, fl);
+      // domes and spires on top of some
+      const tp = srng(); let capped = false;
+      if (!(fl & 96) && ((SH && tp < .35 && h < 160) || (!SH && h < 55 && tp < .06))) {
+        capped = true;
+        const r = Math.min(hx, hz) * (SH ? .9 : .7); push(cx, cz, SH ? hx * .9 : r, SH ? hz * .9 : r, h, h + r * (.55 + srng() * .35), seed + 3.3, DOME | (acc << 2));
+      } else if (!(fl & 96) && h > 120 && tp > .92) {                    // a stepped spire
+        let r = Math.min(hx, hz) * .6, y = h;
+        for (let k = 0; k < 5 && r > .8; k++) { push(cx, cz, r, r, y, y + 5, seed + 6 + k, 1 | (acc << 2) | (k === 4 ? 16 : 0)); y += 5; r *= .68; }
+        beacons.push(cx, y + .6, cz, srng());
+      }
+      // billboards: now and then one standing on the roof, or hung on a wall
+      if (h > 24 && h < 230 && !(fl & 96) && brng() < .1) {
+        const bw = 5 + brng() * 6, bh3 = 5 + brng() * 4, s = brng() < .5 ? -1 : 1, ba = (brng() < .5 ? 0 : 1) << 2;
+        if (hx >= hz) push(cx, cz + (hz - 1.4) * s, Math.min(bw, hx * .85), .3, h, h + bh3, seed + 4.4, 3 | ba);
+        else push(cx + (hx - 1.4) * s, cz, .3, Math.min(bw, hz * .85), h, h + bh3, seed + 4.4, 3 | ba);
+      }
+      if (sp === 3) {                                                    // a neon square: screens on every face, big ones on top
+        const faces = 2 + Math.floor(brng() * 3), hh = Math.min(h, 120);
+        for (let f = 0; f < faces; f++) {
+          const s = brng() < .5 ? -1 : 1, onX = brng() < .5, fwid = onX ? hz : hx, bw = Math.max(3, fwid * (.55 + brng() * .4));
+          const bh3 = 8 + brng() * 16, by = Math.max(base + 3, Math.min(hh - bh3 - 2, 6 + brng() * (hh - 20)));
+          if (by + bh3 > h) continue;
+          const ba = Math.floor(brng() * 3) << 2;
+          if (onX) push(cx + s * (hx + .35), cz, .3, bw, by, by + bh3, seed + 7.7 + f, 3 | ba);
+          else push(cx, cz + s * (hz + .35), bw, .3, by, by + bh3, seed + 7.7 + f, 3 | ba);
+        }
+        if (!(fl & 96) && Math.min(hx, hz) > 5 && brng() < .6) {
+          const bw = Math.max(hx, hz) * .8, bh3 = 10 + brng() * 10;
+          if (hx >= hz) push(cx, cz, bw, .4, h, h + bh3, seed + 9.9, 3 | (Math.floor(brng() * 3) << 2));
+          else push(cx, cz, .4, bw, h, h + bh3, seed + 9.9, 3 | (Math.floor(brng() * 3) << 2));
+        }
+      }
+      if (h - base > 30 && brng() < .07) {
+        const s = brng() < .5 ? -1 : 1, bw = 4 + brng() * 6, by = base + (h - base) * (.3 + brng() * .35), bh3 = 7 + brng() * 6, ba = (brng() < .5 ? 0 : 1) << 2;
+        if (brng() < .5) push(cx + s * (hx + .35), cz, .3, Math.min(bw, hz * .8), by, by + bh3, seed + 5.5, 3 | ba);
+        else push(cx, cz + s * (hz + .35), Math.min(bw, hx * .8), .3, by, by + bh3, seed + 5.5, 3 | ba);
+      }
+      if (!(fl & 96)) {                                                   // rooftop units
+        const n = 1 + Math.floor(rng() * 4), sc = SH ? .6 : 1, onTop = !capped && !lshape;
+        for (let k = 0; k < n; k++) {
+          const ux = Math.min(hx * .45, 1 + rng() * 3.2), uz = Math.min(hz * .45, 1 + rng() * 3.2);
+          const ux2 = (rng() * 2 - 1) * (hx - ux - .6) * sc, uz2 = (rng() * 2 - 1) * (hz - uz - .6) * sc, uh = 1.2 + rng() * 4.5;
+          if (onTop) push(cx + ux2, cz + uz2, ux, uz, h, h + uh, seed + k * 3.1, 1 | (acc << 2));
+        }
+      }
+      if (h > 110) {                                                      // aircraft warning lights, and sometimes a mast
+        const bk = beacons;
+        bk.push(cx - hx + .6, h + .6, cz - hz + .6, rng(), cx + hx - .6, h + .6, cz + hz - .6, rng());
+        if (!(fl & 64) && rng() < .45 && !(fl & 32)) {
+          const mh = 14 + rng() * 34, mx = cx + (rng() - .5) * hx, mz = cz + (rng() - .5) * hz;
+          push(mx, mz, .55, .55, h, h + mh, seed + 9, 2 | (acc << 2)); bk.push(mx, h + mh + .6, mz, rng());
+        }
+      }
+      rng();                                                              // (keeps the layout as it was)
+    }
+  }
+  /* ---------- pocket parks, ponds and plazas ---------- */
+  function genPatch(a, b, c, d, r, out) {
+    const cx = (a + c) / 2, cz = (b + d) / 2, hx = (c - a) / 2, hz = (d - b) / 2, kind = r();
+    if (kind < .55) {                                                    // a lawn with trees, now and then a round pond
+      out.push(cx, cz, hx, hz, 0, .3, Math.floor(r() * 999), PATCH | (0 << 2));
+      if (Math.min(hx, hz) > 9 && r() < .15) { const pr = Math.min(hx, hz) * .5; out.push(cx, cz, pr * (hx / Math.min(hx, hz)) * .8, pr * (hz / Math.min(hx, hz)) * .8, 0, .36, 3, PATCH | ROUND | (1 << 2)); }
+      trees(a, b, c, d, r, out, 5 + Math.floor(r() * 8));
+    } else if (kind < .65) {                                             // a pond with a lawn around it
+      out.push(cx, cz, hx, hz, 0, .3, 7, PATCH | (0 << 2));
+      out.push(cx, cz, hx * .78, hz * .78, 0, .36, 3, PATCH | ROUND | (1 << 2));
+      trees(a, b, c, d, r, out, 4, .82);
+    } else if (kind < .78 && Math.max(hx, hz) > 22 && Math.min(hx, hz) > 14) {   // a floodlit five-a-side pitch on a lawn
+      out.push(cx, cz, hx, hz, 0, .3, Math.floor(r() * 999), PATCH | (0 << 2));
+      out.push(cx, cz, hx >= hz ? 20 : 12, hx >= hz ? 12 : 20, 0, .34, 0, PATCH | (3 << 2));
+    } else {                                                             // a paved plaza, maybe a fountain and a pavilion
+      out.push(cx, cz, hx, hz, 0, .3, 5, PATCH | (2 << 2));
+      if (r() < .6) out.push(cx, cz, Math.min(hx, hz) * .3, Math.min(hx, hz) * .3, 0, .4, 3, PATCH | ROUND | (1 << 2));
+      else { const rr = Math.min(hx, hz) * .35; out.push(cx, cz, rr, rr, .3, .3 + rr * .7, 9, DOME | (1 << 2)); }
+    }
+  }
+  // trees around the edge of a patch (outside an inner keep-clear area of size "keep")
+  function trees(a, b, c, d, r, out, n, keep = 0) {
+    const cx = (a + c) / 2, cz = (b + d) / 2, hx = (c - a) / 2, hz = (d - b) / 2;
+    for (let i = 0; i < n * 3 && n > 0; i++) {
+      const x = cx + (r() * 2 - 1) * (hx - 3), z = cz + (r() * 2 - 1) * (hz - 3);
+      if (keep && Math.hypot((x - cx) / hx, (z - cz) / hz) < keep) continue;
+      const tr = 2 + r() * 2.2; out.push(x, z, tr, tr, .3, .3 + tr * (1.1 + r() * .5), Math.floor(r() * 99) + (r() < .12 ? .5 : 0), DOME | 1); n--;
+    }
+  }
+  // a whole park block: woodland, a pond park, a fountain garden or a sports park. Trees keep off the paths the ground draws.
+  function genPark(bx, bz, x0, z0, x1, z1, out, lights) {
+    const r = rngFrom(bh(bx, bz, 15)), kind = r(), mx = (bx + .5) * PITCH, mz = (bz + .5) * PITCH;
+    const onPath = (x, z, m) => { const qx = (x - bx * PITCH) / PITCH - .5, qz = (z - bz * PITCH) / PITCH - .5;
+      return Math.abs((qx + qz * .4 + .06 * Math.sin(qz * 9)) * PITCH) < m || Math.abs((Math.hypot(qx, qz) - .25) * PITCH) < m + 3; };
+    const keepOut = [];                                                   // circles where no tree may grow
+    const grove = (n, cx, cz, spread) => {
+      for (let i = 0, tries = 0; i < n && tries < n * 6; tries++) {
+        const a = r() * Math.PI * 2, d = Math.sqrt(r()) * spread, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+        if (x < x0 + 3 || x > x1 - 3 || z < z0 + 3 || z > z1 - 3 || onPath(x, z, 3.5) || keepOut.some(k => Math.hypot(x - k[0], z - k[1]) < k[2])) continue;
+        const tr = 1.8 + r() * 2.8, lit = r() < .12 ? 1 : 0;
+        out.push(x, z, tr, tr, .3, .3 + tr * (1.1 + r() * .6), Math.floor(r() * 997) + lit * .5, DOME | 1); i++;
+      }
+    };
+    if (kind < .25) {                                                    // a pond park
+      const pr = 10 + r() * 9, px = mx + (r() - .5) * 20, pz = mz + (r() - .5) * 20;
+      out.push(px, pz, pr * (1 + r() * .5), pr, 0, .36, 3, PATCH | ROUND | (1 << 2)); keepOut.push([px, pz, pr * 1.6 + 3]);
+      for (let k = 0; k < 4; k++) grove(7, mx + (r() - .5) * 60, mz + (r() - .5) * 60, 16);
+    } else if (kind < .55) {                                             // woodland: dense groves with clearings
+      for (let k = 0; k < 6; k++) grove(9, mx + (r() - .5) * 64, mz + (r() - .5) * 64, 14 + r() * 8);
+    } else if (kind < .8) {                                              // a fountain garden in the middle of the loop
+      out.push(mx, mz, 9, 9, 0, .34, 5, PATCH | ROUND | (2 << 2)); out.push(mx, mz, 4.5, 4.5, 0, .4, 3, PATCH | ROUND | (1 << 2));
+      lights.push(mx, 2.5, mz, mx, 2.5, mz, 1.2, 4, 2.6, 1);
+      for (let i = 0; i < 8; i++) { const t = i / 8 * Math.PI * 2; lights.push(mx + Math.cos(t) * 9.5, 1.2, mz + Math.sin(t) * 9.5, mx + Math.cos(t) * 9.5, 1.2, mz + Math.sin(t) * 9.5, .5, 3, 1.8, 1); }
+      keepOut.push([mx, mz, 30]);
+      for (let k = 0; k < 5; k++) grove(6, mx + (r() - .5) * 70, mz + (r() - .5) * 70, 13);
+    } else {                                                             // a sports park: a floodlit pitch, trees around
+      r(); const sx = mx, w = 20, h = 12;                              // the pitch sits in the middle of its park
+      out.push(sx, mz, w, h, 0, .34, Math.floor(r() * 999), PATCH | (3 << 2)); keepOut.push([sx, mz, 30]);
+      for (const ax of [-1, 1]) for (const az of [-1, 1]) { const lx = sx + ax * (w + 2), lz = mz + az * (h + 2);
+        out.push(lx, lz, .5, .5, 0, 16, 11, 2 | (1 << 2)); lights.push(lx, 16.5, lz, lx, 16.5, lz, 1.3, 4, 3.2, 1); }
+      for (let k = 0; k < 4; k++) grove(6, mx + (r() - .5) * 70, mz + (r() - .5) * 70, 13);
+    }
+  }
+
+  /* ---------- bridges ---------- */
+  function genBridges(bx, bz, out, beacons, lights) {
+    // the avenues cross the rivers on bridges; every other one is a big suspension bridge
+    if (posmod(bz, RIVER_Z) === 0 && posmod(bx, 5) === 0 && !metroX(bx) && !riverColX(bx) && !riverColX(bx - 1)) bridge(bx * PITCH, bz, 0, posmod(bx, 10) === 0, out, beacons, lights);
+    if (posmod(bx, RIVER_X) === 0 && posmod(bz, 5) === 0 && !metroZ(bz) && !riverRowZ(bz) && !riverRowZ(bz - 1)) bridge(bz * PITCH, bx, 1, posmod(bz, 10) === 0, out, beacons, lights);
+  }
+  function bridge(line, b0, axis, big, out, beacons, lights) {
+    const s0 = b0 * PITCH + roadW(b0) / 2 + 1, s1 = (b0 + 2) * PITCH - roadW(b0 + 2) / 2 - 1, L = s1 - s0, mid = (s0 + s1) / 2;
+    const hw = 17, seed = bh(Math.round(line), b0, 5) % 1000 / 7;
+    const box = (al, ac, ha, hc, y0, y1, sd, fl) => axis === 0 ? out.push(line + ac, al, hc, ha, y0, y1, sd, fl) : out.push(al, line + ac, ha, hc, y0, y1, sd, fl);
+    const pt = (al, ac, y) => axis === 0 ? [line + ac, y, al] : [al, y, line + ac];
+    const seg = (a, b, w, ci, k, even) => lights.push(a[0], a[1], a[2], b[0], b[1], b[2], w, ci, k, even);
+    box(mid, 0, L / 2, hw, 3.3, 4, seed, 4096 | (1 << 2));                                  // the deck
+    for (const s of [-1, 1]) {
+      seg(pt(s0, s * (hw - .4), 4.6), pt(s1, s * (hw - .4), 4.6), .18, 1, .35, 1);          // railings
+      for (let a = s0 + 6; a < s1; a += 14) { const p = pt(a, s * (hw - .8), 6); seg(p, p, .55, 3, 2, 1); }
+    }
+    if (big) {                                                                             // a Brooklyn-style suspension bridge
+      const a1 = s0 + L * .2, a2 = s1 - L * .2, yT = 62, yMin = 16;
+      for (const a of [a1, a2]) {
+        box(a, 0, 5, hw + 3, 0, yT + 2, seed + 1, 8192 | (2 << 2));
+        for (const s of [-1, 1]) { const p = pt(a, s * (hw + 2), yT + 2.6); beacons.push(p[0], p[1], p[2], ((seed + a + s) * .6180339) % 1); }
+      }
+      const cy = a => a < a1 ? 5 + (yT - 5) * Math.pow((a - s0) / (a1 - s0), 2)
+        : a > a2 ? 5 + (yT - 5) * Math.pow((s1 - a) / (s1 - a2), 2)
+        : yMin + (yT - yMin) * Math.pow((a - (a1 + a2) / 2) / ((a2 - a1) / 2), 2);
+      for (const s of [-1, 1]) {
+        const ac = s * (hw - 1);
+        let prev = null;
+        for (let a = s0; a <= s1 + .01; a += (s1 - s0) / 36) {
+          const p = pt(a, ac, cy(a));
+          if (prev) seg(prev, p, .22, 1, .45, 1);
+          prev = p;
+        }
+        for (let a = s0 + 6; a < s1 - 3; a += 6) {
+          if (Math.abs(a - a1) < 4 || Math.abs(a - a2) < 4) continue;
+          seg(pt(a, ac, cy(a)), pt(a, ac, 4.2), .08, 1, .2, 1);                            // suspender cables
+          if (Math.round((a - s0) / 6) % 2 === 0) { const p = pt(a, ac, cy(a)); seg(p, p, .5, 3, 2.2, 1); }   // lamps along the cable
+        }
+        for (const a of [a1, a2]) for (let k = 1; k <= 5; k++) {                           // diagonal stays from the towers
+          for (const dir of [-1, 1]) { const b = a + dir * k * 7; if (b > s0 && b < s1) seg(pt(a, ac, yT - 4 - k * 2), pt(b, ac, 4.2), .08, 1, .18, 1); }
+        }
+      }
+    } else {                                                                               // a steel arch bridge
+      for (const s of [-1, 1]) {
+        const ac = s * (hw - 1), ay = a => 6 + 30 * (1 - Math.pow((a - mid) / (L / 2), 2));
+        let prev = null;
+        for (let a = s0; a <= s1 + .01; a += L / 28) { const p = pt(a, ac, ay(a)); if (prev) seg(prev, p, .25, 0, .4, 1); prev = p; }
+        for (let a = s0 + 8; a < s1 - 4; a += 8) { seg(pt(a, ac, ay(a)), pt(a, ac, 4.2), .1, 0, .2, 1); const q = pt(a, ac, ay(a)); seg(q, q, .5, 3, 2.2, 1); }
+      }
+    }
+  }
+  /* ---------- harbour yards: stacked containers and dockside cranes ---------- */
+  function genDock(bx, bz, x0, z0, x1, z1, out, beacons, lights) {
+    const rng = rngFrom(bh(bx, bz, 3)), mz = posmod(bz, RIVER_Z), mx = posmod(bx, RIVER_X);
+    let axis, side;                         // axis 0: the shore runs along x; side: which edge faces the water
+    if (mz === 2) { axis = 0; side = -1; } else if (mz === RIVER_Z - 1) { axis = 0; side = 1; } else if (mx === 2) { axis = 1; side = -1; } else { axis = 1; side = 1; }
+    const a0 = axis === 0 ? x0 : z0, a1 = axis === 0 ? x1 : z1;
+    const shore = axis === 0 ? (side < 0 ? z0 : z1) : (side < 0 ? x0 : x1), depth = axis === 0 ? z1 - z0 : x1 - x0, inward = -side;
+    const quay = axis === 0 ? (side < 0 ? bz : bz + 1) : (side < 0 ? bx : bx + 1), gap = roadW(quay) + 8;   // the quay road between the yard and the water
+    const put = (a, b, ha, hb, y0, y1, sd, fl) => { const w = shore + inward * b; axis === 0 ? out.push(a, w, ha, hb, y0, y1, sd, fl) : out.push(w, a, hb, ha, y0, y1, sd, fl); };
+    const pt = (a, b, y) => { const w = shore + inward * b; return axis === 0 ? [a, y, w] : [w, y, a]; };
+    for (let b = 20; b + 2.6 < depth; b += 7) {
+      for (let r = 0; r < 5 && b + 2.6 < depth; r++, b += 2.65) {
+        for (let a = a0 + 1; a + 12.2 < a1; a += 13) {
+          const n = Math.floor(rng() * 5); if (!n) continue;
+          put(a + 6.1, b + 1.3, 6.1, 1.22, 0, n * 2.6, Math.floor(rng() * 1000), 16384);
+        }
+      }
+    }
+    const nc = 1 + Math.floor(rng() * 2);
+    for (let k = 0; k < nc; k++) {
+      const a = a0 + (a1 - a0) * (nc === 1 ? .5 : k ? .74 : .26), acc = (rng() < .5 ? 0 : 1) << 2;
+      for (const da of [-7, 7]) for (const db of [3, 15]) put(a + da, db, .6, .6, 0, 40, 1, 1 | acc);
+      put(a, 9, 8, 7.5, 40, 43.5, 2, 1 | acc);                        // the frame
+      const bEnd = -(gap + 30); put(a, (9 + bEnd) / 2, 1.3, (9 - bEnd) / 2, 41, 42.6, 3, 1 | acc | 256);   // the boom, reaching out over the water
+      put(a, 9, 3, 3.5, 43.5, 47, 4, 1 | acc);                         // the machinery house
+      let p = pt(a, bEnd + 1, 43.2); beacons.push(p[0], p[1], p[2], rng());
+      p = pt(a, 12, 47.6); beacons.push(p[0], p[1], p[2], rng());
+    }
+    for (let a = a0 + 10; a < a1; a += 26) for (let b = 12; b < depth; b += 30) { const p = pt(a, b, 22); lights.push(p[0], p[1], p[2], p[0], p[1], p[2], .9, 3, 2.4, 1); }
+    if (rng() < .3) {                                     // now and then a container ship moored in the water, under the cranes
+      const len = (a1 - a0) * .47, mid = (a0 + a1) / 2, w = 9 + rng() * 3, bc = -(gap + w + 2);
+      const fwd = rng() < .5 ? 1 : -1, dc = axis === 0 ? (fwd > 0 ? 0 : 2) : (fwd > 0 ? 1 : 3);
+      const sgn = (axis === 0 ? 1 : 1) * fwd, acc = Math.floor(rng() * 3) << 2;
+      put(mid, bc, len, w, -1, 6, dc + Math.floor(rng() * 5) * .08, 32768 | acc);              // the hull, pointed at the bow
+      put(mid - sgn * len * .8, bc, 3.6, w * .8, 6, 19, dc + 7 * .08, 32768 | acc);           // the bridge, at the stern
+      for (let al = -len * .62; al < len * .22; al += 6.5) for (const cb of [-w * .55, 0, w * .55]) {
+        const n = 1 + Math.floor(rng() * 4); put(mid + sgn * al, bc + cb, 3, 1.25, 6, 6 + n * 2.6, Math.floor(rng() * 1000), 16384);
+      }
+      // its lights: red and green on the bridge wings, a white mast light, floodlights over the deck, lights along the rails
+      const L = (al, b, y, w, ci, k) => { const p = pt(mid + sgn * al, bc + b, y); lights.push(p[0], p[1], p[2], p[0], p[1], p[2], w, ci, k, 1); };
+      L(-len * .8, -w * .85 * sgn * inward, 19.5, .6, 5, 3); L(-len * .8, w * .85 * sgn * inward, 19.5, .6, 6, 3);
+      L(-len * .8, 0, 26, .6, 4, 3.4); L(len * .55, 0, 14, .6, 4, 3);
+      for (let al = -len * .55; al < len * .25; al += 13) L(al, 0, 22, 1, 4, 2.4);
+      for (let al = -len * .9; al < len * .5; al += 5) { L(al, -w * .95, 6.6, .35, 3, 1.4); L(al, w * .95, 6.6, .35, 3, 1.4); }
+    }
+  }
+  /* ---------- a stadium, filling a whole chunk ---------- */
+  function genStadium(x, z, s, out, beacons, lights, discs) {
+    const rng = rngFrom(s), rot = rng() < .5;
+    const XZ = (a, b) => rot ? [b, a] : [a, b];
+    const tiers = 4, step = 13, fx = 64, fz = 44;
+    const disc = (y, kind, rx, rz, inner, sd) => { const [ax, az] = XZ(rx, rz); discs.push(x, y, z, kind, ax, az, inner, sd); };
+    disc(.5, 2, fx, fz, 0, s % 97);                                                       // the pitch and the track
+    for (let k = 0; k < tiers; k++) {
+      const ri = fx + 2 + step * k, ro = fx + 2 + step * (k + 1);
+      disc(3 + 7 * k, 0, ro, fz + 2 + step * (k + 1), ri / ro, (s % 89) + k);                // the stands, rising ring by ring
+    }
+    const rOut = fx + 2 + step * tiers, zOut = fz + 2 + step * tiers;
+    disc(32, 1, rOut + 6, zOut + 6, (rOut - 14) / (rOut + 6), s % 83);                    // the roof ring
+    for (let i = 0; i < 44; i++) {                                                         // the outer wall of piers
+      const t = i / 44 * Math.PI * 2, [px, pz] = XZ(Math.cos(t) * (rOut + 3), Math.sin(t) * (zOut + 3));
+      out.push(x + px, z + pz, 1.6, 1.6, 0, 32, 7 + i, 1 | 256 | ((i % 2) << 2));
+    }
+    for (const q of [1, 3, 5, 7]) {                                                        // floodlight masts
+      const t = q * Math.PI / 4, [px, pz] = XZ(Math.cos(t) * (rOut + 16), Math.sin(t) * (zOut + 16));
+      out.push(x + px, z + pz, .8, .8, 0, 66, 11 + q, 2 | (1 << 2));
+      for (let i = -1; i <= 1; i++) for (let j = 0; j < 2; j++) {
+        const p = [x + px + i * 1.6, 66.5 + j * 1.6, z + pz]; lights.push(p[0], p[1], p[2], p[0], p[1], p[2], 1.2, 4, 5, 1);
+      }
+      beacons.push(x + px, 69, z + pz, rng());
+    }
+    const [jx, jz] = XZ(rOut - 4, 0);                                                      // the big screen at one end
+    if (rot) out.push(x + jx, z + jz, 14, .4, 32, 44, s % 71, 3 | (1 << 2)); else out.push(x + jx, z + jz, .4, 14, 32, 44, s % 71, 3 | (1 << 2));
+    for (let i = 0; i < 28; i++) {                                                         // lamps around the plaza
+      const t = i / 28 * Math.PI * 2, [px, pz] = XZ(Math.cos(t) * (rOut + 40), Math.sin(t) * (zOut + 40));
+      lights.push(x + px, 7, z + pz, x + px, 7, z + pz, .7, 3, 2, 1);
+    }
+    for (let i = 0; i < 40; i++) {                                                         // food stalls, each with its own neon
+      const t = (i + .5) / 40 * Math.PI * 2, [px, pz] = XZ(Math.cos(t) * (rOut + 24), Math.sin(t) * (zOut + 24));
+      out.push(x + px, z + pz, 2, 2, 0, 3.2, 20 + i, 1 | 16 | (Math.floor(rng() * 3) << 2));
+    }
+    for (const q of [1, 3, 5, 7]) {                                                        // fan-zone screens on the plaza
+      const t = q * Math.PI / 4 + .35, [px, pz] = XZ(Math.cos(t) * (rOut + 30), Math.sin(t) * (zOut + 30));
+      if (rot) out.push(x + px, z + pz, .35, 7, 0, 9, s % 61 + q, 3 | ((q % 3) << 2)); else out.push(x + px, z + pz, 7, .35, 0, 9, s % 61 + q, 3 | ((q % 3) << 2));
+    }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) searchlights.push(x + sx * 108, 2, z + sz * 108, rng() * 6.28, 240, 4, 150);
+  }
+  /* ---------- the megatower: twin black towers, spires, a glowing crown and floodlights ---------- */
+  function genMega(x, z, s, out, beacons, lights) {
+    // a supertall inspired by the Burj Khalifa: a Y-shaped plan of three rounded wings around a core that fills the
+    // whole base, each wing stepping back at a different height so the tower spirals up and thins to a needle spire
+    const rng = rngFrom(s), turn = rng() * Math.PI * 2, M = 131072 | ROUND;
+    out.push(x, z, 74, 74, 0, 6, 11, ROUND | 16 | (1 << 2));                         // a round podium, edged in light
+    const N = 17, T = 24.7, stops = [7, 11, 14];                                       // each wing ends at its own tier
+    for (let i = 0; i < N; i++) {
+      const y0 = 6 + i * T, y1 = y0 + T, f = 1 - i / N;
+      const rc = 14 + 24 * f; out.push(x, z, rc, rc, y0, y1, i === N - 1 ? 4 : 2, M);  // the core
+      for (let k = 0; k < 3; k++) {
+        if (i >= stops[k]) continue;
+        const a = turn + k * Math.PI * 2 / 3, left = 1 - i / stops[k];              // the wing shrinks toward its own top
+        const d = 12 + 24 * f, rw = 10 + 20 * Math.min(1, left * 1.3) * f + 4 * f;      // wings overlap the core: one lobed mass
+        out.push(x + Math.cos(a) * d, z + Math.sin(a) * d, rw, rw, y0, y1, i === stops[k] - 1 ? 4 : 2, M);
+      }
+    }
+    const top = 6 + N * T;                                                           // the spire, narrowing in steps
+    let r = 9, y = top;
+    for (const hgt of [18, 17, 16, 14, 13]) { out.push(x, z, r, r, y, y + hgt, 2, M); y += hgt; r *= .66; }
+    out.push(x, z, .7, .7, y, y + 21, 5, 2 | ROUND); y += 21;
+    beacons.push(x, y + .6, z, .93);
+    for (let k = 0; k < 6; k++) {                                                    // floodlights washing up the wings
+      const a = turn + k * Math.PI / 3, rr = 70, a2 = [x + Math.cos(a) * rr, 7, z + Math.sin(a) * rr], b2 = [x + Math.cos(a) * 30, 234, z + Math.sin(a) * 30];
+      lights.push(a2[0], a2[1], a2[2], b2[0], b2[1], b2[2], 6, 3, .1, 2);
+    }
+    for (let i = 0; i < 28; i++) {                                                   // lamps around the plaza
+      const t = i / 28 * Math.PI * 2; lights.push(x + Math.cos(t) * 80, 5, z + Math.sin(t) * 80, x + Math.cos(t) * 80, 5, z + Math.sin(t) * 80, .6, 3, 2, 1);
+    }
+    searchlights.push(x, top + 2, z, rng() * 6.28, 260, 4, 30);
+    searchlights.push(x, top - 60, z, rng() * 6.28 + 3, 240, 3, 30);
+  }
+  /* ---------- the metro: viaducts on pillars, with a station now and then ---------- */
+  function genMetro(cx, cz, out, lights) {
+    const a0 = cx * CHUNK_M, a1 = a0 + CHUNK_M, b0 = cz * CHUNK_M, b1 = b0 + CHUNK_M, TRACK = 262144;
+    for (let i = cx * CHUNK; i < cx * CHUNK + CHUNK; i++) if (metroX(i)) {                // tracks along z at x = i * PITCH
+      const x = i * PITCH, y = TRACK_X;
+      out.push(x, (b0 + b1) / 2, 9.9, CHUNK_M / 2, y - 2.4, y, 6, TRACK | (1 << 2));
+      for (let zz = b0 + 12; zz < b1; zz += 24) { const j = Math.round(zz / PITCH); if (metroZ(j) && Math.abs(zz - j * PITCH) < 16) continue; out.push(x, zz, 2.5, 2.5, 0, y - 2.4, 7, 1); }
+      for (let zz = b0 + 18; zz < b1; zz += 36) for (const sd of [-1, 1]) lights.push(x + sd * 9.4, y + 1.6, zz, x + sd * 9.4, y + 1.6, zz, .45, 3, 1.5, 1);   // lamps along the edges
+      for (let zz = b0; zz < b1; zz += PITCH) if (posmod(Math.round(zz / PITCH), 8) === 3) station(x, zz + PITCH / 2, y, 0, out, lights);
+    }
+    for (let j = cz * CHUNK; j < cz * CHUNK + CHUNK; j++) if (metroZ(j)) {                // tracks along x at z = j * PITCH
+      const z = j * PITCH, y = TRACK_Z;
+      out.push((a0 + a1) / 2, z, CHUNK_M / 2, 9.9, y - 2.4, y, 6, TRACK | (0 << 2));
+      for (let xx = a0 + 12; xx < a1; xx += 24) { const i = Math.round(xx / PITCH); if (metroX(i) && Math.abs(xx - i * PITCH) < 16) continue; out.push(xx, z, 2.5, 2.5, 0, y - 2.4, 7, 1); }
+      for (let xx = a0 + 18; xx < a1; xx += 36) for (const sd of [-1, 1]) lights.push(xx, y + 1.6, z + sd * 9.4, xx, y + 1.6, z + sd * 9.4, .45, 3, 1.5, 1);
+      for (let xx = a0; xx < a1; xx += PITCH) if (posmod(Math.round(xx / PITCH), 8) === 5) station(xx + PITCH / 2, z, y, 1, out, lights);
+    }
+  }
+  function station(x, z, y, alongX, out, lights) {
+    const L = 36, push = (al, ac, ha, hc, y0, y1, sd, fl) => alongX ? out.push(x + al, z + ac, ha, hc, y0, y1, sd, fl) : out.push(x + ac, z + al, hc, ha, y0, y1, sd, fl);
+    for (const s of [-1, 1]) {
+      push(0, s * 12.4, L, 2.4, y - 1.6, y - .3, 8, 1 | 16 | (0 << 2));                // platforms
+      push(0, s * 10.2, L, 5.4, y + 7.5, y + 8.1, 9, 1 | 16 | (1 << 2));               // canopies
+      for (let a = -L + 6; a < L; a += 12) { const p = alongX ? [x + a, y + 7.1, z + s * 10.2] : [x + s * 10.2, y + 7.1, z + a]; lights.push(p[0], p[1], p[2], p[0], p[1], p[2], .6, 4, 2, 1); }
+    }
+  }
+  const chunks = new Map();
+  let searchlights = [];                     // filled while a chunk is being generated: x, y, z, phase, reach, colour, rise
+  function chunk(cx, cz) {
+    const key = cx + "," + cz; let c = chunks.get(key);
+    if (!c) {
+      const box = [], cylA = [], octA = [], domeA = [], beacons = [], lights = [], discs = []; searchlights = [];
+      const inst = { push(cx, cz, hx, hz, y0, y1, sd, fl) { (fl & DOME ? domeA : fl & OCT ? octA : fl & ROUND ? cylA : box).push(cx, cz, hx, hz, y0, y1, sd, fl); } };
+      for (let bx = cx * CHUNK; bx < cx * CHUNK + CHUNK; bx++) for (let bz = cz * CHUNK; bz < cz * CHUNK + CHUNK; bz++) genBlock(bx, bz, inst, beacons, lights);
+      const sp = special(cx, cz), mx = (cx * CHUNK + 2) * PITCH, mz = (cz * CHUNK + 2) * PITCH;
+      if (sp === 1) genStadium(mx, mz, bh(cx, cz, 33), inst, beacons, lights, discs);
+      if (sp === 2) genMega(mx, mz, bh(cx, cz, 34), inst, beacons, lights);
+      genMetro(cx, cz, inst, lights);
+      c = { key, cx, cz, inst: new Float32Array(box), cyl: new Float32Array(cylA), oct: new Float32Array(octA), dome: new Float32Array(domeA), beacons, lights, discs, beams: searchlights };
+      chunks.set(key, c);
+    }
+    return c;
+  }
+
+  /* ---------- shaders ---------- */
+  const COMMON = `
+    precision highp float; precision highp int;
+    uniform vec3 uEye, uFog, uWin; uniform vec3 uAcc[3]; uniform float uT, uFogNear, uFogK, uHaze, uExpo, uNat, uWinAmt, uLightK, uEdges; uniform vec2 uMistY, uMistD, uWind;
+    uint hu(uint x){ x ^= x >> 16u; x *= 0x7feb352du; x ^= x >> 15u; x *= 0x846ca68bu; x ^= x >> 16u; return x; }
+    float h1(float a){ return float(hu(uint(int(floor(a))) * 2654435761u + 17u)) / 4294967295.0; }
+    float h3(float a, float b, float c){ return float(hu(uint(int(floor(a))) * 1597334677u ^ uint(int(floor(b))) * 3812015801u ^ uint(int(floor(c))) * 2798796415u)) / 4294967295.0; }
+    float fogK(vec3 w){
+      float d = length(w - uEye);
+      return clamp(1.0 - exp(-max(d - uFogNear, 0.0) * uFogK) + uHaze * exp(-max(w.y, 0.0) / 60.0), 0.0, 0.9);
+    }
+    vec3 fogCol(vec3 w){ return uFog * (0.55 + 0.95 * exp(-max(w.y, 0.0) / 60.0)); }
+    vec3 safe3(vec3 c){
+      uvec3 b = floatBitsToUint(c) & uvec3(0x7f800000u);
+      return vec3(b.x == 0x7f800000u ? 0.0 : clamp(c.x, 0.0, 60.0), b.y == 0x7f800000u ? 0.0 : clamp(c.y, 0.0, 60.0), b.z == 0x7f800000u ? 0.0 : clamp(c.z, 0.0, 60.0));
+    }
+    // haze layers, worked out per pixel: where the line from the camera to this surface crosses a layer, that layer's
+    // density there veils the surface. Within 35 m of the layer the veil thins, so anything rising through it fades softly.
+    float mvn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h3(i.x, i.y, 1.0), h3(i.x + 1.0, i.y, 1.0), f.x), mix(h3(i.x, i.y + 1.0, 1.0), h3(i.x + 1.0, i.y + 1.0, 1.0), f.x), f.y); }
+    float mistDens(vec2 xz, float sd){
+      vec2 p = xz + uWind * uT + sd;
+      float patchy = 0.5 + 0.5 * smoothstep(0.38, 0.72, mvn(xz / 1400.0 + 3.7));
+      float f = mvn(p / 260.0) * 0.5 + mvn(p / 120.0) * 0.28 + mvn(p / 55.0) * 0.14 + mvn(p / 24.0) * 0.08;
+      return smoothstep(0.42, 0.85, f) * patchy;
+    }
+    vec3 mistOn(vec3 c, vec3 w){
+      vec3 mc = uFog * 2.55 + uWin * 0.035;
+      for (int i = 0; i < 2; i++) {
+        float Y = i == 0 ? uMistY.x : uMistY.y, D = i == 0 ? uMistD.x : uMistD.y;
+        if (D <= 0.0 || w.y >= Y || uEye.y <= Y) continue;
+        float t = (uEye.y - Y) / (uEye.y - w.y);
+        vec2 P = mix(uEye.xz, w.xz, t);
+        float d = clamp(mistDens(P, i == 0 ? 0.0 : 917.0) * D * smoothstep(0.0, 35.0, Y - w.y), 0.0, 1.0);
+        c = mix(c, mc, d);
+      }
+      return c;
+    }
+    vec3 hsv(float h, float s, float v){ vec3 k = clamp(abs(fract(h + vec3(0.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0) - 1.0, 0.0, 1.0); return v * mix(vec3(1.0), k, s); }
+    // an accent colour; in the Natural look every light picks its own
+    // City Lights: mostly warm white and sodium yellow, some cool white; blue, pink and green only now and then
+    vec3 realCol(float h){ return h < 0.42 ? vec3(1.0, 0.86, 0.66) : h < 0.72 ? vec3(1.0, 0.66, 0.26) : h < 0.9 ? vec3(0.82, 0.9, 1.0) : h < 0.94 ? vec3(0.3, 0.55, 1.0) : h < 0.97 ? vec3(1.0, 0.3, 0.6) : vec3(0.35, 1.0, 0.5); }
+    vec3 accFor(float i, float seed){
+      if (uNat > 1.5) return realCol(h1(seed * 41.0 + i * 7.0));
+      return uNat > 0.5 ? hsv(h1(seed * 41.0 + i * 7.0), 0.5 + 0.45 * h1(seed * 43.0 + i), 1.0) : uAcc[int(mod(i, 3.0))];
+    }
+    const float PITCH = ${PITCH}.0;
+    float roadHalf(float i){ return mod(i, 5.0) == 0.0 ? 15.0 : 8.0; }
+    // signed distance into a river band (positive = water), along one axis
+    float riverSD(float p, float period){
+      float bi = floor(p / PITCH), m = mod(bi, period);
+      if (m >= 2.0) return -1e4;
+      float L0 = bi - m, L2 = L0 + 2.0;
+      return min(p - L0 * PITCH - roadHalf(L0) - 4.0, L2 * PITCH - roadHalf(L2) - 4.0 - p);
+    }
+    // rare chunks: 1 stadium, 2 megatower, 3 neon square (same rules as the city generator)
+    int specialType(vec2 c){
+      vec2 g = floor(c / 4.0), o = c - g * 4.0;
+      uint hc = hu(uint(int(g.x)) * 73856093u ^ uint(int(g.y)) * 19349663u ^ 31u);
+      if (o.x != 1.0 + float(hc % 2u) || o.y != 1.0 + float((hc / 2u) % 2u)) return 0;
+      for (int k = -1; k <= 4; k++) { if (mod(c.y * 4.0 + float(k), 26.0) < 2.0 || mod(c.x * 4.0 + float(k), 37.0) < 2.0) return 0; }
+      for (int k = 1; k <= 3; k++) { if (mod(c.x * 4.0 + float(k), 55.0) == 7.0 || mod(c.y * 4.0 + float(k), 61.0) == 11.0) return 0; }
+      return (hc / 4u) % 100u < 90u ? (mod(g.x + g.y, 2.0) == 0.0 ? 1 : 2) : 0;
+    }
+    // inside the plaza of a stadium or megatower chunk (no streets there): 0 no, else its type
+    int plazaAt(vec2 p){
+      vec2 c = floor(p / (PITCH * 4.0)); int t = specialType(c); if (t != 1 && t != 2) return 0;
+      vec2 q = p - c * PITCH * 4.0;
+      if (t == 1) return length(q - PITCH * 2.0) < 168.0 ? 1 : 0;
+      return (all(greaterThan(q, vec2(PITCH + 19.0))) && all(lessThan(q, vec2(PITCH * 3.0 - 19.0)))) ? 2 : 0;
+    }
+    // how far inside a plaza a point is (negative outside); traffic fades out as it reaches one
+    float plazaSD(vec2 p){
+      vec2 c = floor(p / (PITCH * 4.0)); int t = specialType(c); if (t != 1 && t != 2) return -1e4;
+      vec2 q = p - c * PITCH * 4.0;
+      if (t == 1) return 168.0 - length(q - PITCH * 2.0);
+      vec2 d = min(q - vec2(PITCH + 19.0), vec2(PITCH * 3.0 - 19.0) - q); return min(d.x, d.y);
+    }`;
+  const BLD_VS = `#version 300 es
+    layout(location=0) in vec3 aPos; layout(location=1) in vec3 aNrm;
+    layout(location=2) in vec4 aA; layout(location=3) in vec4 aB;
+    uniform mat4 uVP;
+    centroid out vec3 vW; out vec3 vN; centroid out vec3 vL; flat out vec4 vA; flat out vec4 vB;
+    void main(){
+      vec3 w = vec3(aA.x + aPos.x * aA.z, mix(aB.x, aB.y, aPos.y), aA.y + aPos.z * aA.w);
+      vW = w; vN = vec3(aNrm.x / aA.z, aNrm.y / max(aB.y - aB.x, 0.01), aNrm.z / aA.w); vL = aPos; vA = aA; vB = aB;
+      gl_Position = uVP * vec4(w, 1.0);
+    }`;
+  const BLD_FS = `#version 300 es
+    ${COMMON}
+    centroid in vec3 vW; in vec3 vN; centroid in vec3 vL; flat in vec4 vA; flat in vec4 vB;
+    out vec4 o;
+    uniform int uFont[12]; uniform int uClk[4]; uniform float uColon;
+    // the time in 3x5 LED digits on rooftop screens
+    float clockDots(vec2 p){
+      // p in dot units, text block is 19 x 5 dots
+      if (p.x < 0.0 || p.y < 0.0 || p.x >= 19.0 || p.y >= 5.0) return -1.0;
+      int col = int(p.x), row = 4 - int(p.y), ch = col / 4, cx = col - ch * 4;
+      if (cx == 3) return -1.0;
+      int code = ch == 2 ? 10 : uClk[ch < 2 ? ch : ch - 1];
+      int bit = (uFont[code] >> (row * 3 + (2 - cx))) & 1;
+      if (ch == 2 && uColon < 0.5) bit = 0;
+      return float(bit);
+    }
+    // what plays on billboards and rooftop screens (q: -1..1 across the panel, sz: half size in metres)
+    vec3 adContent(vec2 q, vec2 sz, float seed, vec3 acc, vec3 acc2){
+      float mode = floor(h1(seed * 19.0) * 4.0), t = uT * 0.35 + seed;
+      vec2 m = q * sz;
+      vec3 c;
+      if (mode < 1.0) {                                     // flowing colour and a ring logo
+        float band = 0.5 + 0.5 * sin(q.x * 3.0 + q.y * 2.0 + t * 2.0);
+        c = mix(acc, acc2, band) * (0.45 + 0.8 * pow(max(0.5 + 0.5 * sin(q.y * 6.0 - t * 3.0), 0.0), 3.0));
+        float r = length(m - vec2(-sz.x * 0.45, 0.0)) / max(min(sz.x, sz.y), 0.5);
+        c += vec3(1.0) * 1.6 * smoothstep(0.1, 0.0, abs(r - 0.55)) * step(0.4, fract(t * 0.25));
+      } else if (mode < 2.0) {                              // rows of scrolling glyphs
+        vec2 p = m / 0.6; float row = floor(p.y / 7.0);
+        float x = p.x + uT * (h1(row + seed) - 0.5) * 6.0, gi = floor(x / 5.0);
+        vec2 d = vec2(mod(x, 5.0), mod(p.y, 7.0));
+        float on = (d.x < 4.0 && d.y < 6.0 && d.y >= 1.0) ? step(0.52, h3(gi * 5.0 + floor(d.x), floor(d.y) + row * 9.0, seed)) : 0.0;
+        on *= step(0.25, h3(gi, row, seed + 3.0));
+        c = acc2 * 0.08 + mix(acc, vec3(1.0), 0.25) * 2.2 * on * smoothstep(0.55, 0.25, length(fract(p) - 0.5));
+      } else if (mode < 3.0) {                              // a big glyph that changes every few seconds
+        vec2 p = (q * 0.5 + 0.5) * vec2(4.0, 6.0); vec2 cl = floor(p);
+        float on = step(0.45, h3(cl.x, cl.y, seed + floor(uT / 3.0)));
+        c = acc2 * 0.12 + acc * 2.0 * on * smoothstep(0.5, 0.38, max(abs(fract(p.x) - 0.5), abs(fract(p.y) - 0.5)));
+      } else {                                              // a product shot: a pulsing disc on colour
+        float r = length(m) / max(min(sz.x, sz.y), 0.5);
+        c = mix(acc2 * 0.55, mix(acc, vec3(1.0), 0.3) * 2.0, smoothstep(0.62, 0.56, r)) * (0.85 + 0.15 * sin(t * 4.0));
+      }
+      c *= 0.8 + 0.2 * step(0.5, fract(m.y * 1.6));          // scan lines
+      return c * 1.3 + acc * 2.4 * smoothstep(0.92, 0.98, max(abs(q.x), abs(q.y)));
+    }
+    vec3 roofScreen(vec2 lp, vec2 hs, float seed, vec3 acc, vec3 acc2, inout vec3 col){
+      vec2 sz = hs * 0.8; vec2 q = lp / sz;
+      float mode = floor(h1(seed * 13.0) * 3.0);
+      if (mode >= 1.0) {                                    // a rooftop running track, or a rooftop pool
+        vec2 m = lp; float R = min(hs.x, hs.y) * 0.86, Lh = max(max(hs.x, hs.y) * 0.86 - R, 0.0);
+        vec2 mm = hs.x >= hs.y ? m : m.yx;
+        float r = length(vec2(max(abs(mm.x) - Lh, 0.0), mm.y));      // distance from the centre line of a stadium-shaped oval
+        if (mode < 2.0) {
+          float inner = R * 0.62;
+          if (r < R && r > inner) {
+            col = vec3(0.13, 0.04, 0.03);                   // red track, with white lane lines
+            float lane = fract((r - inner) / (R - inner) * 4.0);
+            col = mix(col, vec3(0.22), smoothstep(0.1, 0.0, min(lane, 1.0 - lane)) * 0.7);
+          } else if (r <= inner) col = vec3(0.025, 0.08, 0.035);   // turf in the middle
+          vec3 e = vec3(0.0);
+          for (int k = 0; k < 3; k++) {                     // a few runners with head torches
+            float fk = float(k), a = uT * (0.06 + 0.02 * fk) + fk * 2.1 + seed;
+            float per = 2.0 * (3.14159 * (R * 0.8) + 2.0 * Lh), sPos = mod(a * 40.0, per);
+            float rr = R * 0.8; vec2 pp;
+            if (sPos < 2.0 * Lh) pp = vec2(-Lh + sPos, rr);
+            else if (sPos < 2.0 * Lh + 3.14159 * rr) { float t2 = (sPos - 2.0 * Lh) / rr; pp = vec2(Lh + sin(t2) * rr, cos(t2) * rr); }
+            else if (sPos < 4.0 * Lh + 3.14159 * rr) pp = vec2(Lh - (sPos - 2.0 * Lh - 3.14159 * rr), -rr);
+            else { float t2 = (sPos - 4.0 * Lh - 3.14159 * rr) / rr; pp = vec2(-Lh - sin(t2) * rr, -cos(t2) * rr); }
+            e += vec3(1.0, 0.95, 0.85) * 3.0 * smoothstep(0.7, 0.2, length(mm - pp));
+          }
+          float ang = atan(mm.y, mm.x + 1e-5);
+          e += uWin * 1.6 * smoothstep(0.6, 0.1, abs(r - R - 0.8)) * step(0.82, fract(ang * 3.0));   // lamps around it
+          return e;
+        } else {
+          float pr = R * 0.7;
+          if (r < pr) {                                     // a lit pool, rippling
+            col = vec3(0.012, 0.035, 0.045);
+            float rip = 0.5 + 0.5 * sin(mm.x * 1.3 + uT * 1.2) * sin(mm.y * 1.7 - uT);
+            return vec3(0.05, 0.16, 0.2) * (0.35 + 0.25 * rip) + vec3(0.3, 0.38, 0.4) * smoothstep(0.3, 0.0, abs(r - pr + 0.3));   // a dim, quiet pool
+          }
+          if (r < R) col = vec3(0.09, 0.06, 0.04);          // a wooden deck
+          return uWin * 1.4 * smoothstep(0.5, 0.0, abs(r - R + 0.6)) * step(0.85, fract(atan(mm.y, mm.x + 1e-5) * 3.5));
+        }
+      }
+      if (abs(q.x) > 1.0 || abs(q.y) > 1.0) return vec3(0.0);
+      float frame = smoothstep(0.93, 0.99, max(abs(q.x), abs(q.y)));
+      vec3 c = acc * 0.05;
+      {                                                     // the clock
+        float u = min(2.0 * sz.x / 22.0, 2.0 * sz.y / 8.0);
+        bool flip = sz.y > sz.x * 1.35;
+        vec2 lq = flip ? vec2(lp.y, -lp.x) : lp;
+        if (flip) u = min(2.0 * sz.y / 22.0, 2.0 * sz.x / 8.0);
+        vec2 p = lq / u + vec2(9.5, 2.5);
+        float b = clockDots(floor(p));
+        vec2 f = fract(p) - 0.5; float dotm = smoothstep(0.48, 0.3, length(f));
+        if (b >= 0.0) c += mix(acc * 0.07, mix(acc, vec3(1.0), 0.35) * 3.2, b) * dotm;
+      }
+      return c + acc * 2.6 * frame;
+    }
+    vec3 facadeSign(float lu, float hy, float fw, float H, float s, vec3 acc){
+      float w = min(2.4 + h1(s * 23.0) * 2.6, fw * 0.6);
+      float c = (h1(s * 29.0) - 0.5) * (fw - w) * 1.5;
+      float y0 = 4.0 + h1(s * 31.0) * max(H * 0.3 - 12.0, 0.5);           // signs hang in the lower half
+      float hh = min(9.0 + h1(s * 37.0) * 32.0, H * 0.5 - y0);
+      if (hh < 4.0) return vec3(0.0);
+      vec2 q = vec2((lu - c) / w, (hy - y0) / hh);
+      if (abs(q.x) > 1.0 || q.y < 0.0 || q.y > 1.0) return vec3(0.0);
+      float gy = q.y * hh / (w * 1.5), gi = floor(gy);
+      vec2 dt = floor(vec2(q.x * 0.5 + 0.5, fract(gy)) * vec2(4.0, 5.0));
+      float on = step(0.5, h3(dt.x + gi * 7.0, dt.y, s));
+      float frame = step(0.9, max(abs(q.x), abs(q.y * 2.0 - 1.0)));
+      float flick = 0.8 + 0.2 * step(0.08, fract(uT * 0.31 + s));
+      return acc * (0.3 + 2.3 * on + 2.2 * frame) * flick;
+    }
+    void main(){
+      int fl = int(vB.w + 0.5), kind = fl & 3, ai = (fl >> 2) & 3;
+      float seed = vB.z, y0 = vB.x, y1 = vB.y;
+      vec3 acc = accFor(float(ai), seed), acc2 = accFor(float(ai + 1), seed + 3.0);
+      vec3 n = normalize(vN), col, em = vec3(0.0);
+      // Neon Edges slider: below the middle, fewer of today's edged buildings keep theirs; above it, more buildings get one
+      float eSel = h1(seed * 53.0 + 7.0), eKeep = eSel < min(uEdges * 2.0, 1.0) ? 1.0 : 0.0;
+      float eMore = (kind == 0 && eSel < max(uEdges * 2.0 - 1.0, 0.0) * 0.6) ? 1.0 : 0.0;
+      vec2 hs = vA.zw, lp = vL.xz * hs;
+      bool round = (fl & 3145728) != 0;
+      if ((fl & 8388608) != 0) {                             // a patch on the ground: lawn, pond or paved plaza
+        vec2 hs2 = vA.zw, q = vL.xz;
+        if (ai == 1) {                                       // a pond: dark water, ripples, the city's lights glinting, a lit rim
+          float r = round ? length(q) : max(abs(q.x), abs(q.y));
+          col = vec3(0.004, 0.008, 0.016) + uFog * 0.18;
+          float g = h3(floor(vW.x / 1.6), floor(vW.z / 0.8), floor(uT * 1.2));
+          em = uWin * 1.4 * step(0.985, g) + uWin * 0.5 * smoothstep(0.86, 1.0, r) * step(0.5, fract(atan(q.y, q.x + 1e-5) * 6.0));
+        } else if (ai == 2) {                                // a paved plaza with lamps
+          vec2 t = abs(fract(vW.xz / 2.5) - 0.5);
+          col = vec3(0.04, 0.038, 0.046) * (0.85 + 0.15 * smoothstep(0.0, 0.05, min(t.x, t.y)));
+          vec2 lp2 = fract(vW.xz / 11.0) - 0.5; em = uWin * 0.9 * exp(-dot(lp2, lp2) * 300.0);
+        } else if (ai == 3) {                                // a floodlit court
+          vec2 m = q * hs2; float px2 = max(fwidth(m.x), 0.05);
+          col = vec3(0.03, 0.12, 0.05);                      // always a grass pitch
+          col *= 0.85 + 0.15 * step(0.5, fract(m.x / 4.0));
+          float line = smoothstep(0.25 + px2, 0.0, min(min(abs(abs(m.x) - hs2.x * 0.92), abs(abs(m.y) - hs2.y * 0.88)), abs(m.x)));
+          line = max(line, smoothstep(0.25 + px2, 0.0, abs(length(m) - min(hs2.x, hs2.y) * 0.3)));
+          em = col * 1.3 + vec3(0.55) * line * step(abs(m.x), hs2.x * 0.93) * step(abs(m.y), hs2.y * 0.89);
+        } else {                                             // a lawn with a path and a few lamps
+          col = vec3(0.009, 0.03, 0.02) * (0.75 + 0.45 * h3(floor(vW.x / 6.0), floor(vW.z / 6.0), 2.0)) * (0.9 + 0.1 * step(0.5, fract((vW.x + vW.z) / 5.0)));
+          float path = abs(q.x * hs2.x * 0.3 - q.y * hs2.y * 0.3 + sin(q.x * 3.0) * 2.0);
+          col = mix(col, vec3(0.045, 0.043, 0.05), smoothstep(1.4, 0.8, path));
+          vec2 lp2 = fract(vW.xz / 13.0) - 0.5; em = uWin * 0.6 * exp(-dot(lp2, lp2) * 500.0) * step(path, 2.5);
+        }
+        o = vec4(safe3(mistOn(mix(col + em * uLightK, fogCol(vW), fogK(vW)), vW) * uExpo), 1.0);
+        return;
+      }
+      if ((fl & 4194304) != 0) {                             // a dome (or, in plain colour, a tree)
+        float ang = atan(vL.z, vL.x + 1e-5), y = vL.y;
+        if (kind == 1) {                                     // a tree crown: leafy clumps in its own shade of green
+          float tone = h1(floor(seed) * 3.0), leaf = h3(floor(ang * 7.0), floor(y * 5.0), seed);
+          col = mix(vec3(0.03, 0.09, 0.04), vec3(0.04, 0.1, 0.07), tone) * (0.55 + 0.6 * leaf) * (0.6 + 0.6 * y);
+          em = uWin * 0.1 * (0.3 + 0.7 * y) * leaf;
+          if (fract(seed) > 0.25) {                          // strung with little lights that twinkle
+            float tw = h3(floor(ang * 9.0), floor(y * 7.0), floor(seed) + floor(uT * 1.5));
+            em += vec3(1.0, 0.82, 0.5) * 1.8 * step(0.9, tw) * step(0.12, y);
+          }
+        } else {
+          col = vec3(0.03, 0.032, 0.04) * (0.7 + 0.5 * y);
+          col += vec3(0.02) * smoothstep(0.06, 0.0, abs(fract(ang / 6.2831853 * 16.0) - 0.5) - 0.44);   // ribs
+          em = acc * 1.8 * smoothstep(0.08, 0.0, y) + uWin * 0.9 * smoothstep(0.96, 1.0, y);         // a lit ring at the base, a lamp on top
+          em += uWin * 0.35 * step(0.15, y) * step(y, 0.55) * step(0.6, fract(ang / 6.2831853 * 32.0)) * step(0.5, h3(floor(ang * 5.1), seed, 3.0));
+        }
+        o = vec4(safe3(mistOn(mix(col + em * uLightK, fogCol(vW), fogK(vW)), vW) * uExpo), 1.0);
+        return;
+      }
+      if ((fl & 32768) != 0) {                               // a boat: pointed bow, pale deck, a lit cabin, navigation lights
+        int dc = int(floor(seed) + 0.5), pc = int(fract(seed) * 12.5 + 0.5);
+        vec2 dir = dc == 0 ? vec2(1.0, 0.0) : dc == 1 ? vec2(0.0, 1.0) : dc == 2 ? vec2(-1.0, 0.0) : vec2(0.0, -1.0);
+        bool ax = abs(dir.x) > 0.5;
+        float al = dot(lp, dir), hl = ax ? hs.x : hs.y, ac = ax ? lp.y : lp.x, hc = ax ? hs.y : hs.x, hy = vW.y - y0;
+        if (pc != 7) {
+          float b0 = hl * 0.3, wAt = al > b0 ? hc * (1.0 - pow(max((al - b0) / (hl - b0), 0.0), 1.6)) : hc;
+          if (abs(ac) > wAt + 0.05) discard;
+          if (n.y > 0.5) {
+            col = pc < 3 ? vec3(0.2, 0.2, 0.22) : vec3(0.1, 0.06, 0.05);
+            col *= 0.85 + 0.15 * step(0.5, fract(al * 0.8));
+            em += acc * 1.2 * smoothstep(0.5, 0.0, wAt - abs(ac));                       // a neon line along the gunwale
+            em += vec3(1.0, 0.1, 0.06) * 3.0 * smoothstep(1.0, 0.0, length(vec2(al - hl * 0.5, ac + wAt * 0.8))) * step(ac, 0.0);
+            em += vec3(0.1, 1.0, 0.3) * 3.0 * smoothstep(1.0, 0.0, length(vec2(al - hl * 0.5, ac - wAt * 0.8))) * step(0.0, ac);
+          } else {
+            col = pc < 3 ? vec3(0.04, 0.05, 0.09) : vec3(0.18, 0.18, 0.2);
+            col = mix(col, acc * 0.4, step(abs(hy - 0.6), 0.18));
+            em += uWin * 1.4 * step(abs(hy - 1.6), 0.22) * step(0.55, fract(al / 1.8));
+          }
+        } else {                                             // the cabin
+          col = n.y > 0.5 ? vec3(0.24, 0.24, 0.26) : vec3(0.05, 0.06, 0.08);
+          if (n.y < 0.5) em += uWin * 1.8 * step(0.25, hy / (y1 - y0)) * step(hy / (y1 - y0), 0.75) * step(0.3, fract((ax ? vW.x : vW.z) / 1.6));
+          else col = vec3(0.22, 0.22, 0.24);
+        }
+        o = vec4(safe3(mistOn(mix(col + em, fogCol(vW), fogK(vW)), vW) * uExpo), 1.0);
+        return;
+      }
+      if ((fl & 65536) != 0) {                               // a metro carriage: lit windows, a neon stripe, headlights on the lead car
+        int dc = int(floor(seed) + 0.5), pc = int(fract(seed) * 12.5 + 0.5);
+        vec2 dir = dc == 0 ? vec2(1.0, 0.0) : dc == 1 ? vec2(0.0, 1.0) : dc == 2 ? vec2(-1.0, 0.0) : vec2(0.0, -1.0);
+        bool ax = abs(dir.x) > 0.5;
+        float al = dot(lp, dir), hl = ax ? hs.x : hs.y, ac = ax ? lp.y : lp.x, hc = ax ? hs.y : hs.x, hy = vW.y - y0;
+        col = vec3(0.24, 0.25, 0.28);
+        if (n.y > 0.5) {                                      // the roof: ribbed silver, air-con units, a lit skylight, neon edges
+          col *= 0.8 + 0.2 * step(0.5, fract(al / 1.2));
+          float unit = step(abs(ac), hc * 0.45) * step(0.62, fract(al / 8.0 + 0.1));
+          col = mix(col, vec3(0.06, 0.065, 0.075), unit);
+          em += vec3(0.75, 0.9, 1.0) * 0.7 * step(abs(ac), hc * 0.14) * (1.0 - unit);
+          em += acc * 1.0 * step(hc - 0.2, abs(ac));
+          if (pc == 1) em += vec3(1.0) * 3.0 * step(hl - 0.6, al) * step(abs(ac), hc * 0.8);
+          em += vec3(0.0) * step(hl - 0.3, abs(al));
+        } else {
+          float f = dot(n.xz, dir);
+          if (abs(f) < 0.5) {                                 // the sides: tall windows in frames, doors, a neon stripe below
+            float wu = fract(al / 2.6), door = step(abs(fract(al / (hl * 0.5)) - 0.5), 0.07);
+            float win = step(1.6, hy) * step(hy, 4.0) * smoothstep(0.08, 0.12, wu) * smoothstep(0.92, 0.88, wu) * (1.0 - door);
+            vec3 inside = mix(uWin, vec3(0.65, 0.88, 1.0), step(0.5, h1(seed * 9.0 + floor(al / 2.6)))) * (0.9 + 0.5 * h1(floor(al / 2.6) + seed));
+            em += inside * 1.8 * win;
+            em += vec3(0.9, 0.95, 1.0) * 0.9 * door * step(0.6, hy) * step(hy, 4.2) * step(abs(fract(hy / 0.6) - 0.5), 0.1);
+            em += acc * 2.4 * step(abs(hy - 0.9), 0.16);
+          } else if (f > 0.5 && pc == 1) {                    // the nose: a wide lit windscreen, headlights, a destination sign
+            em += vec3(0.6, 0.85, 1.0) * 1.2 * step(2.0, hy) * step(hy, 3.8) * step(abs(ac), hc * 0.8);
+            em += vec3(1.0, 0.97, 0.9) * 6.0 * step(abs(hy - 1.1), 0.3) * step(0.5, abs(ac) / hc) * step(abs(ac) / hc, 0.85);
+            em += acc * 2.5 * step(abs(hy - 4.4), 0.25) * step(abs(ac) / hc, 0.6);
+          } else if (f < -0.5 && pc == 2) em += vec3(1.0, 0.05, 0.03) * 4.0 * step(abs(hy - 1.1), 0.3) * step(0.5, abs(ac) / hc);
+        }
+        o = vec4(safe3(mistOn(mix(col + em, fogCol(vW), fogK(vW)), vW) * uExpo), 1.0);
+        return;
+      }
+      if ((fl & 2048) != 0) {                                // a flying car (or a parked one): body, canopy, and its lights
+        int dc = int(floor(seed) + 0.5), pc = int(fract(seed) * 12.5 + 0.5);
+        vec2 dir = dc == 0 ? vec2(1.0, 0.0) : dc == 1 ? vec2(0.0, 1.0) : dc == 2 ? vec2(-1.0, 0.0) : vec2(0.0, -1.0);
+        bool ax = abs(dir.x) > 0.5;
+        float al = dot(lp, dir), hl = ax ? hs.x : hs.y, ac = ax ? lp.y : lp.x, hc = ax ? hs.y : hs.x;
+        // paint: yellow taxi, white, silver, red, blue, black
+        col = pc == 0 ? vec3(0.36, 0.26, 0.03) : pc == 1 ? vec3(0.3, 0.3, 0.32) : pc == 2 ? vec3(0.15, 0.16, 0.18) : pc == 3 ? vec3(0.26, 0.03, 0.03) : pc == 4 ? vec3(0.04, 0.08, 0.22) : vec3(0.03, 0.03, 0.04);
+        if (n.y > 0.5) {
+          float canopy = step(abs(al - hl * 0.08), hl * 0.4) * step(abs(ac), hc * 0.7);
+          col = mix(col, vec3(0.02, 0.05, 0.1) + uFog * 0.4, canopy);
+          em += vec3(1.0, 0.97, 0.9) * 5.0 * step(hl - 0.35, al) * step(abs(ac), hc * 0.85);
+          em += vec3(1.0, 0.04, 0.03) * 4.0 * step(al, -hl + 0.3) * step(abs(ac), hc * 0.85);
+          em += acc * 1.5 * step(hc - 0.16, abs(ac));
+        } else {
+          float f = dot(n.xz, dir);
+          em += f > 0.5 ? vec3(1.0, 0.97, 0.9) * 5.0 : f < -0.5 ? vec3(1.0, 0.05, 0.03) * 4.0 : acc * 1.4 * step(abs(vW.y - (y0 + y1) * 0.5), 0.18);
+        }
+        if ((fl & 524288) != 0) em *= 0.06;                  // parked: lights off
+        o = vec4(safe3(mistOn(mix(col + em, fogCol(vW), fogK(vW)), vW) * uExpo), 1.0);
+        return;
+      }
+      if (n.y > 0.5) {                                       // roof
+        vec2 e2 = hs - abs(lp); float e = round ? (1.0 - length(vL.xz)) * min(hs.x, hs.y) : min(e2.x, e2.y);
+        col = vec3(0.028, 0.028, 0.040) * (0.75 + 0.5 * h1(seed * 97.0));
+        vec2 gp = abs(fract(lp / 4.0) - 0.5);
+        col *= 0.82 + 0.18 * smoothstep(0.0, 0.05, min(gp.x, gp.y));
+        col += vec3(0.05, 0.05, 0.075) * smoothstep(0.8, 0.0, e);
+        if (kind == 1) { col = vec3(0.05, 0.05, 0.062); if (h1(seed * 31.0) < 0.3) em += acc * 0.9 * smoothstep(0.5, 0.0, length(lp / hs) - 0.3); }
+        else if (kind == 2) { col = vec3(0.05); em += vec3(1.0, 0.1, 0.05) * 3.0; }
+        em += acc * 3.0 * smoothstep(1.1, 0.2, e) * ((fl & 16) != 0 ? eKeep : eMore);
+        if ((fl & 32) != 0) em += roofScreen(lp, hs, seed, acc, acc2, col);
+        if (kind == 3) { col = vec3(0.03, 0.03, 0.04); em += acc * 1.2; }
+        if ((fl & 4096) != 0) {                               // a bridge deck: a road with neon edges
+          bool lx = hs.x > hs.y; float acr = lx ? lp.y : lp.x, alo = lx ? lp.x : lp.y, hc = lx ? hs.y : hs.x;
+          col = vec3(0.013, 0.013, 0.02);
+          em = vec3(0.07) * step(0.45, fract(alo / 9.0)) * smoothstep(0.3, 0.1, abs(abs(acr) - hc * 0.45));
+          em += acc * 0.9 * smoothstep(0.6, 0.0, hc - abs(acr));
+        }
+        if ((fl & 8192) != 0) { col = vec3(0.07, 0.062, 0.055); em = acc * 2.0 * smoothstep(0.8, 0.0, e); }
+        if ((fl & 131072) != 0) {                             // megatower roofs
+          int part = int(seed + 0.5);
+          col = vec3(0.018, 0.018, 0.022); em = (round && part != 4) ? vec3(0.0) : vec3(1.0, 0.85, 0.7) * 1.6 * smoothstep(0.6, 0.0, e);
+          if (part == 6) {                                    // the glass pyramid: a glowing lattice of warm light
+            vec2 g = lp / 3.0; float d = min(abs(fract(g.x + g.y) - 0.5), abs(fract(g.x - g.y) - 0.5));
+            col = vec3(0.05, 0.04, 0.035); em = vec3(1.0, 0.7, 0.4) * (0.5 + 1.6 * smoothstep(0.08, 0.0, d)) + vec3(1.0, 0.8, 0.6) * 2.0 * smoothstep(0.5, 0.0, e);
+          }
+          em *= uLightK;
+        }
+        if ((fl & 262144) != 0) {                             // a rail viaduct seen from above: two tracks with glowing rails
+          bool lx = hs.x > hs.y; float acr = lx ? lp.y : lp.x, alo = lx ? lp.x : lp.y, hc = lx ? hs.y : hs.x;
+          col = vec3(0.035, 0.035, 0.045) * (0.8 + 0.2 * step(0.5, fract(alo / 0.7)));
+          em = vec3(0.55, 0.6, 0.7) * 0.6 * (smoothstep(0.18, 0.0, abs(abs(acr - 4.65) - 1.8)) + smoothstep(0.18, 0.0, abs(abs(acr + 4.65) - 1.8)));
+          em += vec3(1.0, 0.55, 0.15) * 2.2 * smoothstep(0.5, 0.0, hc - abs(acr)) * step(abs(fract(alo / 10.0) - 0.5), 0.04);   // marker lamps
+        }
+        if ((fl & 16384) != 0) {                              // the top container of a stack
+          float hc = h3(floor((y1 - y0 - 0.1) / 2.6), seed, 2.0);
+          col = hc < 0.2 ? vec3(0.15, 0.04, 0.03) : hc < 0.4 ? vec3(0.03, 0.06, 0.13) : hc < 0.55 ? vec3(0.17, 0.08, 0.02) : hc < 0.7 ? vec3(0.02, 0.1, 0.09) : hc < 0.85 ? vec3(0.08, 0.08, 0.09) : vec3(0.14, 0.14, 0.13);
+          col *= 0.7 + 0.3 * step(0.5, fract((hs.x > hs.y ? lp.x : lp.y) * 1.2)); em = vec3(0.0);
+        }
+        if ((fl & 64) != 0) {                                 // helipad
+          float r = length(lp), R0 = min(hs.x, hs.y) * 0.8;
+          col = mix(col, vec3(0.055, 0.058, 0.065), step(r, R0));
+          em += vec3(0.85, 0.92, 1.0) * 0.22 * smoothstep(0.45, 0.0, abs(r - R0 * 0.9));
+          vec2 hq = abs(lp) / (R0 * 0.5);
+          float H = ((hq.y < 0.8 && hq.x > 0.34 && hq.x < 0.54) || (hq.x < 0.54 && hq.y < 0.1)) ? 1.0 : 0.0;
+          col += vec3(0.1) * H;
+          float ang = atan(lp.y, lp.x + 1e-4) / 6.2831853, k = fract(ang * 18.0);
+          float chase = step(0.55, fract(uT * 0.4 - ang * 2.0));
+          em += vec3(0.35, 1.0, 0.55) * 2.0 * smoothstep(0.8, 0.2, abs(r - R0)) * step(abs(k - 0.5), 0.14) * (0.35 + 0.65 * chase);
+        }
+      } else {                                               // walls
+        bool xf = abs(n.x) > 0.5;
+        float u = xf ? vW.z : vW.x, fw = xf ? vA.w : vA.z, uc = xf ? vA.y : vA.x;
+        float lu = u - uc, side = xf ? sign(n.x) : 2.0 + sign(n.z), hy = vW.y - y0;
+        if (round) { float R = 0.5 * (vA.z + vA.w); lu = atan(vL.z, vL.x + 1e-5) * R; fw = 3.14159265 * R; side = 0.0; }   // wrap around a round tower
+        col = vec3(0.014, 0.015, 0.026) + acc * 0.05 * exp(-max(vW.y, 0.0) / 9.0) + uFog * 0.1;
+        if ((fl & 4096) != 0) { col = vec3(0.03, 0.03, 0.04); em += acc * 0.9 * smoothstep(0.5, 0.0, abs(vW.y - y1 + 0.4)); }
+        else if ((fl & 262144) != 0) { col = vec3(0.045, 0.045, 0.055); em += vec3(1.0, 0.55, 0.15) * 1.6 * step(abs(vW.y - y1 + 0.5), 0.2) * step(abs(fract((xf ? vW.z : vW.x) / 10.0) - 0.5), 0.04); }
+        else if ((fl & 131072) != 0) {                        // megatower: black glass with a fine grid of windows, light lines on the edges
+          int part = int(seed + 0.5);
+          float H = y1 - y0, fy = hy / 3.6, fu = (lu + fw) / 1.5;
+          vec2 f = fract(vec2(fu, fy)), cell = floor(vec2(fu, fy));
+          col = (part == 3 ? vec3(0.03, 0.022, 0.018) : vec3(0.014, 0.014, 0.019)) + uFog * 0.05;
+          float win = smoothstep(0.12, 0.2, f.x) * smoothstep(0.88, 0.8, f.x) * smoothstep(0.25, 0.32, f.y) * smoothstep(0.85, 0.78, f.y);
+          float lit = step(h3(cell.x + side * 500.0, cell.y, seed * 13.0 + floor(uT / 90.0 + h3(cell.y, cell.x, 3.0))), 0.55 * uWinAmt * 2.0);
+          vec3 wc = mix(uWin, mix(vec3(0.55, 0.75, 1.0), accFor(0.0, seed + cell.y), 0.4), step(0.74, h3(cell.y, seed, 7.0))) * (0.55 + 1.1 * h3(cell.x, cell.y, seed + 2.0));
+          float aa = clamp(1.6 - 2.0 * max(fwidth(fu), fwidth(fy)), 0.0, 1.0);
+          em += mix(uWin * 0.15, win * lit * wc * 1.4, aa) * uLightK;
+          if (!round) em += vec3(0.95, 0.97, 1.0) * 1.6 * smoothstep(0.4, 0.05, fw - abs(lu)) * uLightK;   // light lines down the corners
+          if (part == 3) em += vec3(1.0, 0.75, 0.45) * 0.8 * smoothstep(0.44, 0.5, abs(fract(lu / 2.4) - 0.5)) * uLightK;   // thin bronze fins on the front tower
+          else if (part == 6) {                               // the glass pyramid: a glowing lattice
+            vec2 g = vec2(lu, hy) / 2.0; float d = min(abs(fract(g.x + g.y) - 0.5), abs(fract(g.x - g.y) - 0.5));
+            col = vec3(0.05, 0.04, 0.035); em = vec3(1.0, 0.7, 0.4) * (0.5 + 1.5 * smoothstep(0.08, 0.0, d)) * uLightK;
+          } else if (part >= 7) em = vec3(1.0, 0.85, 0.7) * 1.2 * smoothstep(0.6, 0.0, abs(hy - H + 0.5)) * uLightK;   // crown slats
+          else if (!round || part == 4) em += vec3(1.0, 0.85, 0.7) * 1.2 * smoothstep(1.0, 0.2, abs(hy - (H - 3.0))) * uLightK;   // a lit band at a setback
+          if (round && (part == 2 || part == 4)) {            // an LED skin wrapping the supertall, playing a slow light show
+            float ang = atan(vL.z, vL.x + 1e-5), Y = vW.y;
+            vec2 px = vec2(lu / 1.3, Y / 1.3), pf = fract(px) - 0.5;
+            float dotm = smoothstep(0.42, 0.18, length(pf));                  // individual LED dots
+            float cyc = uT / 20.0, mi = floor(cyc), fr = fract(cyc), blend = smoothstep(0.85, 1.0, fr);
+            float show[3];
+            show[0] = smoothstep(0.55, 1.0, 0.5 + 0.5 * sin(Y * 0.045 - uT * 1.6));                       // waves rising up the tower
+            show[1] = smoothstep(0.6, 1.0, 0.5 + 0.5 * sin(ang * 3.0 + Y * 0.035 - uT * 0.9));             // ribbons spiralling round it
+            float sp = h3(floor(px.x), floor(px.y + uT * 6.0), floor(uT * 3.0));
+            show[2] = step(0.93, sp) + 0.35 * smoothstep(0.7, 1.0, 0.5 + 0.5 * sin(Y * 0.02 + uT * 0.7)); // a sparkling cascade
+            int m0 = int(mod(mi, 3.0)), m1 = int(mod(mi + 1.0, 3.0));
+            float v = mix(m0 == 0 ? show[0] : m0 == 1 ? show[1] : show[2], m1 == 0 ? show[0] : m1 == 1 ? show[1] : show[2], blend);
+            float cs = fract(Y * 0.0012 + uT * 0.015 + mi * 0.31) * 3.0, ci = floor(cs);
+            vec3 lc = mix(accFor(ci, floor(Y / 90.0)), accFor(ci + 1.0, floor(Y / 90.0) + 1.0), smoothstep(0.0, 1.0, cs - ci));   // the scene's own colours
+            em += lc * v * dotm * 3.2 * max(uLightK, 0.75);
+            em += lc * 0.1 * max(uLightK, 0.75);                              // a faint glow so it never reads as black
+          }
+          if (part == 1 && side > 1.5) {                      // an emblem near the top of the tallest tower: a ring around a split diamond
+            vec2 q = vec2(lu, hy - (H - 44.0)) / (fw * 0.55); float r = length(q);
+            float emb = smoothstep(0.08, 0.0, abs(r - 0.8)) + step(abs(q.x) + abs(q.y), 0.5) * step(0.08, abs(q.x));
+            em += vec3(1.0, 0.95, 0.9) * 2.6 * clamp(emb, 0.0, 1.0);
+          }
+        }
+        else if ((fl & 8192) != 0) {                          // a stone bridge tower with two pointed arches, lit from below
+          col = vec3(0.07, 0.062, 0.055) * (0.5 + 0.9 * exp(-max(hy, 0.0) / 22.0)) + uWin * 0.05 * exp(-max(hy, 0.0) / 10.0);
+          if (fw > 6.0) {
+            float dx = abs(abs(lu) - fw * 0.45), aw = fw * 0.24, top = 38.0 + aw * 1.3 * (1.0 - dx / aw);
+            if (dx < aw && hy > 4.0 && hy < top) col = vec3(0.004, 0.005, 0.01) + uFog * 0.25;
+          }
+          em += acc * 1.6 * smoothstep(0.9, 0.2, abs(hy - (y1 - y0) + 2.0));
+        } else if ((fl & 16384) != 0) {                       // shipping containers, each a different colour
+          float lvl = floor(hy / 2.6), hc = h3(lvl, seed, 2.0);
+          vec3 cc = hc < 0.2 ? vec3(0.15, 0.04, 0.03) : hc < 0.4 ? vec3(0.03, 0.06, 0.13) : hc < 0.55 ? vec3(0.17, 0.08, 0.02) : hc < 0.7 ? vec3(0.02, 0.1, 0.09) : hc < 0.85 ? vec3(0.08, 0.08, 0.09) : vec3(0.14, 0.14, 0.13);
+          col = cc * (0.55 + 0.45 * step(0.5, fract(lu * 1.6))) * smoothstep(0.0, 0.06, fract(hy / 2.6));
+        } else if (kind == 0) {
+          float fh = 3.1 + h1(seed * 7.0) * 1.1, cw = 2.2 + h1(seed * 11.0) * 1.8;
+          float fu = (lu + fw) / cw, fy = hy / fh;
+          vec2 cell = floor(vec2(fu, fy)), f = fract(vec2(fu, fy));
+          bool ribbon = (fl & 512) != 0;
+          float wx = ribbon ? 1.0 : smoothstep(0.1, 0.16, f.x) * smoothstep(0.9, 0.84, f.x);
+          float wy = smoothstep(0.2, 0.27, f.y) * smoothstep(0.88, 0.81, f.y);
+          float dens = clamp((0.14 + 0.5 * h1(seed * 3.0)) * uWinAmt * 2.0, 0.0, 0.97);
+          float per = 40.0 + 220.0 * h1(seed * 5.0);
+          float lit = step(h3(cell.x + side * 1000.0, cell.y, seed * 17.0 + floor(uT / per + h3(cell.x, cell.y, seed))), dens);
+          float tone = h3(cell.y, seed, 3.0);
+          vec3 wc = mix(uWin, mix(vec3(0.55, 0.75, 1.0), acc, 0.4), step(0.74, tone)) * (0.55 + 1.1 * h3(cell.x, cell.y, seed + 9.0)) * uLightK;
+          vec3 glass = vec3(0.012, 0.016, 0.03) + uFog * 0.07;
+          vec3 pat = mix(col, mix(glass, wc * 1.4, lit), wx * wy);
+          vec3 avg = mix(col, mix(glass, uWin * 0.85 * uLightK, dens), ribbon ? 0.55 : 0.4);
+          float aa = clamp(1.8 - 2.2 * max(fwidth(fu), fwidth(fy)), 0.0, 1.0);
+          col = mix(avg, pat, aa);
+          if ((fl & 256) != 0 && !round) em += eKeep * acc * 2.4 * smoothstep(0.7, 0.12, fw - abs(lu));
+          if ((fl & 1040) != 0) em += eKeep * acc * 2.2 * smoothstep(1.0, 0.25, abs(y1 - 1.0 - vW.y));
+          if ((fl & 128) != 0) em += facadeSign(lu, hy, fw, y1 - y0, seed + side, acc);
+        } else if (kind == 2) {
+          col = vec3(0.04); em += acc * 0.8 * step(0.75, fract(vW.y / 7.0 - uT * 0.6));
+        } else if (kind == 3) {                               // a billboard: pictures on both big faces
+          col = vec3(0.03, 0.03, 0.04);
+          if (fw > 1.0) em += adContent(vec2(lu / fw, hy / (y1 - y0) * 2.0 - 1.0), vec2(fw, (y1 - y0) * 0.5), seed, acc, acc2);
+        } else col = vec3(0.034, 0.034, 0.046);
+        if (kind == 1 && (fl & 256) != 0) em += acc * 2.0 * smoothstep(0.5, 0.1, fw - abs(lu));
+      }
+      vec3 c = col + em * uLightK;
+      float k = fogK(vW);
+      o = vec4(safe3(mistOn(mix(c, fogCol(vW), k), vW) * uExpo), 1.0);
+    }`;
+  const GROUND_VS = `#version 300 es
+    layout(location=0) in vec2 aC;
+    uniform mat4 uVP; uniform vec3 uRect;      // centre x, centre z, half size
+    out vec3 vW;
+    void main(){ vec3 w = vec3(uRect.x + aC.x * uRect.z, 0.0, uRect.y + aC.y * uRect.z); vW = w; gl_Position = uVP * vec4(w, 1.0); }`;
+  const GROUND_FS = `#version 300 es
+    ${COMMON}
+    in vec3 vW; out vec4 o;
+    uniform vec4 uBoat[24]; uniform vec4 uBoatS[24];
+    // people: tiny lights shuffling about (phones, jackets, glow sticks)
+    vec3 crowd(vec2 p, float dens, float s){
+      vec2 cs = vec2(1.3), cell = floor(p / cs), f = fract(p / cs) - 0.5;
+      float h = h3(cell.x, cell.y, s);
+      if (h > dens) return vec3(0.0);
+      vec2 off = vec2(sin(uT * 0.4 + h * 40.0), cos(uT * 0.33 + h * 31.0)) * 0.25;
+      float d = length(f - off);
+      vec3 c = h3(cell.y, cell.x, s + 1.0) < 0.15 ? accFor(floor(h * 97.0), cell.x) : vec3(0.75, 0.7, 0.65);
+      return c * smoothstep(0.16, 0.05, d) * (0.6 + 0.6 * h3(cell.x, cell.y, s + floor(uT * 0.7 + h * 9.0)));
+    }
+    vec3 shop(float i, float seg, float s){
+      float r = h3(i, seg, s);
+      if (r < 0.45) return vec3(0.0);
+      vec3 c = uNat > 1.5 ? realCol(h3(seg, i, s + 5.0)) : uNat > 0.5 ? hsv(h3(seg, i, s + 5.0), 0.6, 1.0) : r < 0.55 ? uAcc[0] : r < 0.75 ? uAcc[1] : r < 0.86 ? uAcc[2] : uWin;
+      return c * (0.4 + 0.9 * h3(seg, i, s + 2.0));
+    }
+    void main(){
+      vec2 p = vW.xz;
+      float sdz = riverSD(p.y, 26.0), sdx = riverSD(p.x, 37.0);
+      int pt = plazaAt(p); bool stad = pt != 0;
+      if (!stad && (sdz > 0.0 || sdx > 0.0)) {               // a river: dark water, ripples, and the city's lights shimmering on it
+        float sd = max(sdz, sdx);
+        float rip = 0.5 * sin(p.x * 0.23 + uT * 0.8 + sin(p.y * 0.11 + uT * 0.3) * 2.0) + 0.5 * sin(p.y * 0.31 - uT * 0.6 + p.x * 0.07);
+        vec3 col = vec3(0.002, 0.004, 0.01) + uFog * (0.14 + 0.08 * rip);
+        vec2 cs = vec2(2.2, 0.9), cell = floor(p / cs), f = fract(p / cs) - 0.5;
+        float gh = h3(cell.x, cell.y, floor(uT * 1.3 + h3(cell.y, cell.x, 2.0) * 8.0));
+        vec3 em = accFor(floor(gh * 31.0), cell.x + cell.y * 7.0) * step(0.982, gh) * smoothstep(0.5, 0.1, length(f * vec2(1.0, 2.0))) * 1.5;
+        // lamps along the embankment, each with its reflection, and the city's soft glow on the water near the shore
+        float along = sdz > sdx ? p.x : p.y, lampD = abs(fract(along / 14.0) - 0.5) * 14.0;
+        em += uWin * (1.6 * exp(-(lampD * lampD + sd * sd) * 2.0) + 0.25 * exp(-lampD * lampD * 0.6) * exp(-sd / 6.0)) + uWin * 0.16 * exp(-sd / 12.0) * (0.6 + 0.4 * rip);
+        em += uWin * 0.018 * pow(max(0.5 + 0.5 * sin(dot(p, vec2(0.11, 0.05)) - uT * 1.4 + sin(p.x * 0.013 + p.y * 0.021) * 3.0), 0.0), 6.0) * (0.4 + 0.6 * rip);     // slow swells
+        float foam = 0.0;
+        for (int i = 0; i < 24; i++) {                        // wakes: a white V spreading behind each boat, foam churning at the stern
+          vec4 b = uBoat[i]; if (b.z == 0.0 && b.w == 0.0) continue;
+          vec2 rel = p - b.xy; float al = dot(rel, b.zw), ac = dot(rel, vec2(-b.w, b.z));
+          float hl = uBoatS[i].x, hc = uBoatS[i].y, back = -al - hl;
+          if (back < -hl * 2.2 || back > 150.0 || abs(ac) > back * 0.24 + hc + 8.0) continue;
+          float bb = max(back, 0.0), fade = exp(-bb / 50.0);
+          float arm = smoothstep(2.2 + bb * 0.02, 0.0, abs(abs(ac) - (bb * 0.22 + hc * 0.8))) * fade * step(0.0, back) * (0.55 + 0.45 * sin(bb * 0.8 - uT * 3.5));
+          float churn = h3(floor(p.x / 1.4), floor(p.y / 1.4), floor(uT * 4.0));
+          float trail = smoothstep(hc * 1.4 + bb * 0.04, 0.0, abs(ac)) * exp(-bb / 70.0) * step(0.0, back) * (0.5 + 0.5 * churn);
+          float bow = smoothstep(2.5, 0.0, abs(abs(ac) - hc * (1.0 + max(al - hl * 0.3, 0.0) * 0.0) - 1.0)) * smoothstep(-hl * 0.2, hl * 0.6, al) * step(al, hl + 2.0) * step(-al, hl);
+          foam = max(foam, arm * 0.55 + trail * 0.6 + bow * 0.35);
+        }
+        em += vec3(0.5, 0.56, 0.62) * foam * 0.55;             // foam on dark water, not a light
+        o = vec4(safe3(mistOn(mix(col + em, fogCol(vW), fogK(vW)), vW) * uExpo), 1.0);
+        return;
+      }
+      if (stad) {                                            // the plaza around a stadium or the megatower: crowds, lamps, walkways
+        vec2 cc = (floor(p / (PITCH * 4.0)) + 0.5) * PITCH * 4.0, q = p - cc;
+        float r = length(q), ang = atan(q.y, q.x + 1e-4) / 6.2831853;
+        vec3 col = vec3(0.02, 0.02, 0.03);
+        vec2 tq = abs(fract(p / 4.0) - 0.5); col *= 0.8 + 0.2 * smoothstep(0.0, 0.05, min(tq.x, tq.y));
+        col = mix(col, vec3(0.055, 0.055, 0.075), smoothstep(0.012, 0.004, abs(fract(ang * 16.0) - 0.5) - 0.48) * step(120.0, r));
+        vec3 em = uWin * 0.08 * exp(-r / 160.0);
+        float band = pt == 1 ? smoothstep(108.0, 125.0, r) * smoothstep(185.0, 150.0, r) : smoothstep(58.0, 66.0, r) * smoothstep(80.0, 70.0, r);
+        em += crowd(p, 0.08 + 0.42 * band, 3.0);
+        if (pt == 2) em += vec3(1.0, 0.75, 0.5) * 0.5 * smoothstep(0.46, 0.5, abs(fract(r / 9.0) - 0.5)) * step(r, 76.0) * step(62.0, r);
+        o = vec4(safe3(mistOn(mix(col + em, fogCol(vW), fogK(vW)), vW) * uExpo), 1.0);
+        return;
+      }
+      bool square = specialType(floor(p / (PITCH * 4.0))) == 3;
+      vec2 gi = floor(p / PITCH + 0.5), d = p - gi * PITCH, ad = abs(d);
+      vec2 hw = vec2(roadHalf(gi.x), roadHalf(gi.y));
+      bool rx = ad.x < hw.x, rz = ad.y < hw.y;
+      bool sx = ad.x < hw.x + 4.0, sz = ad.y < hw.y + 4.0;
+      vec3 col, em = vec3(0.0);
+      float px = max(fwidth(p.x), fwidth(p.y));
+      // storefront light spilling from the building line onto the pavement and the wet road
+      float ex = hw.x + 4.0 - ad.x, ez = hw.y + 4.0 - ad.y;
+      vec3 shX = shop(gi.x * 2.0 + sign(d.x), floor(p.y / 11.0), 5.0), shZ = shop(gi.y * 2.0 + sign(d.y), floor(p.x / 11.0), 9.0);
+      float spill = square ? 0.5 : 0.06, sk = square ? 2.6 : 0.7;
+      if (square) { shX = shop(gi.x * 2.0 + sign(d.x), floor(p.y / 7.0), 12.0) * 1.4 + accFor(gi.x, floor(p.y / 7.0)) * 0.5; shZ = shop(gi.y * 2.0 + sign(d.y), floor(p.x / 7.0), 13.0) * 1.4 + accFor(gi.y, floor(p.x / 7.0)) * 0.5; }
+      if (sx && ex > 0.0) em += shX * (exp(-ex / 1.2) * sk + exp(-ex / 6.0) * spill);
+      if (sz && ez > 0.0) em += shZ * (exp(-ez / 1.2) * sk + exp(-ez / 6.0) * spill);
+      if (rx || rz) {
+        col = vec3(0.013, 0.013, 0.02);
+        float wet = smoothstep(0.45, 0.8, h3(floor(p.x / 9.0), floor(p.y / 9.0), 4.0));
+        col += uFog * 0.10 * wet;
+        if (rx && !rz) {                                      // markings on a road running north-south
+          float dash = step(0.45, fract(p.y / 9.0));
+          em += vec3(0.07) * dash * smoothstep(0.25 + px, 0.1, abs(ad.x - hw.x * 0.5));
+          if (hw.x > 10.0) em += vec3(0.1, 0.08, 0.03) * smoothstep(0.22 + px, 0.08, abs(ad.x - 0.35));
+        }
+        if (rz && !rx) {
+          float dash = step(0.45, fract(p.x / 9.0));
+          em += vec3(0.07) * dash * smoothstep(0.25 + px, 0.1, abs(ad.y - hw.y * 0.5));
+          if (hw.y > 10.0) em += vec3(0.1, 0.08, 0.03) * smoothstep(0.22 + px, 0.08, abs(ad.y - 0.35));
+        }
+        if (square) em += (shX + shZ) * 0.16 + crowd(p, 0.18, 7.0);                      // the screens' colours on the wet road, people crossing
+        if (rx && !rz && ad.y < hw.y + 5.0) em += vec3(0.08) * step(0.5, fract(d.x / 1.4));     // crossings
+        if (rz && !rx && ad.x < hw.x + 5.0) em += vec3(0.08) * step(0.5, fract(d.y / 1.4));
+      } else if (sx || sz) {
+        col = vec3(0.026, 0.025, 0.038);
+        if (square) em += crowd(p, 0.7, 6.0);
+      } else {
+        vec2 bi = floor(p / PITCH);
+        bool park = (hu(uint(int(bi.x)) * 73856093u ^ uint(int(bi.y)) * 19349663u ^ 7u) % 100u) < 5u;
+        if (park) {
+          // which kind of park this is (the first value of the same random sequence the city generator uses)
+          uint ps = hu(uint(int(bi.x)) * 73856093u ^ uint(int(bi.y)) * 19349663u ^ 15u) + 0x6D2B79F5u, pt2 = ps;
+          pt2 = (pt2 ^ (pt2 >> 15)) * (pt2 | 1u); pt2 ^= pt2 + (pt2 ^ (pt2 >> 7)) * (pt2 | 61u);
+          bool sports = float(pt2 ^ (pt2 >> 14)) / 4294967296.0 >= 0.8;
+          // lawn: mowing stripes and soft patches of light and dark grass
+          vec2 q = fract(p / PITCH) - 0.5;
+          float patchy = h3(floor(p.x / 7.0), floor(p.y / 7.0), 2.0) * 0.5 + h3(floor(p.x / 19.0), floor(p.y / 19.0), 3.0) * 0.5;
+          col = vec3(0.016, 0.05, 0.03) * (0.75 + 0.45 * patchy) * (0.88 + 0.12 * step(0.5, fract((p.x + p.y) / 5.0)));
+          // a winding path across and a loop around the middle, each lined with lamp posts
+          float w1 = (q.x + q.y * 0.4 + 0.06 * sin(q.y * 9.0)) * PITCH, w2 = (length(q) - 0.25) * PITCH;
+          if (sports) { w1 = 1e4; w2 = 1e4; }                 // sports parks: just lawn around the pitch
+          float onPath = max(smoothstep(1.6, 0.9, abs(w1)), smoothstep(1.6, 0.9, abs(w2)));
+          col = mix(col, vec3(0.05, 0.047, 0.052), onPath);
+          float a1 = mod(p.y, 24.0) - 12.0, ang = atan(q.y, q.x + 1e-5), a2 = mod(ang * 0.25 * PITCH, 24.0) - 12.0;
+          em += uWin * (1.3 * exp(-(pow(abs(w1) - 2.3, 2.0) + a1 * a1) * 4.0) + 0.05 * exp(-(pow(abs(w1) - 1.0, 2.0) + a1 * a1) * 0.12));
+          em += uWin * (1.3 * exp(-(pow(abs(w2) - 2.3, 2.0) + a2 * a2) * 4.0) + 0.05 * exp(-(pow(abs(w2) - 1.0, 2.0) + a2 * a2) * 0.12));
+          // flower beds just outside the loop
+          float bed = smoothstep(1.2, 0.6, abs(w2 - 4.2)) * step(0.45, fract(ang * 3.0));
+          vec2 fc = floor(p / 0.9); float fh = h3(fc.x, fc.y, 6.0);
+          em += bed * step(0.55, fh) * mix(vec3(1.0, 0.3, 0.5), mix(vec3(1.0, 0.8, 0.3), vec3(0.6, 0.4, 1.0), step(0.8, fh)), step(0.7, fh)) * 0.35;
+          col = mix(col, vec3(0.02, 0.015, 0.012), bed * 0.6);
+        } else {
+          col = vec3(0.022, 0.022, 0.034);
+          vec2 t = abs(fract(p / 3.0) - 0.5);
+          col *= 0.8 + 0.2 * smoothstep(0.0, 0.06, min(t.x, t.y));
+        }
+      }
+      // street lamps along the kerbs
+      vec2 lampX = vec2(sign(d.x) * (hw.x + 0.8) - d.x, mod(p.y + 13.0, 26.0) - 13.0);
+      vec2 lampZ = vec2(mod(p.x + 13.0, 26.0) - 13.0, sign(d.y) * (hw.y + 0.8) - d.y);
+      em += uWin * 0.16 * (exp(-dot(lampX, lampX) / 20.0) + exp(-dot(lampZ, lampZ) / 20.0)) + uWin * 1.2 * (exp(-dot(lampX, lampX) * 5.0) + exp(-dot(lampZ, lampZ) * 5.0));
+      vec3 c = col + em;
+      o = vec4(safe3(mistOn(mix(c, fogCol(vW), fogK(vW)), vW) * uExpo), 1.0);
+    }`;
+  const CAR_VS = `#version 300 es
+    ${COMMON}
+    layout(location=0) in vec2 aC; layout(location=1) in vec4 aI; layout(location=2) in vec4 aJ;
+    uniform mat4 uVP; uniform vec2 uBase, uCenter; uniform float uL, uDens;
+    out vec2 vL; out float vKind; out float vFog; out vec3 vFC; out float vSeed; out float vFade; out vec3 vW; flat out float vTruck;
+    void main(){
+      // each lane slot owns every 25th road and uses the copy nearest the camera, so only far-off roads ever swap
+      float axis = aJ.x, base = axis < 0.5 ? uBase.x : uBase.y, i = base + mod(aI.x - base + 12.0, 25.0) - 12.0;
+      float hw = mod(i, 5.0) == 0.0 ? 15.0 : 8.0;
+      float keep = hw > 10.0 ? step(h3(i, aJ.z * 97.0, 6.0), uDens) : step(h3(i, aJ.z * 97.0, 5.0), uDens * 0.4);
+      float dir = sign(aI.y), across = i * PITCH + aI.y * (hw - 2.2);
+      float c = axis < 0.5 ? uCenter.y : uCenter.x;
+      float s = aI.w * uL + dir * aI.z * uT;
+      s = mod(s - c + uL * 0.5, uL) + c - uL * 0.5;
+      vec2 pos = axis < 0.5 ? vec2(across, s) : vec2(s, across);
+      // rivers: avenues climb onto their bridges, other streets stop at the water; nothing drives through the stadium
+      float sdA = axis < 0.5 ? riverSD(pos.y, 26.0) : riverSD(pos.x, 37.0);
+      float sdB = axis < 0.5 ? riverSD(pos.x, 37.0) : riverSD(pos.y, 26.0);
+      float lift = 0.0;
+      float fade = 1.0, psd = plazaSD(pos);
+      fade *= 1.0 - smoothstep(-30.0, -10.0, psd);
+      if (sdB > 0.0 || psd > 0.0) keep = 0.0;
+      else if (sdA > -30.0) {
+        // only roads that really have a bridge cross the water: avenues, not where two rivers meet, not under a metro line
+        bool bridge = hw > 10.0 && (axis < 0.5 ? (mod(i, 37.0) >= 2.0 && mod(i - 1.0, 37.0) >= 2.0 && mod(i, 55.0) != 7.0)
+                                               : (mod(i, 26.0) >= 2.0 && mod(i - 1.0, 26.0) >= 2.0 && mod(i, 61.0) != 11.0));
+        if (bridge) lift = 3.8 * smoothstep(-10.0, 0.0, sdA); else { fade *= 1.0 - smoothstep(-30.0, -12.0, sdA); if (sdA > -12.0) keep = 0.0; }
+      }
+      vec2 fwd = axis < 0.5 ? vec2(0.0, dir) : vec2(dir, 0.0), rt = vec2(-fwd.y, fwd.x);
+      vec2 lc = aJ.w > 0.5 ? vec2(aC.x * 3.6, aC.y * 15.5 + 2.5) : vec2(aC.x * 3.6, aC.y * 12.5 + 5.5);   // trucks are longer
+      vec2 wp = pos + rt * lc.x + fwd * lc.y;
+      vL = lc; vKind = aJ.y; vSeed = aJ.z; vFade = fade;
+      vec3 w = vec3(wp.x, 0.35 + lift, wp.y);
+      vFog = fogK(w); vFC = fogCol(w); vW = w; vTruck = aJ.w;
+      gl_Position = keep > 0.5 ? uVP * vec4(w, 1.0) : vec4(2.0, 2.0, 2.0, 1.0);
+    }`;
+  const CAR_FS = `#version 300 es
+    ${COMMON}
+    in vec2 vL; in float vKind; in float vFog; in vec3 vFC; in float vSeed; in float vFade; in vec3 vW; flat in float vTruck; out vec4 o;
+    void main(){
+      vec2 p = vL;
+      bool tk = vTruck > 0.5;
+      float back = tk ? -12.5 : -2.3, bw = tk ? 1.3 : 1.0;
+      float body = step(abs(p.x), bw) * step(back, p.y) * step(p.y, 2.3);
+      vec3 bc = mix(vec3(0.03, 0.03, 0.04), vec3(0.09, 0.09, 0.11), step(abs(p.y), 0.9) * step(abs(p.x), 0.8));
+      if (tk) {                                             // a truck: a cab, a gap, and a long pale trailer with roof ribs
+        float cab = step(0.6, p.y), gap = step(0.25, p.y) * step(p.y, 0.6);
+        vec3 tc = h1(vSeed * 7.0) < 0.5 ? vec3(0.42, 0.42, 0.44) : vec3(0.36, 0.33, 0.28);           // white or tan trailer
+        bc = cab > 0.5 ? mix(vec3(0.3, 0.05, 0.04), vec3(0.05, 0.1, 0.28), step(0.5, h1(vSeed * 3.0))) : tc * (0.85 + 0.15 * step(0.5, fract(p.y / 0.7)));
+        if (cab < 0.5) bc = mix(bc, accFor(1.0, vSeed) * 0.5, step(abs(abs(p.x) - 0.95), 0.12));    // a coloured stripe down each side
+        body *= 1.0 - gap;
+      }
+      vec2 hl = vec2(abs(p.x) - (tk ? 0.85 : 0.65), p.y - 2.25), tl = vec2(abs(p.x) - (tk ? 1.0 : 0.7), p.y - back);
+      vec3 head = mix(uWin, vec3(1.0), 0.6);
+      vec3 em = head * 7.0 * exp(-dot(hl, hl) * 9.0);
+      float ahead = max(p.y - 2.3, 0.0);
+      em += head * 0.32 * step(2.3, p.y) * exp(-p.x * p.x / (0.6 + ahead * 0.28)) * exp(-ahead / 6.0);
+      if (tk) em += vec3(1.0, 0.55, 0.1) * 3.0 * step(p.y, 0.25) * step(back, p.y) * smoothstep(0.22, 0.05, abs(abs(p.x) - 1.25)) * step(abs(fract(p.y / 1.4) - 0.5), 0.12);   // amber side markers
+      em += vec3(1.0, 0.05, 0.03) * (tk ? 1.4 : 1.0) * (5.0 * exp(-dot(tl, tl) * 10.0) + 0.25 * exp(-(p.x * p.x * 0.5 + (p.y - back + 0.7) * (p.y - back + 0.7)) * 0.5));
+      if (vKind > 0.5) { vec3 g = accFor(vKind - 1.0, vSeed); em += g * 0.9 * exp(-(p.x * p.x * 0.9 + p.y * p.y * 0.18)); }
+      float k = vFog;
+      vec3 c = em * (1.0 - k * 0.6) + bc * body * (1.0 - k) + vFC * k * body;
+      o = vec4(safe3(mix(c, mistOn(c, vW), body) * uExpo * vFade), body * vFade);
+    }`;
+  const STREAK_VS = `#version 300 es
+    layout(location=0) in vec2 aC; layout(location=1) in vec4 aH; layout(location=2) in vec4 aT; layout(location=3) in vec4 aCol;
+    uniform mat4 uVP; uniform vec2 uRes; uniform float uFocal;
+    out vec2 vP; out float vLen; out float vR; out vec4 vCol; out float vEven;
+    void main(){
+      vEven = aT.w;
+      vec4 ch = uVP * vec4(aH.xyz, 1.0), ct = uVP * vec4(aT.xyz, 1.0);
+      if (ch.w < 1.0 || ct.w < 1.0) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
+      vec2 hs = uRes * 0.5;
+      vec2 sh = ch.xy / ch.w * hs, st = ct.xy / ct.w * hs, dv = sh - st;
+      float L = length(dv); vec2 dir = L > 0.001 ? dv / L : vec2(1.0, 0.0), nr = vec2(-dir.y, dir.x);
+      // lights keep a sane size even when they pass close under the drone
+      float wpx = clamp(aH.w * uFocal / ch.w, 1.1, aT.w > 1.5 ? uRes.y * 0.05 : uRes.y * 0.0045), r = wpx * 3.0;
+      float t = aC.x * 0.5 + 0.5;
+      vec2 pos = mix(st, sh, t) + dir * aC.x * r + nr * aC.y * r;
+      vP = vec2(t * L + aC.x * r, aC.y * r); vLen = L; vR = wpx; vCol = aCol;
+      float z = mix(ct.z / ct.w, ch.z / ch.w, t);
+      gl_Position = vec4(pos / hs, z, 1.0);
+    }`;
+  const STREAK_FS = `#version 300 es
+    precision highp float;
+    in vec2 vP; in float vLen; in float vR; in vec4 vCol; in float vEven; out vec4 o;
+    uniform float uExpo;
+    vec3 safe3(vec3 c){
+      uvec3 b = floatBitsToUint(c) & uvec3(0x7f800000u);
+      return vec3(b.x == 0x7f800000u ? 0.0 : clamp(c.x, 0.0, 60.0), b.y == 0x7f800000u ? 0.0 : clamp(c.y, 0.0, 60.0), b.z == 0x7f800000u ? 0.0 : clamp(c.z, 0.0, 60.0));
+    }
+    void main(){
+      float along = clamp(vP.x, 0.0, vLen), d = length(vec2(vP.x - along, vP.y));
+      float core = smoothstep(vR, vR * 0.25, d), halo = exp(-d * d / (vR * vR * 3.0));
+      if (vEven > 1.5) { core = 0.0; halo = exp(-d * d / (vR * vR * 0.8)) * 2.5; }          // a soft beam of light in the haze
+      float grad = (vLen > 0.5 && (vEven < 0.5 || vEven > 1.5)) ? mix(0.12, 1.0, along / vLen) : 1.0;
+      o = vec4(safe3(vCol.rgb * (core * vCol.a + halo * 0.4 * vCol.a) * grad * uExpo), 0.0);
+    }`;
+  const DISC_VS = `#version 300 es
+    layout(location=0) in vec2 aC; layout(location=1) in vec4 aP; layout(location=2) in vec4 aQ;
+    uniform mat4 uVP;
+    out vec2 vQ; out vec3 vW; flat out vec4 vI; flat out vec4 vJ;
+    void main(){ vec3 w = vec3(aP.x + aC.x * aQ.x, aP.y, aP.z + aC.y * aQ.y); vQ = aC; vW = w; vI = aP; vJ = aQ; gl_Position = uVP * vec4(w, 1.0); }`;
+  const DISC_FS = `#version 300 es
+    ${COMMON}
+    in vec2 vQ; in vec3 vW; flat in vec4 vI; flat in vec4 vJ; out vec4 o;
+    void main(){
+      float e = length(vQ); int kind = int(vI.w + 0.5);
+      if (e > 1.0 || e < vJ.z) discard;
+      float seed = vJ.w, ang = atan(vQ.y, vQ.x + 1e-4) / 6.2831853;
+      vec3 acc = accFor(0.0, seed), acc2 = accFor(1.0, seed + 1.0), col = vec3(0.0), em = vec3(0.0);
+      vec2 m = vQ * vJ.xy, fm = vJ.x >= vJ.y ? m : m.yx;
+      if (kind == 2) {                                     // the pitch under floodlights, the running track around it
+        if (abs(fm.x) < 54.0 && abs(fm.y) < 35.0) {
+          vec3 grass = vec3(0.03, 0.15, 0.05) * (0.85 + 0.15 * step(0.5, fract(fm.x / 9.0)));
+          col = grass; em = grass * 1.4;
+          float px = max(fwidth(fm.x), 0.05) * 1.2, line = 0.0;
+          line = max(line, smoothstep(0.15 + px, 0.0, abs(abs(fm.x) - 52.0)) * step(abs(fm.y), 33.0));
+          line = max(line, smoothstep(0.15 + px, 0.0, abs(abs(fm.y) - 33.0)) * step(abs(fm.x), 52.0));
+          line = max(line, smoothstep(0.15 + px, 0.0, abs(fm.x)) * step(abs(fm.y), 33.0));
+          line = max(line, smoothstep(0.15 + px, 0.0, abs(length(fm) - 9.15)));
+          line = max(line, smoothstep(0.15 + px, 0.0, abs(abs(fm.x) - 35.5)) * step(abs(fm.y), 20.0));
+          line = max(line, smoothstep(0.15 + px, 0.0, abs(abs(fm.y) - 20.0)) * step(35.5, abs(fm.x)) * step(abs(fm.x), 52.0));
+          em += vec3(0.5) * line;
+          for (int i = 0; i < 22; i++) {                     // the players, drifting about
+            float fi = float(i), t = uT * (0.05 + 0.03 * h1(fi + seed));
+            vec2 pp = vec2(sin(t + fi * 2.1) * 40.0 + (i < 11 ? -8.0 : 8.0), cos(t * 1.3 + fi * 1.7) * 26.0);
+            em += (i < 11 ? acc : acc2) * 3.0 * smoothstep(1.0, 0.4, length(fm - pp));
+          }
+          vec2 bp = vec2(sin(uT * 0.11 + seed) * 30.0, cos(uT * 0.17) * 18.0);
+          em += vec3(3.0) * smoothstep(0.7, 0.2, length(fm - bp));
+        } else {
+          col = vec3(0.09, 0.03, 0.025);
+          em += vec3(0.08) * smoothstep(0.1, 0.0, abs(fract(e * 30.0) - 0.5) - 0.45);
+        }
+      } else if (kind == 0) {                              // the stands: coloured seat sections, the crowd and their phone lights
+        float rows = e * vJ.x * 0.9, rowf = fract(rows);
+        col = mix(vec3(0.035, 0.035, 0.05), acc * 0.12, step(0.5, h1(floor(ang * 24.0) + seed)));
+        col *= 0.55 + 0.45 * step(0.25, rowf);
+        if (abs(fract(ang * 24.0) - 0.5) > 0.47) col = vec3(0.07);
+        vec2 cl = vec2(floor(ang * 700.0), floor(rows));
+        col += vec3(0.035, 0.03, 0.035) * step(0.35, h3(cl.x, cl.y, seed + 5.0));
+        float f = h3(cl.x, cl.y, seed + floor(uT * 2.0 + h3(cl.y, cl.x, 1.0) * 10.0));
+        em += f > 0.988 ? vec3(2.4) : f > 0.97 ? accFor(floor(f * 997.0), cl.x) * 1.2 : vec3(0.0);
+        col += vec3(0.05, 0.05, 0.045);
+      } else {                                             // the roof ring, edged in neon
+        col = vec3(0.04, 0.042, 0.05) * (0.85 + 0.15 * step(0.5, fract(ang * 72.0)));
+        em += acc * 2.6 * smoothstep(0.012, 0.0, abs(e - vJ.z - 0.008)) + acc2 * 2.0 * smoothstep(0.01, 0.0, abs(e - 0.988));
+        em += vec3(1.0, 0.97, 0.9) * 1.6 * smoothstep(0.02, 0.0, abs(e - vJ.z - 0.03)) * step(0.6, fract(ang * 90.0));
+      }
+      vec3 c = col + em * uLightK;
+      o = vec4(safe3(mistOn(mix(c, fogCol(vW), fogK(vW)), vW) * uExpo), 1.0);
+    }`;
+  const MIST_VS = `#version 300 es
+    layout(location=0) in vec2 aC;
+    uniform mat4 uVP; uniform vec3 uRect; uniform float uY;
+    out vec3 vW;
+    void main(){ vec3 w = vec3(uRect.x + aC.x * uRect.z, uY, uRect.y + aC.y * uRect.z); vW = w; gl_Position = uVP * vec4(w, 1.0); }`;
+  const MIST_FS = `#version 300 es
+    ${COMMON}
+    in vec3 vW; out vec4 o; uniform float uDens, uSeed;
+    float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+      return mix(mix(h3(i.x, i.y, 1.0), h3(i.x + 1.0, i.y, 1.0), f.x), mix(h3(i.x, i.y + 1.0, 1.0), h3(i.x + 1.0, i.y + 1.0, 1.0), f.x), f.y); }
+    void main(){
+      vec2 p = vW.xz + uWind * uT + uSeed;
+      // big patches of mist with clear air between; wisps inside each patch
+      float patchy = 0.5 + 0.5 * smoothstep(0.38, 0.72, vn(vW.xz / 1400.0 + 3.7));
+      float f = vn(p / 260.0) * 0.5 + vn(p / 120.0) * 0.28 + vn(p / 55.0) * 0.14 + vn(p / 24.0) * 0.08;
+      float d = smoothstep(0.42, 0.85, f) * patchy * uDens;
+      vec3 c = fogCol(vec3(vW.x, 0.0, vW.z)) * 1.7 + uWin * 0.035;     // lit from the city below
+      o = vec4(safe3(c * d * uExpo), d);
+    }`;
+  const FULL_VS = `#version 300 es
+    out vec2 vUv;
+    void main(){ vec2 p = vec2(float((gl_VertexID << 1) & 2), float(gl_VertexID & 2)); vUv = p; gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0); }`;
+  const DOWN_FS = `#version 300 es
+    precision highp float; in vec2 vUv; out vec4 o;
+    uniform sampler2D uTex; uniform vec2 uTexel; uniform float uThr;
+    vec3 safe3(vec3 c){
+      uvec3 b = floatBitsToUint(c) & uvec3(0x7f800000u);
+      return vec3(b.x == 0x7f800000u ? 0.0 : clamp(c.x, 0.0, 60.0), b.y == 0x7f800000u ? 0.0 : clamp(c.y, 0.0, 60.0), b.z == 0x7f800000u ? 0.0 : clamp(c.z, 0.0, 60.0));
+    }
+    void main(){
+      vec2 d = uTexel;
+      vec3 c = (texture(uTex, vUv + vec2(-d.x, -d.y)).rgb + texture(uTex, vUv + vec2(d.x, -d.y)).rgb + texture(uTex, vUv + vec2(-d.x, d.y)).rgb + texture(uTex, vUv + vec2(d.x, d.y)).rgb) * 0.25;
+      c = safe3(c);                                                   // one bad pixel must never bloom across the screen
+      if (uThr > 0.0) {
+        c = min(c, vec3(uThr * 24.0));
+        float l = max(c.r, max(c.g, c.b)); c *= max(l - uThr, 0.0) / max(l, 1e-4);
+      }
+      o = vec4(safe3(c), 1.0);
+    }`;
+  const UP_FS = `#version 300 es
+    precision highp float; in vec2 vUv; out vec4 o;
+    uniform sampler2D uTex; uniform vec2 uTexel;
+    vec3 safe3(vec3 c){
+      uvec3 b = floatBitsToUint(c) & uvec3(0x7f800000u);
+      return vec3(b.x == 0x7f800000u ? 0.0 : clamp(c.x, 0.0, 60.0), b.y == 0x7f800000u ? 0.0 : clamp(c.y, 0.0, 60.0), b.z == 0x7f800000u ? 0.0 : clamp(c.z, 0.0, 60.0));
+    }
+    void main(){
+      vec2 d = uTexel;
+      vec3 c = texture(uTex, vUv).rgb * 4.0;
+      c += (texture(uTex, vUv + vec2(d.x, 0.0)).rgb + texture(uTex, vUv - vec2(d.x, 0.0)).rgb + texture(uTex, vUv + vec2(0.0, d.y)).rgb + texture(uTex, vUv - vec2(0.0, d.y)).rgb) * 2.0;
+      c += texture(uTex, vUv + d).rgb + texture(uTex, vUv - d).rgb + texture(uTex, vUv + vec2(d.x, -d.y)).rgb + texture(uTex, vUv + vec2(-d.x, d.y)).rgb;
+      o = vec4(safe3(c / 16.0), 1.0);
+    }`;
+  const COMP_FS = `#version 300 es
+    precision highp float; in vec2 vUv; out vec4 o;
+    uniform sampler2D uScene, uBloom; uniform float uExpo, uBloomK, uT, uGrain;
+    vec3 safe3(vec3 c){
+      uvec3 b = floatBitsToUint(c) & uvec3(0x7f800000u);
+      return vec3(b.x == 0x7f800000u ? 0.0 : clamp(c.x, 0.0, 60.0), b.y == 0x7f800000u ? 0.0 : clamp(c.y, 0.0, 60.0), b.z == 0x7f800000u ? 0.0 : clamp(c.z, 0.0, 60.0));
+    }
+    vec3 aces(vec3 x){ return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+    float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+    void main(){
+      vec2 dc = (vUv - 0.5) * 0.0028;
+      vec3 c = vec3(texture(uScene, vUv + dc).r, texture(uScene, vUv).g, texture(uScene, vUv - dc).b) / uExpo;
+      c = safe3(c);
+      c += safe3(texture(uBloom, vUv).rgb) / uExpo * uBloomK;
+      c = aces(c * 1.1);
+      vec2 v = vUv - 0.5; c *= mix(1.0, 0.5, smoothstep(0.2, 0.85, length(v * vec2(1.2, 1.0))));
+      c = pow(max(c, vec3(0.0)), vec3(1.0 / 2.2));
+      c += (hash(gl_FragCoord.xy + fract(uT * 7.0) * 61.0) - 0.5) * uGrain / 255.0;
+      o = vec4(safe3(c), 1.0);
+    }`;
+
+  function compile(vs, fs) {
+    const mk = (t, s) => { const sh = g.createShader(t); g.shaderSource(sh, s); g.compileShader(sh); if (!g.getShaderParameter(sh, g.COMPILE_STATUS)) throw new Error(g.getShaderInfoLog(sh)); return sh; };
+    const p = g.createProgram(); g.attachShader(p, mk(g.VERTEX_SHADER, vs)); g.attachShader(p, mk(g.FRAGMENT_SHADER, fs)); g.linkProgram(p);
+    if (!g.getProgramParameter(p, g.LINK_STATUS)) throw new Error(g.getProgramInfoLog(p));
+    const u = {}, n = g.getProgramParameter(p, g.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const nm = g.getActiveUniform(p, i).name.replace(/\[0\]$/, ""); u[nm] = g.getUniformLocation(p, nm); }
+    return { p, u };
+  }
+
+  /* ---------- GPU objects ---------- */
+  let shapes = null;
+  let bldVao, bldInst, bldCount = 0, vehVao, vehInst, vehData = new Float32Array(8 * 128), vehN = 0, groundVao, carVao, carCount = 0;
+  let streakVao, streakBuf, streakData = new Float32Array(12 * 512), discVao, discBuf, discCount = 0;
+  let hdr = false, expo = 1, samples = 0, fw = 0, fh = 0;
+  let msFbo = null, msColor = null, msDepth = null, sceneFbo = null, sceneTex = null, depthRb = null, bloom = [];
+  function quadVao(attribs) {
+    const vao = g.createVertexArray(); g.bindVertexArray(vao);
+    const b = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, b);
+    g.bufferData(g.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), g.STATIC_DRAW);
+    g.enableVertexAttribArray(0); g.vertexAttribPointer(0, 2, g.FLOAT, false, 0, 0);
+    let inst = null;
+    if (attribs) {
+      inst = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, inst);
+      const stride = attribs * 16;
+      for (let i = 0; i < attribs; i++) { g.enableVertexAttribArray(1 + i); g.vertexAttribPointer(1 + i, 4, g.FLOAT, false, stride, i * 16); g.vertexAttribDivisor(1 + i, 1); }
+    }
+    g.bindVertexArray(null);
+    return { vao, inst };
+  }
+  function init() {
+    try {
+      g = canvas.getContext("webgl2", { antialias: false, alpha: false, depth: false, premultipliedAlpha: false, preserveDrawingBuffer: false, powerPreference: "high-performance" });
+      if (!g) return (ok = false);
+      hdr = !!g.getExtension("EXT_color_buffer_float");
+      expo = hdr ? 1 : .25;
+      P.bld = compile(BLD_VS, BLD_FS); P.ground = compile(GROUND_VS, GROUND_FS); P.car = compile(CAR_VS, CAR_FS);
+      P.streak = compile(STREAK_VS, STREAK_FS); P.disc = compile(DISC_VS, DISC_FS); P.mist = compile(MIST_VS, MIST_FS);
+      P.down = compile(FULL_VS, DOWN_FS); P.up = compile(FULL_VS, UP_FS); P.comp = compile(FULL_VS, COMP_FS);
+      // a box: unit footprint -1..1, height 0..1, no bottom
+      const V = [], face = (n, a, b, c, d) => { for (const q of [a, b, c, a, c, d]) V.push(...q, ...n); };
+      const p = (x, y, z) => [x, y, z];
+      face([0, 1, 0], p(-1, 1, -1), p(-1, 1, 1), p(1, 1, 1), p(1, 1, -1));
+      face([1, 0, 0], p(1, 0, -1), p(1, 1, -1), p(1, 1, 1), p(1, 0, 1));
+      face([-1, 0, 0], p(-1, 0, 1), p(-1, 1, 1), p(-1, 1, -1), p(-1, 0, -1));
+      face([0, 0, 1], p(1, 0, 1), p(1, 1, 1), p(-1, 1, 1), p(-1, 0, 1));
+      face([0, 0, -1], p(-1, 0, -1), p(-1, 1, -1), p(1, 1, -1), p(1, 0, -1));
+      // round, octagonal and dome meshes (unit footprint, height 0..1), each with its own instance buffer
+      const cyl = N => { const M = []; for (let i = 0; i < N; i++) {
+          const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2, c0 = Math.cos(a0), s0 = Math.sin(a0), c1 = Math.cos(a1), s1 = Math.sin(a1);
+          const sm = N > 12, n0 = sm ? [c0, 0, s0] : [Math.cos((a0 + a1) / 2), 0, Math.sin((a0 + a1) / 2)], n1 = sm ? [c1, 0, s1] : n0;
+          M.push(c0, 0, s0, ...n0, c0, 1, s0, ...n0, c1, 1, s1, ...n1,  c0, 0, s0, ...n0, c1, 1, s1, ...n1, c1, 0, s1, ...n1);
+          M.push(0, 1, 0, 0, 1, 0,  c1, 1, s1, 0, 1, 0,  c0, 1, s0, 0, 1, 0);
+        } return M; };
+      const dome = (N, R) => { const M = [], P = (a, b) => [Math.cos(a) * Math.sin(b), Math.cos(b), Math.sin(a) * Math.sin(b)];
+        for (let j = 0; j < R; j++) for (let i = 0; i < N; i++) {
+          const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2, b0 = Math.PI / 2 * (1 - j / R), b1 = Math.PI / 2 * (1 - (j + 1) / R);
+          const A = P(a0, b0), B2 = P(a0, b1), C = P(a1, b1), Dd = P(a1, b0);
+          for (const q of [A, B2, C, A, C, Dd]) M.push(...q, ...q);
+        } return M; };
+      const shapeVao = verts => {
+        const vao = g.createVertexArray(); g.bindVertexArray(vao);
+        const b = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, b); g.bufferData(g.ARRAY_BUFFER, new Float32Array(verts), g.STATIC_DRAW);
+        g.enableVertexAttribArray(0); g.vertexAttribPointer(0, 3, g.FLOAT, false, 24, 0);
+        g.enableVertexAttribArray(1); g.vertexAttribPointer(1, 3, g.FLOAT, false, 24, 12);
+        const inst = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, inst);
+        for (let i = 0; i < 2; i++) { g.enableVertexAttribArray(2 + i); g.vertexAttribPointer(2 + i, 4, g.FLOAT, false, 32, i * 16); g.vertexAttribDivisor(2 + i, 1); }
+        g.bindVertexArray(null);
+        return { vao, inst, verts: verts.length / 6, count: 0 };
+      };
+      shapes = { cyl: shapeVao(cyl(28)), oct: shapeVao(cyl(8)), dome: shapeVao(dome(24, 7)) };
+      bldVao = g.createVertexArray(); g.bindVertexArray(bldVao);
+      const vb = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, vb); g.bufferData(g.ARRAY_BUFFER, new Float32Array(V), g.STATIC_DRAW);
+      g.enableVertexAttribArray(0); g.vertexAttribPointer(0, 3, g.FLOAT, false, 24, 0);
+      g.enableVertexAttribArray(1); g.vertexAttribPointer(1, 3, g.FLOAT, false, 24, 12);
+      bldInst = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, bldInst);
+      for (let i = 0; i < 2; i++) { g.enableVertexAttribArray(2 + i); g.vertexAttribPointer(2 + i, 4, g.FLOAT, false, 32, i * 16); g.vertexAttribDivisor(2 + i, 1); }
+      // flying cars and boats: the same boxes, with their own per-frame instance buffer
+      vehVao = g.createVertexArray(); g.bindVertexArray(vehVao);
+      g.bindBuffer(g.ARRAY_BUFFER, vb);
+      g.enableVertexAttribArray(0); g.vertexAttribPointer(0, 3, g.FLOAT, false, 24, 0);
+      g.enableVertexAttribArray(1); g.vertexAttribPointer(1, 3, g.FLOAT, false, 24, 12);
+      vehInst = g.createBuffer(); g.bindBuffer(g.ARRAY_BUFFER, vehInst);
+      for (let i = 0; i < 2; i++) { g.enableVertexAttribArray(2 + i); g.vertexAttribPointer(2 + i, 4, g.FLOAT, false, 32, i * 16); g.vertexAttribDivisor(2 + i, 1); }
+      g.bindVertexArray(null);
+      groundVao = quadVao(0).vao;
+      // traffic: lanes on the 13 nearest roads each way; the cars themselves move in the shader
+      const cq = quadVao(2); carVao = cq.vao;
+      const cars = [], cr = rngFrom(99);
+      for (let axis = 0; axis < 2; axis++) for (let k = 0; k < 25; k++) for (let n = 0; n < 200; n++) {
+        const side = n % 2 ? 1 : -1, lane = .2 + .55 * Math.floor(cr() * 2) / 1;
+        const kind = cr() < .1 ? 1 + Math.floor(cr() * 3) : 0;
+        const truck = cr() < 1 / 11 ? 1 : 0;
+        cars.push(k, side * lane, truck ? 9 + cr() * 3 : 11 + cr() * 9, cr(), axis, truck ? 0 : kind, n + axis * 61 + 1, truck);
+      }
+      carCount = cars.length / 8; g.bindBuffer(g.ARRAY_BUFFER, cq.inst); g.bufferData(g.ARRAY_BUFFER, new Float32Array(cars), g.STATIC_DRAW);
+      const sq = quadVao(3); streakVao = sq.vao; streakBuf = sq.inst;
+      const dq = quadVao(2); discVao = dq.vao; discBuf = dq.inst;
+      g.bindVertexArray(null);
+      ok = true; visKey = ""; fw = fh = 0;
+    } catch (e) { console.warn("Neon City could not start:", e && e.message); ok = false; }
+    return ok;
+  }
+  function tex(w, h, internal) {
+    const t = g.createTexture(); g.bindTexture(g.TEXTURE_2D, t);
+    g.texStorage2D(g.TEXTURE_2D, 1, internal, w, h);
+    g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MIN_FILTER, g.LINEAR); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_MAG_FILTER, g.LINEAR);
+    g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_S, g.CLAMP_TO_EDGE); g.texParameteri(g.TEXTURE_2D, g.TEXTURE_WRAP_T, g.CLAMP_TO_EDGE);
+    return t;
+  }
+  function fboFor(t) { const f = g.createFramebuffer(); g.bindFramebuffer(g.FRAMEBUFFER, f); g.framebufferTexture2D(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.TEXTURE_2D, t, 0); return f; }
+  function freeTargets() {
+    if (!g) return;
+    for (const b of bloom) { g.deleteTexture(b.t); g.deleteFramebuffer(b.f); }
+    bloom = [];
+    [msColor, msDepth, depthRb].forEach(r => r && g.deleteRenderbuffer(r));
+    [msFbo, sceneFbo].forEach(f => f && g.deleteFramebuffer(f));
+    if (sceneTex) g.deleteTexture(sceneTex);
+    msFbo = msColor = msDepth = sceneFbo = sceneTex = depthRb = null; fw = fh = 0;
+  }
+  function targets(w, h) {
+    if (w === fw && h === fh && sceneFbo) return true;
+    freeTargets();
+    const fmt = hdr ? g.RGBA16F : g.RGBA8;
+    sceneTex = tex(w, h, fmt); sceneFbo = fboFor(sceneTex);
+    const want = S.quality === "sharp" ? 4 : S.quality === "battery" ? 0 : 2;
+    samples = Math.min(want, g.getParameter(g.MAX_SAMPLES) || 0);
+    if (samples > 1) {
+      msFbo = g.createFramebuffer(); g.bindFramebuffer(g.FRAMEBUFFER, msFbo);
+      msColor = g.createRenderbuffer(); g.bindRenderbuffer(g.RENDERBUFFER, msColor); g.renderbufferStorageMultisample(g.RENDERBUFFER, samples, fmt, w, h);
+      g.framebufferRenderbuffer(g.FRAMEBUFFER, g.COLOR_ATTACHMENT0, g.RENDERBUFFER, msColor);
+      msDepth = g.createRenderbuffer(); g.bindRenderbuffer(g.RENDERBUFFER, msDepth); g.renderbufferStorageMultisample(g.RENDERBUFFER, samples, g.DEPTH_COMPONENT24, w, h);
+      g.framebufferRenderbuffer(g.FRAMEBUFFER, g.DEPTH_ATTACHMENT, g.RENDERBUFFER, msDepth);
+      if (g.checkFramebufferStatus(g.FRAMEBUFFER) !== g.FRAMEBUFFER_COMPLETE) {
+        g.deleteRenderbuffer(msColor); g.deleteRenderbuffer(msDepth); g.deleteFramebuffer(msFbo); msFbo = msColor = msDepth = null; samples = 0;
+      }
+    }
+    if (!msFbo) {
+      g.bindFramebuffer(g.FRAMEBUFFER, sceneFbo);
+      depthRb = g.createRenderbuffer(); g.bindRenderbuffer(g.RENDERBUFFER, depthRb); g.renderbufferStorage(g.RENDERBUFFER, g.DEPTH_COMPONENT24, w, h);
+      g.framebufferRenderbuffer(g.FRAMEBUFFER, g.DEPTH_ATTACHMENT, g.RENDERBUFFER, depthRb);
+    }
+    g.bindFramebuffer(g.FRAMEBUFFER, sceneFbo);
+    if (g.checkFramebufferStatus(g.FRAMEBUFFER) !== g.FRAMEBUFFER_COMPLETE) { if (hdr) { hdr = false; expo = .25; freeTargets(); return targets(w, h); } return false; }
+    let bw = w, bh2 = h;
+    for (let i = 0; i < 6; i++) {
+      bw = Math.max(1, bw >> 1); bh2 = Math.max(1, bh2 >> 1);
+      const t = tex(bw, bh2, fmt); bloom.push({ t, f: fboFor(t), w: bw, h: bh2 });
+      if (bw < 24 || bh2 < 24) break;
+    }
+    g.bindFramebuffer(g.FRAMEBUFFER, null);
+    fw = w; fh = h; return true;
+  }
+
+  /* ---------- camera ---------- */
+  const cam = { x: 0, z: 0, head: .6, turn: 0, alt: 560, t: 0, roll: 0, speed: 0 };
+  let VP = new Float32Array(16), eye = [0, 0, 0], tanY = .45, focal = 1, viewR = 800, ctr = [0, 0];
+  function persp(fy, a, n, f) { const t = 1 / Math.tan(fy / 2), r = 1 / (n - f); return [t / a, 0, 0, 0, 0, t, 0, 0, 0, 0, (n + f) * r, -1, 0, 0, 2 * n * f * r, 0]; }
+  function lookAt(e, c, up) {
+    let zx = e[0] - c[0], zy = e[1] - c[1], zz = e[2] - c[2]; let l = Math.hypot(zx, zy, zz); zx /= l; zy /= l; zz /= l;
+    let xx = up[1] * zz - up[2] * zy, xy = up[2] * zx - up[0] * zz, xz = up[0] * zy - up[1] * zx; l = Math.hypot(xx, xy, xz); xx /= l; xy /= l; xz /= l;
+    const yx = zy * xz - zz * xy, yy = zz * xx - zx * xz, yz = zx * xy - zy * xx;
+    return [xx, yx, zx, 0, xy, yy, zy, 0, xz, yz, zz, 0, -(xx * e[0] + xy * e[1] + xz * e[2]), -(yx * e[0] + yy * e[1] + yz * e[2]), -(zx * e[0] + zy * e[1] + zz * e[2]), 1];
+  }
+  function mul(a, b) { const o = new Float32Array(16); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + j] * b[i * 4 + k]; o[i * 4 + j] = s; } return o; }
+  let flyT = 0, camF = [0, -1, 0], camR = [1, 0, 0], camU = [0, 0, 1], camTX = .6, camTY = .45;
+  function updateCamera(dt) {
+    const slow = 1 - (1 - S.nightSpeed) * nightF;
+    const v = 21 * S.citySpeed * slow;
+    cam.speed += (v - cam.speed) * Math.min(1, dt * .8);
+    flyT += dt * slow;
+    const want = S.cityWander ? .045 * Math.sin(flyT * .021 + 1.3) + .03 * Math.sin(flyT * .0083 + 4.1) + .012 * Math.sin(flyT * .057) : 0;
+    cam.turn += (want - cam.turn) * Math.min(1, dt * .5);
+    cam.head += cam.turn * dt * Math.min(1, cam.speed / 12);
+    cam.x += Math.cos(cam.head) * cam.speed * dt; cam.z += Math.sin(cam.head) * cam.speed * dt;
+    { const k = 1 - Math.exp(-dt * 5), tx = pan.qx * k, tz = pan.qz * k; cam.x += tx; cam.z += tz; pan.qx -= tx; pan.qz -= tz; }   // the camera eases after the finger
+    if (!pan.held) { cam.x += pan.vx * dt; cam.z += pan.vz * dt; const k = Math.exp(-dt * 1.5); pan.vx *= k; pan.vz *= k; }
+    cam.roll += (-cam.turn * 2.2 - cam.roll) * Math.min(1, dt * 1.2);
+    const altWant = (440 + 360 * S.cityAlt) / zoom;          // 440 m up to 1160 m
+    cam.alt += (altWant - cam.alt) * Math.min(1, dt * .6);
+    const pitch = S.cityView === "down" ? .03 : .38, aspect = W / Math.max(1, H);
+    tanY = aspect >= 1 ? Math.tan(25 * Math.PI / 180) : Math.tan(25 * Math.PI / 180) / aspect;
+    const fx = Math.cos(cam.head), fz = Math.sin(cam.head), rx = -fz, rz = fx;
+    const bob = Math.sin(flyT * .31) * 4 + Math.sin(flyT * .17 + 2) * 3;
+    const par = S.tilt ? 1.3 : 0;
+    eye = [cam.x + rx * tilt.px * par - fx * tilt.py * par, cam.alt + bob, cam.z + rz * tilt.px * par - fz * tilt.py * par];
+    // look forward and down; screen-up points the way the drone is flying, tipped a little by the bank
+    const lx = cam.x + fx * Math.tan(pitch) * cam.alt, lz = cam.z + fz * Math.tan(pitch) * cam.alt;
+    const rr = cam.roll, up = [fx * Math.cos(rr) + rx * Math.sin(rr), Math.sin(pitch) * .0, fz * Math.cos(rr) + rz * Math.sin(rr)];
+    const tgt = [lx + rx * tilt.px * par * .3, 0, lz + rz * tilt.px * par * .3];
+    const view = lookAt(eye, tgt, up);
+    { // camera axes, for rain drawn in screen space
+      let f = [tgt[0] - eye[0], tgt[1] - eye[1], tgt[2] - eye[2]], l = Math.hypot(...f); f = f.map(v => v / l);
+      let r = [f[1] * up[2] - f[2] * up[1], f[2] * up[0] - f[0] * up[2], f[0] * up[1] - f[1] * up[0]]; l = Math.hypot(...r); r = r.map(v => v / l);
+      const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+      camF = f; camR = r; camU = u; camTX = tanY * aspect; camTY = tanY;
+    }
+    const proj = persp(2 * Math.atan(tanY), aspect, 4, cam.alt * 2.6 + 400);
+    VP = mul(proj, view);
+    focal = (fh || H) * .5 / tanY;
+    const tanX = tanY * aspect, half = Math.atan(Math.hypot(tanX, tanY));
+    viewR = cam.alt * Math.tan(Math.min(1.25, pitch + half)) + 120;
+    ctr = [lx, lz];
+  }
+
+  /* ---------- visible chunks ---------- */
+  let visKey = "", beacons = [], lights = [], beams = [];
+  function updateVisible() {
+    const r = viewR, c0x = Math.floor((ctr[0] - r) / CHUNK_M), c1x = Math.floor((ctr[0] + r) / CHUNK_M);
+    const c0z = Math.floor((ctr[1] - r) / CHUNK_M), c1z = Math.floor((ctr[1] + r) / CHUNK_M);
+    const list = [];
+    for (let cx = c0x; cx <= c1x; cx++) for (let cz = c0z; cz <= c1z; cz++) {
+      const nx = Math.max(cx * CHUNK_M, Math.min(ctr[0], (cx + 1) * CHUNK_M)), nz = Math.max(cz * CHUNK_M, Math.min(ctr[1], (cz + 1) * CHUNK_M));
+      if (Math.hypot(nx - ctr[0], nz - ctr[1]) < r) list.push(cx + "," + cz);
+    }
+    const key = list.join("|");
+    if (key === visKey) return;
+    visKey = key;
+    const cs = list.map(k => { const [a, b] = k.split(",").map(Number); return chunk(a, b); });
+    let n = 0; for (const c of cs) n += c.inst.length;
+    const all = new Float32Array(n); let o = 0; for (const c of cs) { all.set(c.inst, o); o += c.inst.length; }
+    bldCount = n / 8;
+    g.bindBuffer(g.ARRAY_BUFFER, bldInst); g.bufferData(g.ARRAY_BUFFER, all, g.STATIC_DRAW);
+    for (const k of ["cyl", "oct", "dome"]) {
+      let m = 0; for (const c of cs) m += c[k].length;
+      const arr = new Float32Array(m); let p = 0; for (const c of cs) { arr.set(c[k], p); p += c[k].length; }
+      shapes[k].count = m / 8; g.bindBuffer(g.ARRAY_BUFFER, shapes[k].inst); g.bufferData(g.ARRAY_BUFFER, arr, g.STATIC_DRAW);
+    }
+    beacons = []; lights = []; beams = []; const ds = [];
+    for (const c of cs) {
+      for (let i = 0; i < c.beams.length; i += 7) beams.push(c.beams.slice(i, i + 7));
+      for (let i = 0; i < c.beacons.length; i += 4) beacons.push(c.beacons.slice(i, i + 4));
+      for (let i = 0; i < c.lights.length; i += 10) lights.push(c.lights.slice(i, i + 10));
+      for (const v of c.discs) ds.push(v);
+    }
+    discCount = ds.length / 8;
+    g.bindBuffer(g.ARRAY_BUFFER, discBuf); g.bufferData(g.ARRAY_BUFFER, new Float32Array(ds), g.STATIC_DRAW);
+    // forget chunks that are far away
+    if (chunks.size > 80) for (const [k, c] of chunks) {
+      const mx = (c.cx + .5) * CHUNK_M, mz = (c.cz + .5) * CHUNK_M;
+      if (Math.hypot(mx - ctr[0], mz - ctr[1]) > r + CHUNK_M * 3) chunks.delete(k);
+    }
+  }
+
+  /* ---------- flying cars, boats and rain ---------- */
+  // flying cars keep to air lanes above the streets, so they never pass through a building
+  const SPAN = 34 * PITCH, FSPAN = 24 * PITCH, DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]];
+  const flyers = [], frng = rngFrom(4242);
+  for (let road = 0; road < 24; road++) for (const axisX of [true, false]) {
+    const nl = 1 + Math.floor(frng() * 3), tiers = axisX ? [48, 108, 168] : [78, 138, 198];
+    for (let l = 0; l < nl; l++) {
+      const dirP = frng() < .5, d = axisX ? (dirP ? 0 : 2) : (dirP ? 1 : 3), lane = (dirP ? 1 : -1) * (2.5 + l * 4.5);
+      const y = tiers[Math.floor(frng() * 3)] + l * 9, v = 24 + frng() * 26, n = 2 + Math.floor(frng() * 3), o0 = frng() * FSPAN;
+      for (let k = 0; k < n; k++) flyers.push({ d, road, lane, y, v, o: o0 + k * FSPAN / n, paint: Math.floor(frng() * 6), bus: frng() < .14, col: Math.floor(frng() * 3), ph: frng() * 10 });
+    }
+  }
+  const boats = [], brng2 = rngFrom(777);
+  for (const alongX of [true, false]) for (const [lane, dir, v, n] of [[-46, 1, 6, 3], [-15, 1, 8.5, 2], [15, -1, 7.5, 2], [46, -1, 5.5, 3]]) {
+    const o0 = brng2() * 24 * PITCH;
+    for (let k = 0; k < n; k++) boats.push({ z: alongX, lane, dir, v, o: o0 + k * 24 * PITCH / n, len: 26 + brng2() * 24, paint: Math.floor(brng2() * 5), ph: brng2() * 6, acc: Math.floor(brng2() * 3) });
+  }
+  const TSPAN = 40 * PITCH;
+  function addBox(x, z, hx, hz, y0, y1, seed, fl) {
+    if (vehN * 8 + 8 > vehData.length) { const n = new Float32Array(vehData.length * 2); n.set(vehData); vehData = n; }
+    const d = vehData, o = vehN * 8;
+    d[o] = x; d[o + 1] = z; d[o + 2] = hx; d[o + 3] = hz; d[o + 4] = y0; d[o + 5] = y1; d[o + 6] = seed; d[o + 7] = fl; vehN++;
+  }
+  const addVeh = (x, z, hx, hz, y0, y1, d, acc) => addBox(x, z, hx, hz, y0, y1, d, 2048 | (acc << 2));
+  const boatU = new Float32Array(96), boatS = new Float32Array(96);
+  // dragging a finger moves the world under it; let go and it glides to a stop
+  const pan = { vx: 0, vz: 0, qx: 0, qz: 0, held: false, lt: 0 };
+  const drops = [];
+  for (let i = 0; i < 2600; i++) drops.push({ x: Math.random(), z: Math.random(), y: Math.random(), s: .7 + Math.random() * .6 });
+  const wrap = (v, c, L) => ((v - c + L / 2) % L + L) % L + c - L / 2;
+  let streakN = 0;
+  function addStreak(hx, hy, hz, tx, ty, tz, w, r, gg, b, a) {
+    if (streakN * 12 + 12 > streakData.length) { const n = new Float32Array(streakData.length * 2); n.set(streakData); streakData = n; }
+    const d = streakData, o = streakN * 12;
+    d[o] = hx; d[o + 1] = hy; d[o + 2] = hz; d[o + 3] = w; d[o + 4] = tx; d[o + 5] = ty; d[o + 6] = tz; d[o + 7] = 0;
+    d[o + 8] = r; d[o + 9] = gg; d[o + 10] = b; d[o + 11] = a; streakN++;
+  }
+  const REAL = [[1, .86, .66], [1, .66, .26], [.82, .9, 1], [.3, .55, 1], [1, .3, .6], [.35, 1, .5]];
+  const realCol = (x, z) => { const h = bh(Math.round(x / 7), Math.round(z / 7), 52) / 4294967296; return REAL[h < .42 ? 0 : h < .72 ? 1 : h < .9 ? 2 : h < .94 ? 3 : h < .97 ? 4 : 5]; };
+  const natCol0 = (x, z) => { const h = bh(Math.round(x / 7), Math.round(z / 7), 51) / 4294967296; const k = [0, 2 / 3, 1 / 3].map(o => Math.min(1, Math.max(0, Math.abs(((h + o) % 1) * 6 - 3) - 1)));
+    return k.map(v => 1 - .7 * (1 - v)); };
+  const natCol = (x, z) => (CITY_LOOKS[S.cityLook] || {}).real ? realCol(x, z) : natCol0(x, z);
+  function train(line, dir, alongX, y, t, n) {
+    const v = 30, o = posmod(line * .37 + (dir > 0 ? 0 : 640) + n * TSPAN / 3, TSPAN);
+    const head = wrap(o + dir * v * t, alongX ? cam.x : cam.z, TSPAN), across = line + dir * 4.65;
+    const d = alongX ? (dir > 0 ? 0 : 2) : (dir > 0 ? 1 : 3), acc = posmod(Math.round(line / PITCH), 3);
+    for (let c = 0; c < 6; c++) {
+      const mid = head - dir * (c * 27 + 13.5), pc = c === 0 ? 1 : c === 5 ? 2 : 0;
+      addBox(alongX ? mid : across, alongX ? across : mid, alongX ? 13 : 3.6, alongX ? 3.6 : 13, y, y + 5.4, d + pc * .08, 65536 | (acc << 2));
+    }
+    const fx = alongX ? head : across, fz = alongX ? across : head, ex = alongX ? dir * 60 : 0, ez = alongX ? 0 : dir * 60;
+    if (Math.sin(t * 2.9 + line * .01) > .985) {                                                       // a blue spark from the pantograph
+      const sx = fx - (alongX ? dir * 50 : 0), sz = fz - (alongX ? 0 : dir * 50);
+      addStreak(sx, y + 5.8, sz, sx, y + 5.8, sz, 2.5, .5, .7, 1, 3);
+    }
+  }
+  const addBeam = (...a) => { addStreak(...a); streakData[(streakN - 1) * 12 + 7] = 2; };
+  // rain, drawn in screen space: every drop streams toward the point straight below the drone (where falling rain
+  // vanishes, seen from above) at one steady speed, fading as it goes. When the drone moves or you drag, the drops
+  // shift with the city like a layer of rain a couple of hundred metres below.
+  const rain = [], rainPrev = { x: null, z: null, t: 0 };
+  function rainStreaks(t) {
+    const dt = Math.min(.1, Math.max(0, t - rainPrev.t)); rainPrev.t = t;
+    const F = camF, R = camR, U = camU, TX = camTX, TY = camTY;
+    // the point straight below, on screen (normalised -1..1)
+    const fd = -F[1], nx = (-R[1] / fd) / TX, ny = (-U[1] / fd) / TY;
+    // how far the city slid this frame, at a depth of ~220 m
+    let sx = 0, sy = 0;
+    if (rainPrev.x !== null) { const mx = cam.x - rainPrev.x, mz = cam.z - rainPrev.z; sx = -(mx * R[0] + mz * R[2]) / 220 / TX; sy = -(mx * U[0] + mz * U[2]) / 220 / TY; }
+    rainPrev.x = cam.x; rainPrev.z = cam.z;
+    if (Math.abs(sx) > .5 || Math.abs(sy) > .5) { sx = 0; sy = 0; }
+    const asp = TX / TY, amt = S.cityRainAmt ?? 0, snow = amt >= .9, lvl = Math.min(1, amt / .9);
+    const want = snow ? 420 : Math.round(90 + 760 * lvl);
+    while (rain.length < 850) rain.push({ x: 0, y: 0, k: 1, s: 0, d: 0, ph: 0 });
+    const P = (x, y) => { const dist = 120; return [eye[0] + dist * (F[0] + x * TX * R[0] + y * TY * U[0]), eye[1] + dist * (F[1] + x * TX * R[1] + y * TY * U[1]), eye[2] + dist * (F[2] + x * TX * R[2] + y * TY * U[2])]; };
+    for (let i = 0; i < want; i++) {
+      const d = rain[i];
+      if (d.k >= 1) {                                       // a new drop anywhere on screen, right up to the point below the drone
+        d.x = Math.random() * 2.4 - 1.2; d.y = Math.random() * 2.4 - 1.2; d.k = 0; d.s = .55 + Math.random() * .5; d.ph = Math.random() * 6.28;
+        d.d = Math.max(.06, Math.hypot((nx - d.x) * asp, ny - d.y));
+      }
+      let vx = (nx - d.x) * asp, vy = ny - d.y; const L = Math.hypot(vx, vy) || 1; vx /= L; vy /= L;
+      const step = d.s * (snow ? .26 : 1.1) * dt;           // steady screen speed; snow drifts down slowly
+      let wx = 0, wy = 0;
+      if (snow) { const wob = Math.sin(t * 1.3 + d.ph) * .0035; wx = -vy * wob; wy = vx * wob; }   // flakes sway as they fall
+      d.x += (vx * step + wx) / asp + sx; d.y += vy * step + wy + sy; d.k += step / d.d;
+      if (L < .02) d.k = 1;
+      const near = Math.min(1, L / .15), a = Math.min(1, d.k / .12, (1 - d.k) / .3) * near;
+      if (a <= 0) continue;
+      const h = P(d.x, d.y);
+      if (snow) { const tl = P(d.x - vx * .002 / asp, d.y - vy * .002); addStreak(h[0], h[1], h[2], tl[0], tl[1], tl[2], .07 + .09 * d.s, .92, .95, 1, .55 * a); continue; }
+      const len = (.016 + .03 * d.s) * (.55 + .45 * lvl) * Math.min(1, L / .4), tx = d.x - vx * len / asp, ty = d.y - vy * len;
+      const tl = P(tx, ty);
+      addStreak(h[0], h[1], h[2], tl[0], tl[1], tl[2], .012 + .026 * lvl, .66, .74, .9, (.2 + .2 * lvl) * a);   // light rain is thin, heavy rain thicker
+    }
+  }
+  function buildStreaks(t) {
+    streakN = 0; vehN = 0;
+    const [A, B, C] = colNow, W0 = winNow, LKS = CITY_LOOKS[S.cityLook] || {}, nat = LKS.nat || LKS.real, LK = S.cityLightK;
+    const PAL = [A, B, C, W0, [1, 1, 1], [1, .06, .04], [.1, 1, .3]];
+    // warning lights: some burn steadily, the rest flash each on their own beat
+    for (const bk of beacons) {
+      const r = bk[3]; let a;
+      if (r < .3) a = 2.2;
+      else { const per = 1.3 + r * 1.7, v = ((t + r * 37) % per) / per; a = .06 + 3.5 * (v < .3 ? Math.min(1, v / .05, (.3 - v) / .08) : 0); }
+      addStreak(bk[0], bk[1], bk[2], bk[0], bk[1], bk[2], .9, 1, .08, .04, a);
+    }
+    // bridges, cranes, floodlights, lamps
+    for (const L of lights) {
+      const c = nat && L[7] < 3 ? natCol(L[0], L[2]) : PAL[L[7]];
+      addStreak(L[0], L[1], L[2], L[3], L[4], L[5], L[6], c[0], c[1], c[2], L[8] * LK);
+      streakData[(streakN - 1) * 12 + 7] = L[9];
+    }
+    if (S.cityFlyers) {
+      for (const f of flyers) {
+        const [dx, dz] = DIRS[f.d], alongX = dx !== 0;
+        const camA = alongX ? cam.x : cam.z, camC = alongX ? cam.z : cam.x;
+        const a = wrap(f.o + (dx + dz) * f.v * t, camA, FSPAN), cr = wrap(f.road * PITCH, camC, FSPAN), c = cr + f.lane;
+        const x = alongX ? a : c, z = alongX ? c : a, y = Math.min(f.y, cam.alt - 230);
+        { const ccx = Math.floor(x / CHUNK_M), ccz = Math.floor(z / CHUNK_M);           // tucked away while behind the megatower
+          if (special(ccx, ccz) === 2 && Math.hypot(x - (ccx * CHUNK + 2) * PITCH, z - (ccz * CHUNK + 2) * PITCH) < 84) continue; }
+        if (Math.abs(x - ctr[0]) > viewR + 60 || Math.abs(z - ctr[1]) > viewR + 60) continue;      // out of sight
+        const hl = f.bus ? 8 : 4.4, hc = f.bus ? 2.2 : 1.8, ht = f.bus ? 3 : 2;
+        addVeh(x, z, alongX ? hl : hc, alongX ? hc : hl, y, y + ht, f.d + f.paint * .08, f.col);
+        const fx = x + dx * hl, fz = z + dz * hl, bx = x - dx * hl, bz = z - dz * hl, col = nat ? natCol(f.road * 9, f.o) : PAL[f.col];
+        const rx = -dz * hc * .7, rz = dx * hc * .7;
+        for (const s of [-1, 1]) {
+          addStreak(fx + rx * s, y + .8, fz + rz * s, fx + rx * s, y + .8, fz + rz * s, .5, 1, .97, .9, 2.8);      // headlights
+          addStreak(bx + rx * s, y + .8, bz + rz * s, bx + rx * s, y + .8, bz + rz * s, .42, 1, .06, .04, 2.2);   // tail lights
+        }
+        addBeam(x + dx * 10, .6, z + dz * 10, x + dx * 10, .6, z + dz * 10, 6, col[0] * .5 + .5, col[1] * .5 + .5, col[2] * .5 + .5, .06);   // its light on the street below
+        const nav = ((t + f.ph) % 1.2) < .12 ? 3 : 0;                                              // wingtip lights, like an aircraft
+        if (nav) addStreak(x - dz * (hc + .6), y + .9, z + dx * (hc + .6), x - dz * (hc + .6), y + .9, z + dx * (hc + .6), .4, 1, .1, .08, nav);
+        if (nav) addStreak(x + dz * (hc + .6), y + .9, z - dx * (hc + .6), x + dz * (hc + .6), y + .9, z - dx * (hc + .6), .4, .1, 1, .3, nav);
+        addBeam(x, y - .7, z, x, y - .7, z, hc * 1.6, col[0], col[1], col[2], .12);                 // underglow
+      }
+    }
+    // boats on the nearest rivers, bobbing on the swell; their wakes are drawn on the water itself
+    boatU.fill(0); let bi = 0;
+    for (const bt of boats) {
+      const alongX = bt.z;                                   // on an east-west river the boats sail along x
+      const k = alongX ? Math.round((cam.z / PITCH - 1) / RIVER_Z) : Math.round((cam.x / PITCH - 1) / RIVER_X);
+      const centre = (k * (alongX ? RIVER_Z : RIVER_X) + 1) * PITCH + bt.lane;
+      const a = wrap(bt.o + bt.dir * bt.v * t, alongX ? cam.x : cam.z, 24 * PITCH);
+      const x = alongX ? a : centre, z = alongX ? centre : a, hl = bt.len / 2, hc = 2.2 + bt.len * .07;
+      // keep out of junctions where the other river crosses, so boats and their wakes never meet at right angles
+      const near = (p, period) => { for (const o of [-200, 0, 200]) if (posmod(Math.floor((p + o) / PITCH), period) < 2) return true; return false; };
+      if (alongX ? near(x, RIVER_X) : near(z, RIVER_Z)) continue;
+      const d = alongX ? (bt.dir > 0 ? 0 : 2) : (bt.dir > 0 ? 1 : 3), [dx, dz] = DIRS[d];
+      const bob = Math.sin(t * 1.1 + bt.ph) * .22 + Math.sin(t * 2.3 + bt.ph * 2) * .08;
+      addBox(x, z, alongX ? hl : hc, alongX ? hc : hl, -.6 + bob, 1.1 + bob, d + bt.paint * .08, 32768 | (bt.acc << 2));
+      const cx = x - dx * hl * .25, cz = z - dz * hl * .25, cl = hl * .28, cw = hc * .62;
+      addBox(cx, cz, alongX ? cl : cw, alongX ? cw : cl, 1.1 + bob, 2.5 + bob, d + 7 * .08, 32768 | (bt.acc << 2));
+      // navigation lights like a real vessel: red to port, green to starboard, a white masthead light forward;
+      // warm lights strung along the rails, and their glow on the water. Nothing at the stern.
+      const rx = -dz, rz = dx, at = (al, ac, y) => [x + dx * al + rx * ac, y + bob, z + dz * al + rz * ac];
+      let q = at(hl * .35, -hc * .95, 1.5); addStreak(q[0], q[1], q[2], q[0], q[1], q[2], .5, 1, .06, .04, 3.2);
+      q = at(hl * .35, hc * .95, 1.5); addStreak(q[0], q[1], q[2], q[0], q[1], q[2], .5, .1, 1, .3, 3.2);
+      q = at(hl * .22, 0, 2.7); addStreak(q[0], q[1], q[2], q[0], q[1], q[2], .5, 1, .97, .9, 3.4);
+      for (let al = -hl * .85; al < hl * .2; al += 4) for (const sd of [-1, 1]) {
+        q = at(al, sd * hc * .92, 1.3); addStreak(q[0], q[1], q[2], q[0], q[1], q[2], .3, 1, .8, .5, 1.3);
+      }
+      addBeam(x, .25, z, x, .25, z, hc * 3.2, 1, .8, .55, .09);
+      if (bi < 24 && Math.hypot(x - ctr[0], z - ctr[1]) < viewR + 200) { boatU.set([x, z, dx, dz], bi * 4); boatS.set([hl, hc, 0, 0], bi * 4); bi++; }
+    }
+    // the metro: trains on the nearest lines, both directions
+    const lines = (c, period, off) => { const k = Math.round((c / PITCH - off) / period); return [k - 1, k, k + 1].map(n => (n * period + off) * PITCH); };
+    for (const line of lines(cam.x, 55, 7)) for (const dir of [-1, 1]) for (let n = 0; n < 3; n++) train(line, dir, false, TRACK_X, t, n);
+    for (const line of lines(cam.z, 61, 11)) for (const dir of [-1, 1]) for (let n = 0; n < 3; n++) train(line, dir, true, TRACK_Z, t, n);
+    // searchlights sweeping the sky
+    for (const b of beams) {
+      const a = t * .22 + b[3], tx = b[0] + Math.cos(a) * b[4], tz = b[2] + Math.sin(a) * b[4], c = PAL[b[5]];
+      addBeam(b[0], b[1], b[2], tx, b[1] + b[6], tz, 5, c[0], c[1], c[2], .07);
+    }
+    if ((S.cityRainAmt ?? 0) > .01) rainStreaks(t);
+  }
+
+  /* ---------- colours ---------- */
+  let colNow = null, fogNow = null, winNow = null;
+  function lookColours(dt) {
+    const L = CITY_LOOKS[S.cityLook] || CITY_LOOKS.neon;
+    const k = colNow ? Math.min(1, dt * 1.2) : 1;
+    const ease = (cur, tgt) => cur ? cur.map((v, i) => v + (tgt[i] - v) * k) : tgt.slice();
+    colNow = [0, 1, 2].map(i => ease(colNow && colNow[i], [L.a, L.b, L.c][i]));
+    fogNow = ease(fogNow, L.fog); winNow = ease(winNow, L.win);
+  }
+
+  /* ---------- the clock on rooftop screens ---------- */
+  const FONT = ["111101101101111", "010110010010111", "111001111100111", "111001111001111", "101101111001001", "111100111001111",
+    "111100111101111", "111001010010010", "111101111101111", "111101111001111", "000010000010000", "000000000000000"].map(s => parseInt(s, 2));
+  let clk = [0, 0, 0, 0], clkKey = "";
+  function clockDigits() {
+    const d = new Date(); let h = d.getHours(); if (!S.clock24) h = h % 12 || 12;
+    const m = d.getMinutes(); clk = [Math.floor(h / 10), h % 10, Math.floor(m / 10), m % 10];
+    if (!S.clock24 && clk[0] === 0) clk[0] = 11;                    // no leading zero on a 12-hour clock
+  }
+
+  /* ---------- drawing ---------- */
+  function setCommon(p) {
+    const u = p.u;
+    g.uniform3f(u.uEye, eye[0], eye[1], eye[2]);
+    g.uniform3fv(u.uAcc, new Float32Array([...colNow[0], ...colNow[1], ...colNow[2]]));
+    g.uniform3fv(u.uFog, fogNow); g.uniform3fv(u.uWin, winNow);
+    g.uniform1f(u.uT, cityT); g.uniform1f(u.uFogNear, cam.alt * .6 * (1 - .5 * Math.min(mistNow, 1))); g.uniform1f(u.uFogK, (1 + 1.3 * mistNow) / (cam.alt * 1.5));
+    g.uniform1f(u.uHaze, .14 * (1 + 1.6 * mistNow)); g.uniform1f(u.uExpo, expo);
+    const LKS = CITY_LOOKS[S.cityLook] || {}; g.uniform1f(u.uNat, LKS.real ? 2 : LKS.nat ? 1 : 0); g.uniform1f(u.uWinAmt, S.cityWinAmt); { const hz = S.cityHaze ?? 1; g.uniform2f(u.uMistY, cam.alt * .42, cam.alt - 150); g.uniform2f(u.uMistD, .45 * hz, Math.min(1, .55 * hz)); g.uniform2f(u.uWind, 5, 2.5); } g.uniform1f(u.uEdges, S.cityEdgeAmt ?? .5); g.uniform1f(u.uLightK, S.cityLightK);
+    if (u.uVP) g.uniformMatrix4fv(u.uVP, false, VP);
+  }
+  let cityT = 0;
+  function draw(dt) {
+    const w = canvas.width, h = canvas.height;
+    if (!targets(w, h)) return;
+    lookColours(dt); clockDigits();
+    const hz = S.cityHaze ?? 1;
+    mistNow += ((hz > .01 ? mistAt(ctr[0], ctr[1]) * hz : 0) - mistNow) * Math.min(1, dt * .7);
+    cityT += dt;
+    updateCamera(dt); updateVisible();
+    g.bindFramebuffer(g.FRAMEBUFFER, msFbo || sceneFbo); g.viewport(0, 0, w, h);
+    g.clearColor(fogNow[0] * expo, fogNow[1] * expo, fogNow[2] * expo, 1); g.clearDepth(1);
+    g.clear(g.COLOR_BUFFER_BIT | g.DEPTH_BUFFER_BIT);
+    g.enable(g.DEPTH_TEST); g.depthFunc(g.LEQUAL); g.disable(g.BLEND); g.depthMask(true);
+    buildStreaks(cityT);
+    // ground
+    g.useProgram(P.ground.p); setCommon(P.ground); g.uniform3f(P.ground.u.uRect, ctr[0], ctr[1], viewR + 200);
+    g.uniform4fv(P.ground.u.uBoat, boatU); g.uniform4fv(P.ground.u.uBoatS, boatS);
+    g.bindVertexArray(groundVao); g.drawArrays(g.TRIANGLES, 0, 6);
+    // buildings
+    g.enable(g.CULL_FACE); g.cullFace(g.BACK);
+    g.useProgram(P.bld.p); setCommon(P.bld);
+    g.uniform1iv(P.bld.u.uFont, FONT); g.uniform1iv(P.bld.u.uClk, clk); g.uniform1f(P.bld.u.uColon, (Date.now() % 2000) < 1000 ? 1 : 0);
+    g.bindVertexArray(bldVao); g.drawArraysInstanced(g.TRIANGLES, 0, 30, bldCount);
+    g.disable(g.CULL_FACE);
+    for (const k of ["cyl", "oct", "dome"]) { const sh = shapes[k]; if (sh.count) { g.bindVertexArray(sh.vao); g.drawArraysInstanced(g.TRIANGLES, 0, sh.verts, sh.count); } }
+    g.enable(g.CULL_FACE);
+    if (vehN) {
+      g.bindVertexArray(vehVao); g.bindBuffer(g.ARRAY_BUFFER, vehInst); g.bufferData(g.ARRAY_BUFFER, vehData.subarray(0, vehN * 8), g.DYNAMIC_DRAW);
+      g.drawArraysInstanced(g.TRIANGLES, 0, 30, vehN);
+    }
+    g.disable(g.CULL_FACE);
+    if (discCount) { g.useProgram(P.disc.p); setCommon(P.disc); g.bindVertexArray(discVao); g.drawArraysInstanced(g.TRIANGLES, 0, 6, discCount); }
+    // traffic
+    g.enable(g.BLEND); g.blendFunc(g.ONE, g.ONE_MINUS_SRC_ALPHA); g.depthMask(false);
+    if (S.cityTraffic > .01) {
+      g.useProgram(P.car.p); setCommon(P.car); const u = P.car.u;
+      g.uniform2f(u.uBase, Math.floor(ctr[0] / PITCH + .5), Math.floor(ctr[1] / PITCH + .5)); g.uniform2f(u.uCenter, ctr[0], ctr[1]);
+      g.uniform1f(u.uL, 3400); g.uniform1f(u.uDens, S.cityTraffic);       // fixed loop length: cars never jump as the view changes
+      g.bindVertexArray(carVao); g.drawArraysInstanced(g.TRIANGLES, 0, 6, carCount);
+    }
+    // mist: a high layer the drone skims through and a lower one among the towers
+    if (false) {                                          // (haze is now drawn as part of every surface)
+      g.useProgram(P.mist.p); setCommon(P.mist); const u = P.mist.u;
+      g.uniform3f(u.uRect, ctr[0], ctr[1], viewR + 200); g.uniform2f(u.uWind, 5, 2.5);
+      g.bindVertexArray(groundVao);
+      g.uniform1f(u.uY, cam.alt * .42); g.uniform1f(u.uDens, .45 * hz); g.uniform1f(u.uSeed, 0); g.drawArrays(g.TRIANGLES, 0, 6);
+      g.uniform1f(u.uY, cam.alt - 150); g.uniform1f(u.uDens, Math.min(1, .55 * hz)); g.uniform1f(u.uSeed, 917); g.drawArrays(g.TRIANGLES, 0, 6);
+    }
+    // lights: warning lights, bridge cables, lamps, headlights, rain; all added on top
+    g.blendFunc(g.ONE, g.ONE);
+    if (streakN) {
+      g.useProgram(P.streak.p); const u = P.streak.u;
+      g.uniformMatrix4fv(u.uVP, false, VP); g.uniform2f(u.uRes, w, h); g.uniform1f(u.uFocal, h * .5 / tanY); g.uniform1f(u.uExpo, expo);
+      g.bindVertexArray(streakVao); g.bindBuffer(g.ARRAY_BUFFER, streakBuf); g.bufferData(g.ARRAY_BUFFER, streakData.subarray(0, streakN * 12), g.DYNAMIC_DRAW);
+      g.drawArraysInstanced(g.TRIANGLES, 0, 6, streakN);
+    }
+    g.depthMask(true); g.disable(g.BLEND); g.disable(g.DEPTH_TEST);
+    if (msFbo) {
+      g.bindFramebuffer(g.READ_FRAMEBUFFER, msFbo); g.bindFramebuffer(g.DRAW_FRAMEBUFFER, sceneFbo);
+      g.blitFramebuffer(0, 0, w, h, 0, 0, w, h, g.COLOR_BUFFER_BIT, g.NEAREST);
+      g.bindFramebuffer(g.READ_FRAMEBUFFER, null); g.bindFramebuffer(g.DRAW_FRAMEBUFFER, null);
+    }
+    // bloom: down the chain, then back up adding as we go
+    g.bindVertexArray(null);
+    let src = sceneTex, sw = w, sh = h;
+    g.useProgram(P.down.p);
+    bloom.forEach((b, i) => {
+      g.bindFramebuffer(g.FRAMEBUFFER, b.f); g.viewport(0, 0, b.w, b.h);
+      g.activeTexture(g.TEXTURE0); g.bindTexture(g.TEXTURE_2D, src); g.uniform1i(P.down.u.uTex, 0);
+      g.uniform2f(P.down.u.uTexel, .5 / sw, .5 / sh); g.uniform1f(P.down.u.uThr, i === 0 ? .9 * expo : 0);
+      g.drawArrays(g.TRIANGLES, 0, 3); src = b.t; sw = b.w; sh = b.h;
+    });
+    g.useProgram(P.up.p); g.enable(g.BLEND); g.blendFunc(g.ONE, g.ONE);
+    for (let i = bloom.length - 1; i > 0; i--) {
+      const s = bloom[i], d = bloom[i - 1];
+      g.bindFramebuffer(g.FRAMEBUFFER, d.f); g.viewport(0, 0, d.w, d.h);
+      g.bindTexture(g.TEXTURE_2D, s.t); g.uniform1i(P.up.u.uTex, 0); g.uniform2f(P.up.u.uTexel, 1 / s.w, 1 / s.h);
+      g.drawArrays(g.TRIANGLES, 0, 3);
+    }
+    g.disable(g.BLEND);
+    g.bindFramebuffer(g.FRAMEBUFFER, null); g.viewport(0, 0, w, h);
+    g.useProgram(P.comp.p); const u = P.comp.u;
+    g.activeTexture(g.TEXTURE0); g.bindTexture(g.TEXTURE_2D, sceneTex); g.uniform1i(u.uScene, 0);
+    g.activeTexture(g.TEXTURE1); g.bindTexture(g.TEXTURE_2D, bloom[0].t); g.uniform1i(u.uBloom, 1);
+    g.uniform1f(u.uExpo, expo); g.uniform1f(u.uBloomK, .4 * S.cityGlow * bloomMul); g.uniform1f(u.uT, cityT); g.uniform1f(u.uGrain, 3.5);
+    g.drawArrays(g.TRIANGLES, 0, 3);
+    g.activeTexture(g.TEXTURE0);
+  }
+
+  let lost = false;
+  canvas.addEventListener("webglcontextlost", e => { e.preventDefault(); ok = false; lost = true; });
+  canvas.addEventListener("webglcontextrestored", () => { lost = false; if (init() && active) size(); });
+  function size() { canvas.width = Math.max(1, Math.round(W * DPR)); canvas.height = Math.max(1, Math.round(H * DPR)); }
+  return {
+    available: () => !failed && !!gl && typeof WebGL2RenderingContext !== "undefined",
+    resize() { if (active && ok) { size(); } },
+    enter() {
+      if (!g || !ok) init();
+      if (!ok) { failed = true; return false; }
+      active = true; downT = 0; size();
+      return true;
+    },
+    leave() { active = false; freeTargets(); canvas.width = 1; canvas.height = 1; },
+    frame(dt) {
+      if (!ok) {
+        downT += dt;
+        if (downT > 2) { downT = -8; if (init()) size(); else { failed = true; S.scene === "city" && (S.scene = "silk"); requestScene("silk"); renderUI(); } }
+        return;
+      }
+      draw(dt);
+    },
+    // a finger drag, in CSS pixels: the world follows the finger
+    drag(dx, dy) {
+      const s = .45 * 2 * cam.alt * tanY / Math.max(1, H), fx = Math.cos(cam.head), fz = Math.sin(cam.head), rx = -fz, rz = fx;
+      const mx = (-rx * dx + fx * dy) * s, mz = (-rz * dx + fz * dy) * s, now = performance.now(), el = Math.max(8, now - (pan.lt || now - 16)) / 1000;
+      pan.qx += mx; pan.qz += mz; pan.held = true; pan.lt = now;
+      pan.vx = pan.vx * .6 + mx / el * .4; pan.vz = pan.vz * .6 + mz / el * .4;
+    },
+    release() { pan.held = false; if (performance.now() - pan.lt > 120) { pan.vx = 0; pan.vz = 0; } pan.lt = 0; },
+    info: () => ({ x: cam.x, z: cam.z, alt: cam.alt, boxes: bldCount, chunks: visKey.split("|").length, hdr, samples, streaks: streakN, vehicles: vehN, discs: discCount, lights: lights.length }),
+  };
+})();
+const citycv = document.getElementById("city");
+
 /* ---------- clock overlay ---------- */
 const clockEl = document.getElementById("clock"), clockT = document.getElementById("clockT"), clockD = document.getElementById("clockD");
 const tf = new Intl.DateTimeFormat(undefined, { hour:"numeric", minute:"2-digit" });
@@ -2229,7 +4205,9 @@ cv.addEventListener("pointermove", e => {
     down.drawing = true; closePanel();
     down.ink = activeScene === "ink" && inkAvailable();
     down.mech = isMech(activeScene) || isFx(activeScene);
-    if (down.ink) { ink.handColor = inkColor(1); ink.last = [down.x, down.y]; }
+    down.city = activeScene === "city"; down.lx = down.x; down.ly = down.y;
+    if (down.city) { /* Neon City: the drag moves the world */ }
+    else if (down.ink) { ink.handColor = inkColor(1); ink.last = [down.x, down.y]; }
     else if (down.mech) { /* the mechanical scenes run themselves */ }
     else {
       const [sx, sy] = toArt(down.x, down.y);
@@ -2237,13 +4215,14 @@ cv.addEventListener("pointermove", e => {
     }
   }
   if (hand.pen && e.pressure > 0) hand.press = e.pressure;
-  if (down.drawing && down.ink) { inkStroke(ink.last[0], ink.last[1], e.clientX, e.clientY); ink.last = [e.clientX, e.clientY]; }
+  if (down.drawing && down.city) { City.drag(e.clientX - down.lx, e.clientY - down.ly); down.lx = e.clientX; down.ly = e.clientY; }
+  else if (down.drawing && down.ink) { inkStroke(ink.last[0], ink.last[1], e.clientX, e.clientY); ink.last = [e.clientX, e.clientY]; }
   else if (down.drawing) { [hand.tx, hand.ty] = toArt(e.clientX, e.clientY); }
 });
 cv.addEventListener("click", () => { if (S.tilt && !tilt.on) enableTilt(true); });
 const endPointer = e => {
   if (!down || e.pointerId !== down.id) return;
-  if (down.drawing) { if (!down.ink && !down.mech) { hand.active = false; hand.lift = 1; } }
+  if (down.drawing) { if (down.city) City.release(); else if (!down.ink && !down.mech) { hand.active = false; hand.lift = 1; } }
   else if (performance.now() - down.t < 450) {
     if (panel.classList.contains("open")) closePanel();
     else if (fab.classList.contains("show")) openPanel();
@@ -2280,6 +4259,15 @@ const fmt = {
   bokehGlow: v => Math.round(v * 100) + "%",
   meshSpeed: v => v.toFixed(1) + "×",
   meshWarp: v => v < .02 ? "Still" : Math.round(v * 100) + "%",
+  citySpeed: v => v.toFixed(2).replace(/0$/, "") + "×",
+  cityAlt: v => Math.round(440 + 360 * v) + " m",
+  cityTraffic: v => v < .02 ? "None" : Math.round(v * 100) + "%",
+  cityGlow: v => v < .02 ? "Off" : Math.round(v * 100) + "%",
+  cityEdgeAmt: v => v < .02 ? "Off" : v < .35 ? "Few" : v < .65 ? "Some" : v < .85 ? "Many" : "Most",
+  cityHaze: v => v < .02 ? "Clear" : Math.round(v * 100) + "%",
+  cityRainAmt: v => v < .02 ? "Off" : v >= .9 ? "Snow" : v < .3 ? "Drizzle" : v < .65 ? "Rain" : "Heavy",
+  cityWinAmt: v => v < .02 ? "Off" : Math.round(v * 200) + "%",
+  cityLightK: v => Math.round(v * 100) + "%",
 
   clockWeight: v => ({100:"Ultralight",200:"Thin",300:"Light",400:"Regular",500:"Medium",600:"Semibold",700:"Bold",800:"Heavy"})[v] || v,
   clockSize: v => Math.round(v*100) + "%",
@@ -2313,12 +4301,12 @@ function rotCountdown() {
   const l = rotList();
   if (l.length < 2) { el.textContent = "Turn on at least two scenes so they can take turns."; return; }
   const left = Math.max(0, Math.ceil((S.rotEvery || 1) * 60 - (clock - lastSceneSwap)));
-  const names = { silk: "Silk", ink: "Ink", board: "Board", bokeh: "Bokeh Lights", mesh: "Gradient" };
+  const names = { silk: "Silk", ink: "Ink", board: "Board", bokeh: "Bokeh Lights", mesh: "Gradient", city: "Neon City" };
   el.textContent = `Now showing ${names[pendingScene || activeScene] || "Silk"}. Next: ${names[rotNext()]} in ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}.`;
 }
 setInterval(() => { if (panel.classList.contains("open")) rotCountdown(); }, 1000);
 // drill-down pages inside the settings sheet, like the Settings app
-const SCENE_NAMES = { silk: "Silk", ink: "Ink", board: "Board", bokeh: "Bokeh Lights", mesh: "Gradient", cities: "Cities" };
+const SCENE_NAMES = { silk: "Silk", ink: "Ink", board: "Board", bokeh: "Bokeh Lights", mesh: "Gradient", city: "Neon City", cities: "Cities" };
 let pageStack = [];
 const navBack = document.getElementById("navBack"), subTitle = document.getElementById("subTitle");
 function showPage() {
@@ -2353,6 +4341,18 @@ for (const [k, set] of [["palette", { name: "Your Palette" }], ...Object.entries
   b.innerHTML = `<i style="background:${bg}"></i>${set.name}`;
   b.addEventListener("click", () => { S.meshColors = k; save(); renderUI(); });
   meshWrap.appendChild(b);
+}
+// Neon City colour looks
+const cityLookWrap = document.getElementById("cityLooks");
+for (const [k, L] of Object.entries(CITY_LOOKS)) {
+  const b = document.createElement("button"); b.className = "pal"; b.dataset.citylook = k;
+  const c = v => `rgb(${v.map(x => Math.round(Math.min(1, x) * 255)).join(",")})`;
+  const sw = L.real ? "linear-gradient(135deg,#ffe0b0 0 38%,#ffb04a 38% 70%,#d8e8ff 70% 88%,#4d8cff 88% 92%,#ff4d9a 92% 96%,#5cff8a 96%)"
+    : L.nat ? "conic-gradient(from 210deg,#ffb347,#ff5e7e,#b06bff,#5ac8fa,#7cf29a,#ffe680,#ffb347)"
+    : `linear-gradient(135deg,${c(L.fog.map(x => x * 2.2))} 0 30%,${c(L.a)} 30% 55%,${c(L.b)} 55% 80%,${c(L.c)} 80%)`;
+  b.innerHTML = `<i style="background:${sw}"></i>${L.name}`;
+  b.addEventListener("click", () => { S.cityLook = k; save(); renderUI(); });
+  cityLookWrap.appendChild(b);
 }
 const palWrap = document.getElementById("palettes");
 for (const [k, p] of Object.entries(PALETTES)) {
@@ -2401,7 +4401,7 @@ if (!hinted) { setTimeout(() => hintEl.classList.add("show"), 2500); setTimeout(
 const btnFull = document.getElementById("btnFull");
 const isStandalone = NATIVE || window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
 if (isStandalone) btnFull.textContent = "Hide Settings";
-if (NATIVE) document.getElementById("ver").textContent = "Silkfall 1.6 · iPad App";
+if (NATIVE) document.getElementById("ver").textContent = "Silkfall 1.7 · iPad App";
 btnFull.addEventListener("click", async () => {
   closePanel();
   if (isStandalone) return;
@@ -2412,7 +4412,10 @@ btnFull.addEventListener("click", async () => {
   } catch (e) {}
 });
 
+let inkRetryAt = 0;
 function renderUI() {
+  // if Ink couldn't start (for example the graphics chip was busy at launch), quietly try again now and then
+  if (gl && !inkAvailable() && performance.now() - inkRetryAt > 5000) { inkRetryAt = performance.now(); retryInk(); }
   document.querySelectorAll("input[type=range][data-key]").forEach(el => {
     const k = el.dataset.key; el.value = S[k];
     el.style.setProperty("--p", ((S[k] - el.min) / (el.max - el.min) * 100) + "%");
@@ -2442,7 +4445,7 @@ function renderUI() {
   document.querySelectorAll("[data-if]").forEach(el => { const [k, v] = el.dataset.if.split(":"); el.hidden = !v.split(",").includes(String(S[k])); });
   document.querySelectorAll("[data-pick]").forEach(b => b.setAttribute("aria-checked", String(b.dataset.pick === (S.scene === "rotate" ? "rotate" : sc))));
   document.querySelectorAll("[data-needs]").forEach(el => {
-    const okay = el.dataset.needs === "ink" ? inkAvailable() : FX.available();
+    const okay = el.dataset.needs === "ink" ? inkAvailable() : el.dataset.needs === "city" ? City.available() : FX.available();
     el.classList.toggle("unavail", !okay);
     const sw = el.querySelector(".switch"); if (sw) sw.disabled = !okay;
   });
@@ -2461,11 +4464,13 @@ function renderUI() {
     board: "A full-screen wall of split flaps.",
     bokeh: "Soft city lights through a rainy window.",
     mesh: "Soft blobs of colour slowly morphing, like Apple's wallpapers.",
+    city: "A drone flying over a neon city at night. Drag to move around.",
     rotate: "Your chosen scenes take turns. Set each one up under Scene Settings.",
   }[sc];
   if (S.scene === "ink" && !inkAvailable()) document.getElementById("sceneNote").textContent = "Ink can't run here: " + inkReason() + " Showing Silk instead.";
-  else if (isFx(S.scene) && !FX.available()) document.getElementById("sceneNote").textContent = "This scene can't run on this device's graphics. Showing Silk instead.";
+  else if ((isFx(S.scene) && !FX.available()) || (S.scene === "city" && !City.available())) document.getElementById("sceneNote").textContent = "This scene can't run on this device's graphics. Showing Silk instead.";
   document.querySelectorAll("[data-mesh]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mesh === S.meshColors)));
+  document.querySelectorAll("[data-citylook]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.citylook === S.cityLook)));
   document.getElementById("meshSetNote").textContent = S.meshColors === "palette"
     ? "Uses the palette from the Colour section below. Pick a set here for darker, bolder gradients."
     : "Gradient uses this set and ignores the Colour section below. Pick Your Palette to follow it again.";
@@ -2479,6 +4484,7 @@ if (S.scene === "ink" && !inkAvailable()) S.scene = "silk";
 activeScene = sceneWanted();
 if (isMech(activeScene)) Mech.enter(activeScene);
 else if (isFx(activeScene) && !FX.enter(activeScene)) activeScene = "silk";
+else if (activeScene === "city" && !City.enter()) activeScene = "silk";
 renderUI(); applyWake(); enableTilt(false);
 requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
 
