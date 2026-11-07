@@ -27,7 +27,7 @@ Settings live in an iPadOS-style sheet: tap the screen to open it.
 
 ## Two versions in one repository
 
-- **Web app**: the files at the top level (`index.html` and friends). If GitHub Pages is turned on, it's served at `https://atharva309.github.io/SILKFALL/`.
+- **Web app**: the files at the top level (`index.html` and friends). It's served at `https://atharva309.github.io/SILKFALL/`.
 - **iPad app**: the `ios` folder. GitHub builds it in the cloud every time you upload changes and publishes **Silkfall.ipa** on this repository's **latest** release. You install it with AltStore (or SideStore).
 
 ## Download link for the iPad app
